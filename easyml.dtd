@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT easyml (nil|boolean|int|double|date|string|base64|object|array)+>
+
+<!ELEMENT nil (#CDATA)>
+
+<!ELEMENT boolean (true|false)>
+
+<!ELEMENT int (#CDATA)>
+
+<!ELEMENT double (#CDATA)>
+
+<!ELEMENT date (#CDATA)>
+
+<!ELEMENT string (#PCDATA)>
+
+<!ELEMENT base64 (#PCDATA)>
+
+<!ELEMENT object (#PCDATA)*>
+<!ATTLIST object
+    id CDATA #IMPLIED
+    idref CDATA #IMPLIED
+    class CDATA #IMPLIED
+  >
+
+<!ELEMENT array (boolean|int|double|date|string|base64|object|array)*>
+<!ATTLIST array
+    id CDATA #REQUIRED
+    length CDATA #REQUIRED
+  >
