@@ -23,6 +23,7 @@ package net.sourceforge.easyml;
 
 import java.io.*;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -78,7 +79,7 @@ import org.xmlpull.v1.XmlPullParserException;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.7
+ * @version 1.3.8
  */
 public class XMLReader implements Closeable {
 
@@ -418,7 +419,8 @@ public class XMLReader implements Closeable {
     private Map<String, Object> decoded;
     private boolean sharedConfiguration;
     private UnmarshalContextImpl context;
-    private ConcurrentHashMap<String, Object> cachedAliasingReflection;
+    /* default*/ ConcurrentHashMap<String, Object> cachedAliasingReflection;
+    /* default*/ ConcurrentHashMap<Class, Object> cachedDefCtors;
     private Map<String, SimpleStrategy> simpleStrategies;
     private Map<String, CompositeStrategy> compositeStrategies;
     /* default*/ SimpleDateFormat dateFormat;
@@ -427,9 +429,9 @@ public class XMLReader implements Closeable {
     /**
      * Creates a new instance. To be used by {@linkplain EasyML} only.
      */
-    /* default*/ XMLReader(ConcurrentHashMap<String, Object> cache) {
+    /* default*/ XMLReader(ConcurrentHashMap<Class, Object> commonCtorCache) {
         this.driver = null;
-        this.cachedAliasingReflection = cache;
+        this.cachedDefCtors = commonCtorCache;
         this.init();
     }
 
@@ -575,10 +577,10 @@ public class XMLReader implements Closeable {
         this.decoded = new HashMap<String, Object>();
         this.sharedConfiguration = false;
         this.context = new UnmarshalContextImpl();
-        if (this.cachedAliasingReflection == null) {
-            // if not instantiated by EasyML then init a local cache:
-            // The cache must be concurrent in case this instance will be used as a prototype:
-            this.cachedAliasingReflection = new ConcurrentHashMap<String, Object>();
+        // The caches must be concurrent in case this instance will be used as a prototype:
+        this.cachedAliasingReflection = new ConcurrentHashMap<String, Object>();
+        if (this.cachedDefCtors == null) {
+            this.cachedDefCtors = new ConcurrentHashMap<Class, Object>();
         }
         this.simpleStrategies = new StrategyHashMap<SimpleStrategy>();
         this.compositeStrategies = new StrategyHashMap<CompositeStrategy>();
@@ -605,13 +607,14 @@ public class XMLReader implements Closeable {
         this.sharedConfiguration = true;
         this.context = new UnmarshalContextImpl();
         this.cachedAliasingReflection = other.cachedAliasingReflection;
+        this.cachedDefCtors = other.cachedDefCtors;
         this.simpleStrategies = other.simpleStrategies;
         this.compositeStrategies = other.compositeStrategies;
         this.dateFormat = new SimpleDateFormat(other.dateFormat.toPattern());
         this.securityPolicy = other.securityPolicy;
     }
 
-    private void checkSharedConfiguration() {
+    private void checkNotSharedConfiguration() {
         if (this.sharedConfiguration) {
             throw new IllegalStateException("modifying this reader's shared configuration not allowed");
         }
@@ -636,7 +639,7 @@ public class XMLReader implements Closeable {
      * @throws IllegalStateException if shared configuration
      */
     public Map<String, SimpleStrategy> getSimpleStrategies() {
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         return this.simpleStrategies;
     }
 
@@ -648,7 +651,7 @@ public class XMLReader implements Closeable {
      * @throws IllegalStateException if shared configuration
      */
     public Map<String, CompositeStrategy> getCompositeStrategies() {
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         return this.compositeStrategies;
     }
 
@@ -675,7 +678,7 @@ public class XMLReader implements Closeable {
      * @throws IllegalStateException if shared configuration
      */
     public SecurityPolicy getSecurityPolicy() {
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         if (this.securityPolicy == null) {  // lazy:
             this.securityPolicy = new SecurityPolicy();
         }
@@ -693,7 +696,7 @@ public class XMLReader implements Closeable {
         if (dateFormat == null) {
             throw new IllegalArgumentException("dateFormat: null");
         }
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         this.dateFormat = new SimpleDateFormat(dateFormat);
     }
 
@@ -709,7 +712,7 @@ public class XMLReader implements Closeable {
      */
     public void alias(Class c, String alias) {
         XMLUtil.validateAlias(alias);
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         this.cachedAliasingReflection.put(alias, c);
     }
 
@@ -725,7 +728,7 @@ public class XMLReader implements Closeable {
      */
     public void alias(Field f, String alias) {
         XMLUtil.validateAlias(alias);
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         this.cachedAliasingReflection.put(
                 ReflectionUtil.qualifiedNameFor(f.getDeclaringClass(), alias),
                 f);
@@ -908,7 +911,7 @@ public class XMLReader implements Closeable {
             InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         // read object attributes and create instance and mark it as visited:
         Class cls = this.context.classFor(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS));
-        final Object ret = ReflectionUtil.instantiate(cls);
+        final Object ret = this.context.defaultConstructorFor(cls).newInstance();
         // security check:
         this.ensureSecurityPolicy(ret);
         this.decoded.put(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_ID), ret);
@@ -1130,6 +1133,40 @@ public class XMLReader implements Closeable {
     }
 
     /**
+     * Clears the so-far-filled cache of this instance, decreasing memory
+     * consumption as well as time performance. If this instance is a prototype
+     * for other XMLReaders, it will affect those as well, but in a thread-safe
+     * manner.
+     * <br>
+     * <b>Note:</b> this is an advanced feature and should be used only if the
+     * caller knows that this instance (as well as related ones) won't be doing
+     * de-serialization for a considerable time interval or will be doing that
+     * but on an XML containing a totally different set of object classes.
+     *
+     * @throws IllegalStateException if shared configuration
+     */
+    public void clearCache() {
+        this.checkNotSharedConfiguration();
+        this.cachedDefCtors.clear();
+        final Iterator<Map.Entry<String, Object>> iter = this.cachedAliasingReflection.entrySet().iterator();
+        while (iter.hasNext()) {
+            final Map.Entry<String, Object> crt = iter.next();
+            final Object crtVal = crt.getValue();
+            if (crtVal.getClass() == Field.class) {
+                if (ReflectionUtil.fieldNameFor(crt.getKey())
+                        .equals(
+                                ((Field) crtVal).getName())) {
+                    iter.remove(); // removed non-alias entry.
+                }
+            } else if (crtVal.getClass() == Class.class) {
+                if (crt.getKey().equals(((Class) crtVal).getName())) {
+                    iter.remove(); // removed non-alias entry.
+                }
+            }
+        }
+    }
+
+    /**
      * Closes this instance by releasing all resources.
      */
     @Override
@@ -1140,12 +1177,33 @@ public class XMLReader implements Closeable {
         this.decoded.clear();
         this.context = null;
         this.cachedAliasingReflection = null;
+        this.cachedDefCtors = null;
         this.compositeStrategies = null;
         this.simpleStrategies = null;
         this.securityPolicy = null;
     }
 
     private final class UnmarshalContextImpl implements UnmarshalContext {
+
+        @Override
+        public <T> Constructor<T> defaultConstructorFor(Class<T> c)
+                throws NoSuchMethodException {
+            final Object cached = cachedDefCtors.get(c);
+            if (cached != null) {
+                if (cached.getClass() != Constructor.class) {
+                    throw (NoSuchMethodException) cached;
+                }
+                return (Constructor<T>) cached;
+            }
+            try {
+                final Constructor<T> ctor = ReflectionUtil.defaultConstructor(c);
+                cachedDefCtors.putIfAbsent(c, ctor);
+                return ctor;
+            } catch (NoSuchMethodException noDefCtorX) {
+                cachedDefCtors.putIfAbsent(c, noDefCtorX);
+                throw noDefCtorX;
+            }
+        }
 
         @Override
         public Class aliasedClassFor(String alias) {

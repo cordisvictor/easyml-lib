@@ -22,7 +22,6 @@
 package net.sourceforge.easyml.marshalling.java.lang;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,7 +39,7 @@ import net.sourceforge.easyml.util.*;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.3.5
- * @version 1.3.7
+ * @version 1.3.8
  */
 @Deprecated
 public class ObjectStrategyV1_3_4 extends AbstractStrategy
@@ -130,15 +129,9 @@ public class ObjectStrategyV1_3_4 extends AbstractStrategy
         final boolean skipDefaults = ctx.skipDefaults();
         if (skipDefaults) {
             try {
-                defTarget = (outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : ReflectionUtil.instantiate(cls));
-            } catch (NoSuchMethodException noDefConstructor) {
-                // no defaults defined.
-            } catch (InstantiationException iX) {
-                // cannot use defaults.
-            } catch (InvocationTargetException iX) {
-                // cannot use defaults.
-            } catch (IllegalAccessException neverThrown) {
-                // ignored.
+                defTarget = (outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : ctx.defaultInstanceFor(cls));
+            } catch (ReflectiveOperationException defaultConstructorX) {
+                // cannot use defaults defined.
             }
         }
         while (this.continueProcessFor(cls)) { // process inheritance:
@@ -217,11 +210,9 @@ public class ObjectStrategyV1_3_4 extends AbstractStrategy
                 // do not consume this.outer end: let the second step while do it.
                 ret = ReflectionUtil.instantiateInner(cls, outer);
             } else {
-                ret = ReflectionUtil.instantiate(cls);
+                ret = ctx.defaultConstructorFor(cls).newInstance();
             }
-        } catch (NoSuchMethodException noDefaultConstructor) {
-            ret = ReflectionUtil.instantiateUnsafely(cls);
-        } catch (InvocationTargetException itX) {
+        } catch (ReflectiveOperationException defaultConstructorX) {
             ret = ReflectionUtil.instantiateUnsafely(cls);
         }
         return ret;

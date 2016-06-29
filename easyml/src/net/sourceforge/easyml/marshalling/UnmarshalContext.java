@@ -21,6 +21,7 @@
  */
 package net.sourceforge.easyml.marshalling;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.Date;
@@ -31,7 +32,7 @@ import java.util.Date;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.7
+ * @version 1.3.8
  */
 public interface UnmarshalContext {
 
@@ -55,6 +56,18 @@ public interface UnmarshalContext {
      * @return the field or null
      */
     Field aliasedFieldFor(Class declaring, String alias);
+
+    /**
+     * Returns the given class' default constructor, if any. If found but not
+     * accessible, it will be set to be accessible.
+     *
+     * @param <T> underlying type for the given class c
+     * @param c the class to reflect the default constructor for
+     *
+     * @return class' default constructor
+     * @throws NoSuchMethodException if no default constructor defined for class
+     */
+    <T> Constructor<T> defaultConstructorFor(Class<T> c) throws NoSuchMethodException;
 
     /**
      * Returns the class for the given <code>aliasOrName</code>, or throws

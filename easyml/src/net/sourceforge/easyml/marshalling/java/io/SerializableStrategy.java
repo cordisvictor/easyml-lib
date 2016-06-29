@@ -54,7 +54,7 @@ import net.sourceforge.easyml.util.*;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.7
+ * @version 1.3.8
  */
 public class SerializableStrategy extends AbstractStrategy<Serializable>
         implements CompositeStrategy<Serializable> {
@@ -254,15 +254,9 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         // if skipDefaults then init default for comparison usage:
         if (ctx.skipDefaults()) {
             try {
-                theDef = outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : ReflectionUtil.instantiate(cls);
-            } catch (NoSuchMethodException noDefConstructor) {
-                // no defaults defined.
-            } catch (InstantiationException iX) {
-                // cannot use defaults.
-            } catch (InvocationTargetException iX) {
-                // cannot use defaults.
-            } catch (IllegalAccessException neverThrown) {
-                // ignored.
+                theDef = outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : ctx.defaultInstanceFor(cls);
+            } catch (ReflectiveOperationException defaultConstructorX) {
+                // cannot use defaults defined.
             }
         }
         try {
@@ -369,11 +363,9 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                     // do not consume this.outer end: let the second step while do it.
                     ret = ReflectionUtil.instantiateInner(cls, outer);
                 } else {
-                    ret = ReflectionUtil.instantiate(cls);
+                    ret = ctx.defaultConstructorFor(cls).newInstance();
                 }
-            } catch (NoSuchMethodException noDefaultConstructor) {
-                ret = ReflectionUtil.instantiateUnsafely(cls);
-            } catch (InvocationTargetException itX) {
+            } catch (ReflectiveOperationException defaultConstructorX) {
                 ret = ReflectionUtil.instantiateUnsafely(cls);
             }
             return (Serializable) ret;

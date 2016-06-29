@@ -6,10 +6,7 @@ package net.sourceforge.easyml;
  */
 public class FacadeMain {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
+//    public static void main(String[] args) {
 //        final Person in = new Person(1, "da");
 //
 //        final EasyML easyml = new EasyML();
@@ -20,13 +17,13 @@ public class FacadeMain {
 //            easyml.deserialize(easyml.serialize(in));
 //        }
 //        System.out.println(System.currentTimeMillis() - time);
-    }
-
-    private static final class Person {
+//    }
+    public static final class Person {
 
         public int id;
         public String name;
 
+//        private Person(){}
         public Person(int id, String name) {
             this.id = id;
             this.name = name;

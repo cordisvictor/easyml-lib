@@ -9,6 +9,11 @@ EasyML
   (http://sourceforge.net/projects/kxml/files/kxml2/2.3.0/kxml2-min-2.3.0.jar/download)
 
 
+!Release 1.3.8
+- performance: EasyML cache reflected class constructors.
+- feature: EasyML, XMLReader, XMLWriter clearCache() methods.
+
+
 !Release 1.3.7
 - performance: EasyML and XMLReader cache reflected classes and fields.
     This is done via n.s.e.m.UnmarshalContext's classFor() and fieldFor().

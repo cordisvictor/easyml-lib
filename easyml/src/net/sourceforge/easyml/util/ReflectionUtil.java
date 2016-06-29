@@ -32,7 +32,7 @@ import java.util.Map;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.7
+ * @version 1.3.8
  */
 public final class ReflectionUtil {
 
@@ -131,9 +131,28 @@ public final class ReflectionUtil {
     }
 
     /**
+     * Returns the given class' default constructor, if any. If found but not
+     * accessible, it will be set to be accessible.
+     *
+     * @param <T> underlying type for the given class c
+     * @param c the class to reflect the default constructor for
+     *
+     * @return class' default constructor
+     */
+    public static <T> Constructor<T> defaultConstructor(Class<T> c)
+            throws NoSuchMethodException {
+        final Constructor nonArg = c.getDeclaredConstructor();
+        if (!nonArg.isAccessible()) {
+            nonArg.setAccessible(true);
+        }
+        return nonArg;
+    }
+
+    /**
      * Instantiates the given class using the default constructor. The modifier
      * needs not to be public.
      *
+     * @param <T> underlying type for the given class c
      * @param c the class to instantiate
      *
      * @return a new class instance
@@ -141,11 +160,7 @@ public final class ReflectionUtil {
     public static <T> T instantiate(Class<T> c)
             throws NoSuchMethodException, InstantiationException,
             IllegalAccessException, InvocationTargetException {
-        final Constructor nonArg = c.getDeclaredConstructor();
-        if (!nonArg.isAccessible()) {
-            nonArg.setAccessible(true);
-        }
-        return (T) nonArg.newInstance();
+        return ReflectionUtil.defaultConstructor(c).newInstance();
     }
 
     /**

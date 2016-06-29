@@ -40,10 +40,18 @@ public class EasyMLTest {
 
         final PersonDTO expected = new PersonDTO(1, "fn", "ln");
         final Object actual = easyml.deserialize(easyml.serialize(expected));
+
+        assertEquals(4, easyml.readerPrototype.cachedAliasingReflection.size());
+        assertEquals(1, easyml.readerPrototype.cachedDefCtors.size());
+        assertEquals(1, easyml.writerPrototype.cachedDefCtors.size());
+        assertSame(easyml.readerPrototype.cachedDefCtors, easyml.writerPrototype.cachedDefCtors);
+
         easyml.clearCache();
 
         assertEquals(expected, actual);
-        assertEquals(5 - 1 - 2, easyml.readerCache.size());
+        assertEquals(4 - 2/* 2 aliases */, easyml.readerPrototype.cachedAliasingReflection.size());
+        assertTrue(easyml.readerPrototype.cachedDefCtors.isEmpty());
+        assertTrue(easyml.writerPrototype.cachedDefCtors.isEmpty());
     }
 
     @Test

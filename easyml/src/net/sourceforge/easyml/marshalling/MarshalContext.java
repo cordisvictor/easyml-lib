@@ -22,6 +22,7 @@
 package net.sourceforge.easyml.marshalling;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 
 /**
@@ -30,9 +31,20 @@ import java.util.Date;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.5
+ * @version 1.3.8
  */
 public interface MarshalContext {
+
+    /**
+     * Returns a default instance for the given class, if any.
+     *
+     * @param <T> underlying type for the given class c
+     * @param c the class to instantiate
+     *
+     * @return a default instance
+     */
+    <T> T defaultInstanceFor(Class<T> c) throws NoSuchMethodException,
+            InstantiationException, IllegalAccessException, InvocationTargetException;
 
     /**
      * Returns the alias for the given class, or <code>null</code> if the given

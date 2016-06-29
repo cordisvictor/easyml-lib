@@ -23,7 +23,6 @@ package net.sourceforge.easyml;
 
 import java.io.*;
 import java.lang.reflect.Field;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.sourceforge.easyml.marshalling.CompositeStrategy;
@@ -64,7 +63,6 @@ import net.sourceforge.easyml.marshalling.java.util.TreeMapStrategy;
 import net.sourceforge.easyml.marshalling.java.util.UUIDStrategy;
 import net.sourceforge.easyml.marshalling.java.util.VectorStrategy;
 import net.sourceforge.easyml.marshalling.java.util.regex.PatternStrategy;
-import net.sourceforge.easyml.util.ReflectionUtil;
 import org.w3c.dom.Document;
 import org.xmlpull.v1.XmlPullParser;
 
@@ -157,7 +155,7 @@ import org.xmlpull.v1.XmlPullParser;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.7
+ * @version 1.3.8
  */
 public class EasyML {
 
@@ -486,10 +484,6 @@ public class EasyML {
      */
     protected final XMLReader readerPrototype;
     /**
-     * A cache, used by the reader, to store reflection and aliasing info.
-     */
-    protected final ConcurrentHashMap<String, Object> readerCache;
-    /**
      * The per-thread writer.
      */
     protected final ThreadLocal<XMLWriter> perThreadWriter;
@@ -517,9 +511,9 @@ public class EasyML {
      * @param profile to use
      */
     public EasyML(Profile profile) {
-        this.writerPrototype = new XMLWriter();
-        this.readerCache = new ConcurrentHashMap<String, Object>();
-        this.readerPrototype = new XMLReader(this.readerCache);
+        final ConcurrentHashMap<Class, Object> commonCtorCache = new ConcurrentHashMap<Class, Object>();
+        this.writerPrototype = new XMLWriter(commonCtorCache);
+        this.readerPrototype = new XMLReader(commonCtorCache);
         profile.configure(this.writerPrototype);
         profile.configure(this.readerPrototype);
         this.perThreadWriter = new ThreadLocal<XMLWriter>() {
@@ -1115,21 +1109,9 @@ public class EasyML {
      * the already cached data irrelevant.
      */
     public void clearCache() {
-        final Iterator<Map.Entry<String, Object>> iter = this.readerCache.entrySet().iterator();
-        while (iter.hasNext()) {
-            final Map.Entry<String, Object> crt = iter.next();
-            final Object crtVal = crt.getValue();
-            if (crtVal.getClass() == Field.class) {
-                if (ReflectionUtil.fieldNameFor(crt.getKey())
-                        .equals(
-                                ((Field) crtVal).getName())) {
-                    iter.remove(); // removed non-alias entry.
-                }
-            } else if (crtVal.getClass() == Class.class) {
-                if (crt.getKey().equals(((Class) crtVal).getName())) {
-                    iter.remove(); // removed non-alias entry.
-                }
-            }
-        }
+        // clear reader cache:
+        this.readerPrototype.clearCache();
+        // clear writer cache:
+        this.writerPrototype.clearCache();
     }
 }

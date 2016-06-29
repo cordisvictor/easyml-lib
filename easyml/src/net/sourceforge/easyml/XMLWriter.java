@@ -23,6 +23,7 @@ package net.sourceforge.easyml;
 
 import java.io.*;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import net.sourceforge.easyml.marshalling.CompositeStrategy;
 import net.sourceforge.easyml.marshalling.CompositeWriter;
 import net.sourceforge.easyml.marshalling.MarshalContext;
@@ -78,7 +80,7 @@ import org.w3c.dom.Document;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.7
+ * @version 1.3.8
  */
 public class XMLWriter implements Flushable, Closeable {
 
@@ -504,6 +506,7 @@ public class XMLWriter implements Flushable, Closeable {
     /* default*/ boolean prettyPrint;
     /* default*/ SimpleDateFormat dateFormat;
     private MarshalContextImpl context;
+    /* default*/ ConcurrentHashMap<Class, Object> cachedDefCtors;
     private Map<Object, String> aliasing;
     private Set<Field> exclusions;
     private StrategyRegistry<SimpleStrategy> simpleStrategies;
@@ -512,8 +515,9 @@ public class XMLWriter implements Flushable, Closeable {
     /**
      * Creates a new instance. To be used by {@linkplain EasyML} only.
      */
-    /* default*/ XMLWriter() {
+    /* default*/ XMLWriter(ConcurrentHashMap<Class, Object> commonCtorCache) {
         this.driver = null;
+        this.cachedDefCtors = commonCtorCache;
         this.init();
     }
 
@@ -599,6 +603,10 @@ public class XMLWriter implements Flushable, Closeable {
         this.encodedOneTimeUniqueId = null;
         this.sharedConfiguration = false;
         this.context = new MarshalContextImpl();
+        // The cache must be concurrent in case this instance will be used as a prototype:
+        if (this.cachedDefCtors == null) {
+            this.cachedDefCtors = new ConcurrentHashMap<Class, Object>();
+        }
         this.aliasing = new HashMap<Object, String>();
         this.exclusions = new HashSet<Field>();
         this.skipDefaults = true;
@@ -626,6 +634,7 @@ public class XMLWriter implements Flushable, Closeable {
         this.encodedOneTimeUniqueId = null;
         this.sharedConfiguration = true;
         this.context = new MarshalContextImpl();
+        this.cachedDefCtors = other.cachedDefCtors;
         this.aliasing = other.aliasing;
         this.exclusions = other.exclusions;
         this.skipDefaults = other.skipDefaults;
@@ -635,7 +644,7 @@ public class XMLWriter implements Flushable, Closeable {
         this.compositeStrategies = other.compositeStrategies;
     }
 
-    private void checkSharedConfiguration() {
+    private void checkNotSharedConfiguration() {
         if (this.sharedConfiguration) {
             throw new IllegalStateException("modifying this writer's shared configuration not allowed");
         }
@@ -671,7 +680,7 @@ public class XMLWriter implements Flushable, Closeable {
      * @throws IllegalStateException if shared configuration
      */
     public void setSkipDefaults(boolean skipDefaults) {
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         this.skipDefaults = skipDefaults;
     }
 
@@ -692,7 +701,7 @@ public class XMLWriter implements Flushable, Closeable {
      * @throws IllegalStateException if shared configuration
      */
     public void setPrettyPrint(boolean prettyPrint) {
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         this.prettyPrint = prettyPrint;
     }
 
@@ -708,7 +717,7 @@ public class XMLWriter implements Flushable, Closeable {
         if (dateFormat == null) {
             throw new IllegalArgumentException("dateFormat: null");
         }
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         this.dateFormat = new SimpleDateFormat(dateFormat);
     }
 
@@ -720,7 +729,7 @@ public class XMLWriter implements Flushable, Closeable {
      * @throws IllegalStateException if shared configuration
      */
     public StrategyRegistry<SimpleStrategy> getSimpleStrategies() {
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         return this.simpleStrategies;
     }
 
@@ -732,7 +741,7 @@ public class XMLWriter implements Flushable, Closeable {
      * @throws IllegalStateException if shared configuration
      */
     public StrategyRegistry<CompositeStrategy> getCompositeStrategies() {
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         return this.compositeStrategies;
     }
 
@@ -751,7 +760,7 @@ public class XMLWriter implements Flushable, Closeable {
      */
     public String alias(Class c, String alias) {
         XMLUtil.validateAlias(alias);
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         return this.aliasing.put(c, alias);
     }
 
@@ -770,7 +779,7 @@ public class XMLWriter implements Flushable, Closeable {
      */
     public String alias(Field f, String alias) {
         XMLUtil.validateAlias(alias);
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         return this.aliasing.put(f, alias);
     }
 
@@ -782,7 +791,7 @@ public class XMLWriter implements Flushable, Closeable {
      * @throws IllegalStateException if shared configuration
      */
     public void exclude(Field f) {
-        this.checkSharedConfiguration();
+        this.checkNotSharedConfiguration();
         this.exclusions.add(f);
     }
 
@@ -1059,6 +1068,24 @@ public class XMLWriter implements Flushable, Closeable {
     }
 
     /**
+     * Clears the so-far-filled cache of this instance, decreasing memory
+     * consumption as well as time performance. If this instance is a prototype
+     * for other XMLWriters, it will affect those as well, but in a thread-safe
+     * manner.
+     * <br>
+     * <b>Note:</b> this is an advanced feature and should be used only if the
+     * caller knows that this instance (as well as related ones) won't be doing
+     * serialization for a considerable time interval or will be doing that but
+     * on a totally different set of object classes.
+     *
+     * @throws IllegalStateException if shared configuration
+     */
+    public void clearCache() {
+        this.checkNotSharedConfiguration();
+        this.cachedDefCtors.clear();
+    }
+
+    /**
      * Closes this instance by releasing all resources.
      */
     @Override
@@ -1070,6 +1097,7 @@ public class XMLWriter implements Flushable, Closeable {
         this.encoded = null;
         this.encodedOneTimeUniqueId = null;
         this.context = null;
+        this.cachedDefCtors = null;
         this.aliasing = null;
         this.exclusions = null;
         this.compositeStrategies = null;
@@ -1077,6 +1105,36 @@ public class XMLWriter implements Flushable, Closeable {
     }
 
     private final class MarshalContextImpl implements MarshalContext {
+
+        @Override
+        public <T> T defaultInstanceFor(Class<T> c) throws NoSuchMethodException,
+                InstantiationException, IllegalAccessException, InvocationTargetException {
+            final Object cached = cachedDefCtors.get(c);
+            if (cached != null) {
+                if (cached.getClass() != Constructor.class) {
+                    throw (NoSuchMethodException) cached;
+                }
+                return ((Constructor<T>) cached).newInstance();
+            }
+            try {
+                final Constructor<T> ctor = ReflectionUtil.defaultConstructor(c);
+                T ret = ctor.newInstance();
+                cachedDefCtors.putIfAbsent(c, ctor);
+                return ret;
+            } catch (NoSuchMethodException noDefCtorX) {
+                cachedDefCtors.putIfAbsent(c, noDefCtorX);
+                throw noDefCtorX;
+            } catch (InstantiationException noUsableDefCtorX) {
+                cachedDefCtors.putIfAbsent(c, noUsableDefCtorX);
+                throw noUsableDefCtorX;
+            } catch (IllegalAccessException noUsableDefCtorX) {
+                cachedDefCtors.putIfAbsent(c, noUsableDefCtorX);
+                throw noUsableDefCtorX;
+            } catch (InvocationTargetException noUsableDefCtorX) {
+                cachedDefCtors.putIfAbsent(c, noUsableDefCtorX);
+                throw noUsableDefCtorX;
+            }
+        }
 
         @Override
         public String aliasFor(Class c) {
