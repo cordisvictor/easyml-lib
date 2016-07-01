@@ -18,12 +18,13 @@ public class FacadeMain {
 //        }
 //        System.out.println(System.currentTimeMillis() - time);
 //    }
+    
     public static final class Person {
 
         public int id;
         public String name;
 
-//        private Person(){}
+        private Person(){}
         public Person(int id, String name) {
             this.id = id;
             this.name = name;

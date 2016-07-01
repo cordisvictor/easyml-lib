@@ -1111,10 +1111,21 @@ public class XMLWriter implements Flushable, Closeable {
                 InstantiationException, IllegalAccessException, InvocationTargetException {
             final Object cached = cachedDefCtors.get(c);
             if (cached != null) {
-                if (cached.getClass() != Constructor.class) {
+                if (cached.getClass() == Constructor.class) {
+                    return ((Constructor<T>) cached).newInstance();
+                }
+                if (cached.getClass() == NoSuchMethodException.class) {
                     throw (NoSuchMethodException) cached;
                 }
-                return ((Constructor<T>) cached).newInstance();
+                if (cached.getClass() == InstantiationException.class) {
+                    throw (InstantiationException) cached;
+                }
+                if (cached.getClass() == InvocationTargetException.class) {
+                    throw (InvocationTargetException) cached;
+                }
+                if (cached.getClass() == IllegalAccessException.class) {
+                    throw (IllegalAccessException) cached;
+                }
             }
             try {
                 final Constructor<T> ctor = ReflectionUtil.defaultConstructor(c);
@@ -1127,10 +1138,10 @@ public class XMLWriter implements Flushable, Closeable {
             } catch (InstantiationException noUsableDefCtorX) {
                 cachedDefCtors.putIfAbsent(c, noUsableDefCtorX);
                 throw noUsableDefCtorX;
-            } catch (IllegalAccessException noUsableDefCtorX) {
+            } catch (InvocationTargetException noUsableDefCtorX) {
                 cachedDefCtors.putIfAbsent(c, noUsableDefCtorX);
                 throw noUsableDefCtorX;
-            } catch (InvocationTargetException noUsableDefCtorX) {
+            } catch (IllegalAccessException noUsableDefCtorX) {
                 cachedDefCtors.putIfAbsent(c, noUsableDefCtorX);
                 throw noUsableDefCtorX;
             }
