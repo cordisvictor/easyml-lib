@@ -52,19 +52,23 @@ public final class SingletonMapStrategy extends AbstractStrategy<Map> implements
      */
     public static final SingletonMapStrategy INSTANCE = new SingletonMapStrategy();
     private static final Class TARGET;
-    private static Field target_k;
-    private static Field target_v;
+    private static final Field TARGET_SINGLE_K;
+    private static final Field TARGET_SINGLE_V;
 
     static {
         TARGET = Collections.singletonMap(null, null).getClass();
+        Field singleK, singleV;
         try {
-            target_k = TARGET.getDeclaredField("k");
-            target_k.setAccessible(true);
-            target_v = TARGET.getDeclaredField("v");
-            target_v.setAccessible(true);
-        } catch (NoSuchFieldException neverThrown) {
-        } catch (SecurityException neverThrown) {
+            singleK = TARGET.getDeclaredField("k");
+            singleK.setAccessible(true);
+            singleV = TARGET.getDeclaredField("v");
+            singleV.setAccessible(true);
+        } catch (NoSuchFieldException | SecurityException neverThrown) {
+            singleK = null;
+            singleV = null;
         }
+        TARGET_SINGLE_K = singleK;
+        TARGET_SINGLE_V = singleV;
     }
 
     private SingletonMapStrategy() {
@@ -130,8 +134,8 @@ public final class SingletonMapStrategy extends AbstractStrategy<Map> implements
         // consume root tag:
         reader.next();
         // read and set singleton element:
-        target_k.set(target, reader.read());
-        target_v.set(target, reader.read());
+        TARGET_SINGLE_K.set(target, reader.read());
+        TARGET_SINGLE_V.set(target, reader.read());
         if (reader.atElementEnd() && reader.elementName().equals(SingletonMapStrategy.NAME)) {
             return target;
         }

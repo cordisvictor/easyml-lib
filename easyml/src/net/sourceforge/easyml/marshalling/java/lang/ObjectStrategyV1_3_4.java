@@ -227,7 +227,7 @@ public class ObjectStrategyV1_3_4 extends AbstractStrategy
             throws IllegalAccessException {
         // read object fields: in exactly the same order as they were written:
         Class cls = target.getClass();
-        final Set<String> fields = new HashSet<String>();
+        final Set<String> fields = new HashSet<>();
         while (reader.next()) {
             if (reader.atElementStart()) {
                 final String localPartName = reader.elementName();

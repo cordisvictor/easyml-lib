@@ -79,7 +79,7 @@ import org.xmlpull.v1.XmlPullParserException;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.8
+ * @version 1.3.9
  */
 public class XMLReader implements Closeable {
 
@@ -96,14 +96,14 @@ public class XMLReader implements Closeable {
         private boolean whitelist;
 
         private SecurityPolicy() {
-            this.strict = new HashSet<Class>();
-            this.inheritance = new ArrayList<Class>();
+            this.strict = new HashSet<>();
+            this.inheritance = new ArrayList<>();
             this.whitelist = false;
         }
 
         private SecurityPolicy(SecurityPolicy other) {
-            this.strict = new HashSet<Class>(other.strict);
-            this.inheritance = new ArrayList<Class>(other.inheritance);
+            this.strict = new HashSet<>(other.strict);
+            this.inheritance = new ArrayList<>(other.inheritance);
             this.whitelist = other.whitelist;
         }
 
@@ -279,6 +279,15 @@ public class XMLReader implements Closeable {
         }
 
         /**
+         * Returns this readers root tag setting.
+         *
+         * @return root tag name
+         */
+        public String rootTag() {
+            return this.target.rootTag;
+        }
+
+        /**
          * Calculates a descriptor detailing the current driver position inside
          * the XML. This information should be used as exception message for
          * detailing read exceptions.
@@ -416,6 +425,7 @@ public class XMLReader implements Closeable {
 
     private Driver driver;
     private boolean beforeRoot;
+    /* default*/ String rootTag;
     private Map<String, Object> decoded;
     private boolean sharedConfiguration;
     private UnmarshalContextImpl context;
@@ -574,16 +584,17 @@ public class XMLReader implements Closeable {
 
     private void init() {
         this.beforeRoot = true;
-        this.decoded = new HashMap<String, Object>();
+        this.rootTag = DTD.ELEMENT_EASYML;
+        this.decoded = new HashMap<>();
         this.sharedConfiguration = false;
         this.context = new UnmarshalContextImpl();
         // The caches must be concurrent in case this instance will be used as a prototype:
-        this.cachedAliasingReflection = new ConcurrentHashMap<String, Object>();
+        this.cachedAliasingReflection = new ConcurrentHashMap<>();
         if (this.cachedDefCtors == null) {
-            this.cachedDefCtors = new ConcurrentHashMap<Class, Object>();
+            this.cachedDefCtors = new ConcurrentHashMap<>();
         }
-        this.simpleStrategies = new StrategyHashMap<SimpleStrategy>();
-        this.compositeStrategies = new StrategyHashMap<CompositeStrategy>();
+        this.simpleStrategies = new StrategyHashMap<>();
+        this.compositeStrategies = new StrategyHashMap<>();
         this.dateFormat = new SimpleDateFormat(DTD.FORMAT_DATE);
         this.securityPolicy = null; // lazy.
         // add DTD strategies by default:
@@ -603,7 +614,8 @@ public class XMLReader implements Closeable {
 
     private void initIdentically(XMLReader other) {
         this.beforeRoot = true;
-        this.decoded = new HashMap<String, Object>();
+        this.rootTag = other.rootTag;
+        this.decoded = new HashMap<>();
         this.sharedConfiguration = true;
         this.context = new UnmarshalContextImpl();
         this.cachedAliasingReflection = other.cachedAliasingReflection;
@@ -629,6 +641,15 @@ public class XMLReader implements Closeable {
      */
     public boolean isSharedConfiguration() {
         return this.sharedConfiguration;
+    }
+
+    /**
+     * Gets the {@linkplain #rootTag} property.
+     *
+     * @return the root tag name
+     */
+    public String getRootTag() {
+        return this.rootTag;
     }
 
     /**
@@ -683,6 +704,25 @@ public class XMLReader implements Closeable {
             this.securityPolicy = new SecurityPolicy();
         }
         return this.securityPolicy;
+    }
+
+    /**
+     * Sets the {@linkplain #rootTag} property.
+     *
+     * @param rootTag to be used as XML root tag
+     *
+     * @throws IllegalArgumentException if tag is null or empty
+     * @throws IllegalStateException if reader isn't in initial state
+     */
+    public void setRootTag(String rootTag) {
+        if (!XMLUtil.isLegalXMLTag(rootTag)) {
+            throw new IllegalArgumentException("rootTag: illegal: " + rootTag);
+        }
+        if (!this.beforeRoot) {
+            throw new IllegalStateException("reader read in progress");
+        }
+        this.checkNotSharedConfiguration();
+        this.rootTag = rootTag;
     }
 
     /**
@@ -1011,14 +1051,12 @@ public class XMLReader implements Closeable {
                 return this.readArray0(componentType); // also consumes element end.
             }
             throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid element start: " + localPartName);
-        } catch (XmlPullParserException xppX) {
-            throw new InvalidFormatException(this.driver.positionDescriptor(), xppX);
-        } catch (IOException ioX) {
+        } catch (XmlPullParserException | IOException ioX) {
             throw new InvalidFormatException(this.driver.positionDescriptor(), ioX);
         } catch (ClassNotFoundException iB) {
             throw new InvalidFormatException(this.driver.positionDescriptor(), "unknown object class: " + iB.getMessage(), iB);
         } catch (NoSuchMethodException nsmX) {
-            throw new InvalidFormatException(this.driver.positionDescriptor(), nsmX);
+            throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid object constructor", nsmX);
         } catch (InstantiationException iDC) {
             throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid object constructor: " + iDC.getMessage(), iDC);
         } catch (InvocationTargetException iA) {
@@ -1078,7 +1116,7 @@ public class XMLReader implements Closeable {
         if (this.beforeRoot) {
             while (this.driver.next()) {
                 if (this.driver.atElementStart()) {
-                    if (this.driver.elementName().equals(DTD.ELEMENT_EASYML)) {
+                    if (this.driver.elementName().equals(this.rootTag)) {
                         this.beforeRoot = false;
                         this.driver.next(); // consumed easyml start tag.
                         return;
@@ -1090,7 +1128,7 @@ public class XMLReader implements Closeable {
     }
 
     private void ensureRootEndClear() {
-        if (this.driver.atElementEnd() && this.driver.elementName().equals(DTD.ELEMENT_EASYML)) {
+        if (this.driver.atElementEnd() && this.driver.elementName().equals(this.rootTag)) {
             this.decoded.clear();
             this.beforeRoot = true;
         }
@@ -1263,6 +1301,11 @@ public class XMLReader implements Closeable {
         @Override
         public Date parseDate(String date) throws ParseException {
             return dateFormat.parse(date);
+        }
+
+        @Override
+        public String rootTag() {
+            return rootTag;
         }
     }//(+)class UnmarshalContextImpl.
 }

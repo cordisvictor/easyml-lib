@@ -55,6 +55,17 @@ public class EasyMLTest {
     }
 
     @Test
+    public void testCustomRootTag() throws Exception {
+        easyml.setCustomRootTag("thePersons");
+
+        final PersonDTO expected = new PersonDTO(1, "fn", "ln");
+
+        final String xml = easyml.serialize(expected);
+        assertTrue(xml.startsWith("<thePersons>"));
+        assertEquals(expected, easyml.deserialize(xml));
+    }
+
+    @Test
     public void testAliasClassAndFields() throws Exception {
         easyml.alias(PersonDTO.class, "Person");
         easyml.alias(PersonDTO.class, "lastName", "Person");

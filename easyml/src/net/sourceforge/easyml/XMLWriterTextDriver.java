@@ -34,7 +34,7 @@ import net.sourceforge.easyml.util.XMLUtil;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.1.0
- * @version 1.3.6
+ * @version 1.3.9
  */
 /* default */ final class XMLWriterTextDriver extends XMLWriter.Driver {
 
@@ -57,7 +57,7 @@ import net.sourceforge.easyml.util.XMLUtil;
     public XMLWriterTextDriver(XMLWriter target, Writer out) {
         super(target);
         this.writer = out;
-        this.elementStack = new ArrayList<String>(XML_INDENTATION_BUF.length);
+        this.elementStack = new ArrayList<>(XML_INDENTATION_BUF.length);
     }
 
     private void writeIndent() throws IOException {
@@ -110,7 +110,7 @@ import net.sourceforge.easyml.util.XMLUtil;
             }
             writeIndentedLt();
             this.writer.write(name);
-            if (this.isOneTimeUniqueId()) {
+            if (this.hasOneTimeUniqueId()) {
                 writeAttrEqValue(DTD.ATTRIBUTE_ID, this.oneTimeUniqueId());
             }
             // update state:

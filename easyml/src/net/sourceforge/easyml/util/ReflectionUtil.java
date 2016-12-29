@@ -273,14 +273,13 @@ public final class ReflectionUtil {
                     public Object instantiate(Class c) {
                         try {
                             return allocateInstanceM.invoke(theUnsafe, c);
-                        } catch (IllegalAccessException neverThrown) {
-                            return null;
-                        } catch (InvocationTargetException neverThrown) {
+                        } catch (IllegalAccessException | InvocationTargetException neverThrown) {
                             return null;
                         }
                     }
                 };
-            } catch (Exception sunUnsafeNotAvailable) {
+            } catch (ClassNotFoundException | NoSuchFieldException | SecurityException |
+                    IllegalArgumentException | IllegalAccessException | NoSuchMethodException sunUnsafeNotAvailable) {
             }
             // if available, use java.io.ObjectInputStream:
             try {
@@ -291,14 +290,12 @@ public final class ReflectionUtil {
                     public Object instantiate(Class c) {
                         try {
                             return newInstanceM.invoke(null, c, Object.class);
-                        } catch (IllegalAccessException neverThrown) {
-                            return null;
-                        } catch (InvocationTargetException neverThrown) {
+                        } catch (IllegalAccessException | InvocationTargetException neverThrown) {
                             return null;
                         }
                     }
                 };
-            } catch (Exception notAvailable) {
+            } catch (NoSuchMethodException | SecurityException notAvailable) {
             }
             // if available, use java.io.ObjectStreamClass:
             try {
@@ -312,14 +309,13 @@ public final class ReflectionUtil {
                     public Object instantiate(Class c) {
                         try {
                             return newInstanceM.invoke(null, c, constructorId);
-                        } catch (IllegalAccessException neverThrown) {
-                            return null;
-                        } catch (InvocationTargetException neverThrown) {
+                        } catch (IllegalAccessException | InvocationTargetException neverThrown) {
                             return null;
                         }
                     }
                 };
-            } catch (Exception notAvailable) {
+            } catch (NoSuchMethodException | SecurityException | IllegalAccessException |
+                    IllegalArgumentException | InvocationTargetException notAvailable) {
             }
             // else unsafe allocation will not work, if used:
             return new UnsafeInstantiator() {
@@ -339,7 +335,7 @@ public final class ReflectionUtil {
      */
     private static final class Primitives {
 
-        private static final Map<String, Class> map = new HashMap<String, Class>(9);
+        private static final Map<String, Class> map = new HashMap<>(9);
 
         static {
             map.put(Void.TYPE.getName(), Void.TYPE);

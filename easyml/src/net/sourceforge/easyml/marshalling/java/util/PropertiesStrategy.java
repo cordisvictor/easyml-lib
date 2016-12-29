@@ -109,9 +109,7 @@ public final class PropertiesStrategy extends AbstractStrategy<Properties>
         Properties defaults = null;
         try {
             defaults = (Properties) PropertiesStrategy.propertiesDefaults.get(target);
-        } catch (IllegalArgumentException ex) {
-            // will never happen.
-        } catch (IllegalAccessException ex) {
+        } catch (IllegalArgumentException | IllegalAccessException ex) {
             // will never happen.
         }
         if (defaults != null) {
@@ -144,22 +142,25 @@ public final class PropertiesStrategy extends AbstractStrategy<Properties>
     public Properties unmarshalInit(Properties target, CompositeReader reader, UnmarshalContext ctx) {
         while (reader.next()) {// read Properties entries:
             if (reader.atElementStart()) {
-                if (reader.elementName().equals(PropertiesStrategy.ELEMENT_ENTRY)) {
-                    target.setProperty(
-                            reader.elementRequiredAttribute(PropertiesStrategy.ATTRIBUTE_KEY),
-                            reader.elementRequiredAttribute(PropertiesStrategy.ATTRIBUTE_VALUE));
-                    reader.next(); // consumed entry element start.
-                } else if (reader.elementName().equals(PropertiesStrategy.ELEMENT_DEFAULTS)) {
-                    reader.next(); // consumed defaults element start.
-                    try {
-                        PropertiesStrategy.propertiesDefaults.set(target, reader.read());
-                    } catch (IllegalAccessException neverThrown) {
-                        // ignore it.
-                    }
-                    // do not consume defaults element end: let the next while do it.
-                } else {
-                    throw new InvalidFormatException(ctx.readerPositionDescriptor(),
-                            "unexpected element start");
+                switch (reader.elementName()) {
+                    case PropertiesStrategy.ELEMENT_ENTRY:
+                        target.setProperty(
+                                reader.elementRequiredAttribute(PropertiesStrategy.ATTRIBUTE_KEY),
+                                reader.elementRequiredAttribute(PropertiesStrategy.ATTRIBUTE_VALUE));
+                        reader.next(); // consumed entry element start.
+                        break;
+                    case PropertiesStrategy.ELEMENT_DEFAULTS:
+                        reader.next(); // consumed defaults element start.
+                        try {
+                            PropertiesStrategy.propertiesDefaults.set(target, reader.read());
+                        } catch (IllegalAccessException neverThrown) {
+                            // ignore it.
+                        }
+                        // do not consume defaults element end: let the next while do it.
+                        break;
+                    default:
+                        throw new InvalidFormatException(ctx.readerPositionDescriptor(),
+                                "unexpected element start");
                 }
             } else if (reader.atElementEnd()
                     && reader.elementName().equals(PropertiesStrategy.NAME)) {

@@ -268,10 +268,8 @@ public class ObjectStrategy extends AbstractStrategy
                     Field f = null;
                     try {
                         f = ctx.fieldFor(cls, localPartName);
-                    } catch (NoSuchFieldException invalidFieldName) {
+                    } catch (NoSuchFieldException | SecurityException invalidFieldName) {
                         throw new InvalidFormatException(ctx.readerPositionDescriptor(), invalidFieldName);
-                    } catch (SecurityException ex) {
-                        throw new InvalidFormatException(ctx.readerPositionDescriptor(), ex);
                     }
                     // check if field is indeed valid:
                     if (Modifier.isStatic(f.getModifiers())) {

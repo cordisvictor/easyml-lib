@@ -110,10 +110,8 @@ public final class PatternStrategy extends AbstractStrategy<Pattern>
         try {
             return (flagsStr != null) ? Pattern.compile(regex, Integer.parseInt(flagsStr))
                     : Pattern.compile(regex);
-        } catch (NumberFormatException nfx) {
+        } catch (NumberFormatException | PatternSyntaxException nfx) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), nfx);
-        } catch (PatternSyntaxException psx) {
-            throw new InvalidFormatException(ctx.readerPositionDescriptor(), psx);
         }
     }
 
