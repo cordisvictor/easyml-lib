@@ -31,7 +31,7 @@ import java.util.Date;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.8
+ * @version 1.3.9
  */
 public interface MarshalContext {
 
@@ -105,6 +105,13 @@ public interface MarshalContext {
      * @return true if pretty, false otherwise
      */
     boolean prettyPrinting();
+
+    /**
+     * Returns the tag name currently being used as the XML root.
+     *
+     * @return XML root tag
+     */
+    String rootTag();
 
     /**
      * Returns <code>true</code> if the composite strategies doing default-value

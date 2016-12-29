@@ -80,7 +80,7 @@ import org.w3c.dom.Document;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.8
+ * @version 1.3.9
  */
 public class XMLWriter implements Flushable, Closeable {
 
@@ -97,8 +97,8 @@ public class XMLWriter implements Flushable, Closeable {
         private List<S> backup;
 
         private StrategyRegistry() {
-            this.strict = new IdentityHashMap<Class, S>();
-            this.range = new LinkedList<S>();
+            this.strict = new IdentityHashMap<>();
+            this.range = new LinkedList<>();
             this.backup = null;
         }
 
@@ -113,7 +113,7 @@ public class XMLWriter implements Flushable, Closeable {
          */
         public List<S> getBackup() {
             if (this.backup == null) {
-                this.backup = new ArrayList<S>();
+                this.backup = new ArrayList<>();
             }
             return this.backup;
         }
@@ -340,6 +340,7 @@ public class XMLWriter implements Flushable, Closeable {
         protected static final int STATE_VALUE = 2;
         protected static final int STATE_VALUE_END = 3;
         private final XMLWriter target;
+        private String oneTimeUniqueId;
         protected int state;
 
         /**
@@ -369,21 +370,25 @@ public class XMLWriter implements Flushable, Closeable {
          *
          * @return true if unique id available, false otherwise
          */
-        public final boolean isOneTimeUniqueId() {
-            return this.target.encodedOneTimeUniqueId != null;
+        public final boolean hasOneTimeUniqueId() {
+            return this.oneTimeUniqueId != null;
         }
 
         /**
          * Returns and clears the current one-time only unique id, if available,
-         * or returns <code>null</code> if {@linkplain #isOneTimeUniqueId() } is
-         * false.
+         * or returns <code>null</code> if {@linkplain #hasOneTimeUniqueId() }
+         * is false.
          *
          * @return one-time only unique or null
          */
         public final String oneTimeUniqueId() {
-            final String result = this.target.encodedOneTimeUniqueId;
-            this.target.encodedOneTimeUniqueId = null;
+            final String result = this.oneTimeUniqueId;
+            this.oneTimeUniqueId = null;
             return result;
+        }
+
+        /* default*/ final void setOneTimeUniqueIdTo(String uniqueId) {
+            this.oneTimeUniqueId = uniqueId;
         }
 
         /**
@@ -472,9 +477,7 @@ public class XMLWriter implements Flushable, Closeable {
                 this.target.write0(o);
             } catch (NoSuchMethodException nDC) {
                 throw new IllegalArgumentException("value: no default constructor: " + nDC.getMessage(), nDC);
-            } catch (InvocationTargetException iDC) {
-                throw new IllegalArgumentException("value: invalid default constructor: " + iDC.getMessage(), iDC);
-            } catch (InstantiationException iDC) {
+            } catch (InvocationTargetException | InstantiationException iDC) {
                 throw new IllegalArgumentException("value: invalid default constructor: " + iDC.getMessage(), iDC);
             } catch (IllegalAccessException iDCM) {
                 throw new IllegalArgumentException("value: invalid default constructor modifier: " + iDCM.getMessage(), iDCM);
@@ -500,10 +503,10 @@ public class XMLWriter implements Flushable, Closeable {
 
     private Driver driver;
     private Map<Object, Integer> encoded;
-    private String encodedOneTimeUniqueId;
     private boolean sharedConfiguration;
     /* default*/ boolean skipDefaults;
     /* default*/ boolean prettyPrint;
+    /* default*/ String rootTag;
     /* default*/ SimpleDateFormat dateFormat;
     private MarshalContextImpl context;
     /* default*/ ConcurrentHashMap<Class, Object> cachedDefCtors;
@@ -599,21 +602,21 @@ public class XMLWriter implements Flushable, Closeable {
     }
 
     private void init() {
-        this.encoded = new IdentityHashMap<Object, Integer>();
-        this.encodedOneTimeUniqueId = null;
+        this.encoded = new IdentityHashMap<>();
         this.sharedConfiguration = false;
         this.context = new MarshalContextImpl();
         // The cache must be concurrent in case this instance will be used as a prototype:
         if (this.cachedDefCtors == null) {
-            this.cachedDefCtors = new ConcurrentHashMap<Class, Object>();
+            this.cachedDefCtors = new ConcurrentHashMap<>();
         }
-        this.aliasing = new HashMap<Object, String>();
-        this.exclusions = new HashSet<Field>();
+        this.aliasing = new HashMap<>();
+        this.exclusions = new HashSet<>();
         this.skipDefaults = true;
         this.prettyPrint = false;
+        this.rootTag = DTD.ELEMENT_EASYML;
         this.dateFormat = new SimpleDateFormat(DTD.FORMAT_DATE);
-        this.simpleStrategies = new StrategyRegistry<SimpleStrategy>();
-        this.compositeStrategies = new StrategyRegistry<CompositeStrategy>();
+        this.simpleStrategies = new StrategyRegistry<>();
+        this.compositeStrategies = new StrategyRegistry<>();
         // add DTD strategies by default:
         this.simpleStrategies.add(Base64Strategy.INSTANCE);
         this.simpleStrategies.add(BooleanStrategy.INSTANCE);
@@ -630,8 +633,7 @@ public class XMLWriter implements Flushable, Closeable {
     }
 
     private void initIdentically(XMLWriter other) {
-        this.encoded = new IdentityHashMap<Object, Integer>();
-        this.encodedOneTimeUniqueId = null;
+        this.encoded = new IdentityHashMap<>();
         this.sharedConfiguration = true;
         this.context = new MarshalContextImpl();
         this.cachedDefCtors = other.cachedDefCtors;
@@ -639,6 +641,7 @@ public class XMLWriter implements Flushable, Closeable {
         this.exclusions = other.exclusions;
         this.skipDefaults = other.skipDefaults;
         this.prettyPrint = other.prettyPrint;
+        this.rootTag = other.rootTag;
         this.dateFormat = new SimpleDateFormat(other.dateFormat.toPattern());
         this.simpleStrategies = other.simpleStrategies;
         this.compositeStrategies = other.compositeStrategies;
@@ -703,6 +706,34 @@ public class XMLWriter implements Flushable, Closeable {
     public void setPrettyPrint(boolean prettyPrint) {
         this.checkNotSharedConfiguration();
         this.prettyPrint = prettyPrint;
+    }
+
+    /**
+     * Gets the {@linkplain #rootTag} property.
+     *
+     * @return the root tag name
+     */
+    public String getRootTag() {
+        return this.rootTag;
+    }
+
+    /**
+     * Sets the {@linkplain #rootTag} property.
+     *
+     * @param rootTag to be used as XML root tag
+     *
+     * @throws IllegalArgumentException if tag is null or empty
+     * @throws IllegalStateException if write isn't in initial state
+     */
+    public void setRootTag(String rootTag) {
+        if (!XMLUtil.isLegalXMLTag(rootTag)) {
+            throw new IllegalArgumentException("rootTag: illegal: " + rootTag);
+        }
+        if (!this.isInitialState()) {
+            throw new IllegalStateException("writer write in progress");
+        }
+        this.checkNotSharedConfiguration();
+        this.rootTag = rootTag;
     }
 
     /**
@@ -977,7 +1008,7 @@ public class XMLWriter implements Flushable, Closeable {
             // mark data as visited:
             final int nextUniqueId = this.encoded.size() + 1;
             this.encoded.put(data, nextUniqueId);
-            this.encodedOneTimeUniqueId = String.valueOf(nextUniqueId);
+            this.driver.setOneTimeUniqueIdTo(String.valueOf(nextUniqueId));
             // visit data:
             final CompositeStrategy cs = this.compositeStrategies.lookup(cls);
             if (cs != null) {
@@ -1005,9 +1036,7 @@ public class XMLWriter implements Flushable, Closeable {
             this.write0(o);
         } catch (NoSuchMethodException nDC) {
             throw new IllegalArgumentException("o: no default constructor: " + nDC.getMessage(), nDC);
-        } catch (InvocationTargetException iDC) {
-            throw new IllegalArgumentException("o: invalid default constructor: " + iDC.getMessage(), iDC);
-        } catch (InstantiationException iDC) {
+        } catch (InvocationTargetException | InstantiationException iDC) {
             throw new IllegalArgumentException("o: invalid default constructor: " + iDC.getMessage(), iDC);
         } catch (IllegalAccessException iDCM) {
             throw new IllegalArgumentException("o: invalid default constructor modifier: " + iDCM.getMessage(), iDCM);
@@ -1015,8 +1044,8 @@ public class XMLWriter implements Flushable, Closeable {
     }
 
     private void ensureRootWritten() {
-        if (this.driver.state == XMLWriter.Driver.STATE_INITIAL) {
-            this.driver.startElement(DTD.ELEMENT_EASYML);
+        if (this.isInitialState()) {
+            this.driver.startElement(this.rootTag);
         }
     }
 
@@ -1026,13 +1055,17 @@ public class XMLWriter implements Flushable, Closeable {
      */
     @Override
     public final void flush() {
-        // this.driver==null: when this is instantiated by EasyML constructor and first write:
-        if (this.driver != null && this.driver.state != XMLWriter.Driver.STATE_INITIAL) {
+        if (!this.isInitialState()) {
             this.driver.endElement(); // DTD.ELEMENT_EASYML.
             this.driver.flush();
             this.driver.state = XMLWriter.Driver.STATE_INITIAL;
             this.encoded.clear();
         }
+    }
+
+    private boolean isInitialState() {
+        // driver is null when this is instantiated by EasyML constructor and before first write:
+        return this.driver == null || this.driver.state == XMLWriter.Driver.STATE_INITIAL;
     }
 
     /**
@@ -1095,7 +1128,6 @@ public class XMLWriter implements Flushable, Closeable {
             this.driver.close();
         }
         this.encoded = null;
-        this.encodedOneTimeUniqueId = null;
         this.context = null;
         this.cachedDefCtors = null;
         this.aliasing = null;
@@ -1132,18 +1164,10 @@ public class XMLWriter implements Flushable, Closeable {
                 T ret = ctor.newInstance();
                 cachedDefCtors.putIfAbsent(c, ctor);
                 return ret;
-            } catch (NoSuchMethodException noDefCtorX) {
+            } catch (NoSuchMethodException | InstantiationException |
+                    InvocationTargetException | IllegalAccessException noDefCtorX) {
                 cachedDefCtors.putIfAbsent(c, noDefCtorX);
                 throw noDefCtorX;
-            } catch (InstantiationException noUsableDefCtorX) {
-                cachedDefCtors.putIfAbsent(c, noUsableDefCtorX);
-                throw noUsableDefCtorX;
-            } catch (InvocationTargetException noUsableDefCtorX) {
-                cachedDefCtors.putIfAbsent(c, noUsableDefCtorX);
-                throw noUsableDefCtorX;
-            } catch (IllegalAccessException noUsableDefCtorX) {
-                cachedDefCtors.putIfAbsent(c, noUsableDefCtorX);
-                throw noUsableDefCtorX;
             }
         }
 
@@ -1177,6 +1201,11 @@ public class XMLWriter implements Flushable, Closeable {
         @Override
         public boolean prettyPrinting() {
             return prettyPrint;
+        }
+
+        @Override
+        public String rootTag() {
+            return rootTag;
         }
 
         @Override

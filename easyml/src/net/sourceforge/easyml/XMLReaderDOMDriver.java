@@ -35,7 +35,7 @@ import org.w3c.dom.NodeList;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.1.0
- * @version 1.3.3
+ * @version 1.3.9
  */
 /* default */ final class XMLReaderDOMDriver extends XMLReader.Driver {
 
@@ -208,9 +208,10 @@ import org.w3c.dom.NodeList;
     @Override
     protected void consumeFully() {
         // move up until easyml is parent:
+        final String rootTag = this.rootTag();
         Element e = this.crt;
         Node parent = e.getParentNode();
-        while (parent.getNodeType() == Node.ELEMENT_NODE && !parent.getNodeName().equals(DTD.ELEMENT_EASYML)) {
+        while (parent.getNodeType() == Node.ELEMENT_NODE && !parent.getNodeName().equals(rootTag)) {
             e = (Element) parent;
             parent = e.getParentNode();
         }

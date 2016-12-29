@@ -92,10 +92,8 @@ import org.xmlpull.v1.XmlPullParserException;
             }
             this.parser.nextTag();
             return true;
-        } catch (XmlPullParserException xppX) {
+        } catch (XmlPullParserException | IOException xppX) {
             throw new InvalidFormatException(this.positionDescriptor(), xppX);
-        } catch (IOException ioX) {
-            throw new InvalidFormatException(this.positionDescriptor(), ioX);
         }
     }
 
@@ -183,10 +181,8 @@ import org.xmlpull.v1.XmlPullParserException;
     public String readValue() {
         try {
             return parser.nextText();
-        } catch (XmlPullParserException xppX) {
+        } catch (XmlPullParserException | IOException xppX) {
             throw new InvalidFormatException(this.positionDescriptor(), xppX);
-        } catch (IOException ioX) {
-            throw new InvalidFormatException(this.positionDescriptor(), ioX);
         }
     }
 
@@ -206,10 +202,8 @@ import org.xmlpull.v1.XmlPullParserException;
             if (et != XmlPullParser.END_DOCUMENT) {
                 parser.nextTag();
             }
-        } catch (XmlPullParserException xppX) {
+        } catch (XmlPullParserException | IOException xppX) {
             throw new InvalidFormatException(this.positionDescriptor(), xppX);
-        } catch (IOException ioX) {
-            throw new InvalidFormatException(this.positionDescriptor(), ioX);
         }
     }
 

@@ -52,16 +52,18 @@ public final class SingletonSetStrategy extends AbstractStrategy<Set> implements
      */
     public static final SingletonSetStrategy INSTANCE = new SingletonSetStrategy();
     private static final Class TARGET;
-    private static Field target_element;
+    private static final Field TARGET_ELEMENT;
 
     static {
         TARGET = Collections.singleton(null).getClass();
+        Field singletonListElement;
         try {
-            target_element = TARGET.getDeclaredField("element");
-            target_element.setAccessible(true);
-        } catch (NoSuchFieldException neverThrown) {
-        } catch (SecurityException neverThrown) {
+            singletonListElement = TARGET.getDeclaredField("element");
+            singletonListElement.setAccessible(true);
+        } catch (NoSuchFieldException | SecurityException neverThrown) {
+            singletonListElement = null;
         }
+        TARGET_ELEMENT = singletonListElement;
     }
 
     private SingletonSetStrategy() {
@@ -125,7 +127,7 @@ public final class SingletonSetStrategy extends AbstractStrategy<Set> implements
         // consume root tag:
         reader.next();
         // read and set singleton element:
-        target_element.set(target, reader.read());
+        TARGET_ELEMENT.set(target, reader.read());
         if (reader.atElementEnd() && reader.elementName().equals(SingletonSetStrategy.NAME)) {
             return target;
         }

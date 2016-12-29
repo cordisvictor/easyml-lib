@@ -31,7 +31,7 @@ import org.w3c.dom.Node;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.1.0
- * @version 1.3.5
+ * @version 1.3.9
  */
 /* default */ final class XMLWriterDOMDriver extends XMLWriter.Driver {
 
@@ -64,7 +64,7 @@ import org.w3c.dom.Node;
             throw new IllegalStateException("cannot write element start");
         }
         final Element started = this.root.createElement(name);
-        if (this.isOneTimeUniqueId()) {
+        if (this.hasOneTimeUniqueId()) {
             started.setAttribute(DTD.ATTRIBUTE_ID, this.oneTimeUniqueId());
         }
         // update state:

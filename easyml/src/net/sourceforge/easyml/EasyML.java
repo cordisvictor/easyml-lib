@@ -155,7 +155,7 @@ import org.xmlpull.v1.XmlPullParser;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.8
+ * @version 1.3.9
  */
 public class EasyML {
 
@@ -511,7 +511,7 @@ public class EasyML {
      * @param profile to use
      */
     public EasyML(Profile profile) {
-        final ConcurrentHashMap<Class, Object> commonCtorCache = new ConcurrentHashMap<Class, Object>();
+        final ConcurrentHashMap<Class, Object> commonCtorCache = new ConcurrentHashMap<>();
         this.writerPrototype = new XMLWriter(commonCtorCache);
         this.readerPrototype = new XMLReader(commonCtorCache);
         profile.configure(this.writerPrototype);
@@ -554,6 +554,20 @@ public class EasyML {
     public void setDateFormat(String format) {
         this.writerPrototype.setDateFormat(format);
         this.readerPrototype.setDateFormat(format);
+    }
+
+    /**
+     * Sets the given custom XML tag name to be used as the XML root tag,
+     * replacing the default {@linkplain DTD#ELEMENT_EASYML}.
+     *
+     * @param tag to be used as XML root tag name
+     *
+     * @throws IllegalArgumentException if tag is null or empty
+     * @throws IllegalStateException if reader or writer aren't in initial state
+     */
+    public void setCustomRootTag(String tag) {
+        this.writerPrototype.setRootTag(tag);
+        this.readerPrototype.setRootTag(tag);
     }
 
     /**
@@ -1047,10 +1061,11 @@ public class EasyML {
 
     private XMLWriter initPerThreadWriter() {
         final XMLWriter writer = this.perThreadWriter.get();
-        // ensure value-type prototype conf changes are made visible
+        // ensure value-type conf changes are made visible
         // on the per-thread writer:
         writer.skipDefaults = this.writerPrototype.skipDefaults;
         writer.prettyPrint = this.writerPrototype.prettyPrint;
+        writer.rootTag = this.writerPrototype.rootTag;
         final String configuredPattern = this.writerPrototype.dateFormat.toPattern();
         if (!configuredPattern.equals(writer.dateFormat.toPattern())) {
             writer.dateFormat.applyPattern(configuredPattern);
@@ -1060,9 +1075,10 @@ public class EasyML {
 
     private XMLReader initPerThreadReader() {
         final XMLReader reader = this.perThreadReader.get();
-        // ensure value-type prototype conf changes are made visible
+        // ensure value-type conf changes are made visible
         // on the per-thread reader:
         reader.securityPolicy = this.readerPrototype.securityPolicy; // securityPolicy is lazy.
+        reader.rootTag = this.readerPrototype.rootTag;
         final String configuredPattern = this.readerPrototype.dateFormat.toPattern();
         if (!configuredPattern.equals(reader.dateFormat.toPattern())) {
             reader.dateFormat.applyPattern(configuredPattern);
