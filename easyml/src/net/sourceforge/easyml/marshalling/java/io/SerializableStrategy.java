@@ -227,12 +227,10 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                 throw new RuntimeException(new NotSerializableException(replacement.getClass().getName()));
             }
             theTarget = (Serializable) replacement;
-        } catch (NoSuchMethodException writeReplaceNotFound) {
+        } catch (NoSuchMethodException | IllegalAccessException writeReplaceNotFound) {
             // ignore.
         } catch (InvocationTargetException writeReplaceFailure) {
             throw new RuntimeException(writeReplaceFailure);
-        } catch (IllegalAccessException neverThrown) {
-            // ignore.
         }
         // begin object encoding:
         writer.startElement(this.name());
@@ -418,12 +416,10 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                     throw new RuntimeException(new NotSerializableException(resolved.getClass().getName()));
                 }
                 return (Serializable) resolved;
-            } catch (NoSuchMethodException readResolveNotFound) {
+            } catch (NoSuchMethodException | IllegalAccessException readResolveNotFound) {
                 // ignore.
             } catch (InvocationTargetException readResolveFailure) {
                 throw new RuntimeException(readResolveFailure);
-            } catch (IllegalAccessException neverThrown) {
-                // ignore.
             }
             return target;
         }
@@ -591,7 +587,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
     private static final class PutFieldImpl extends ObjectOutputStream.PutField {
 
-        private final Map<String, Object> content = new HashMap<String, Object>();
+        private final Map<String, Object> content = new HashMap<>();
 
         @Override
         public void put(String name, boolean val) {
@@ -713,7 +709,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                 throw new InvalidFormatException(this.context.readerPositionDescriptor(),
                         "expected: " + SerializableStrategy.ELEMENT_FIELDS + ", found: " + this.reader.elementName());
             }
-            final Map<String, Object> fields = new HashMap<String, Object>();
+            final Map<String, Object> fields = new HashMap<>();
             while (this.reader.next()) {
                 if (this.reader.atElementStart()) {
                     final String localPartName = this.reader.elementName();

@@ -349,7 +349,7 @@ public enum ValueType {
                     return value;
                 }
             };
-    private static final Map<Class, ValueType> types = new IdentityHashMap<Class, ValueType>();
+    private static final Map<Class, ValueType> types = new IdentityHashMap<>();
 
     static {
         types.put(boolean.class, BOOLEAN);

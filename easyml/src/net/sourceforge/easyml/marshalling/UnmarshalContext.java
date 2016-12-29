@@ -32,7 +32,7 @@ import java.util.Date;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.8
+ * @version 1.3.9
  */
 public interface UnmarshalContext {
 
@@ -113,4 +113,11 @@ public interface UnmarshalContext {
      * @throws ParseException when date is invalid w.r.t. the configuration
      */
     Date parseDate(String date) throws ParseException;
+
+    /**
+     * Returns the tag name currently being used as the XML root.
+     *
+     * @return XML root tag
+     */
+    String rootTag();
 }
