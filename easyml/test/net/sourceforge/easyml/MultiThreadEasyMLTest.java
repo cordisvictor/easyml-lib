@@ -15,10 +15,12 @@ import org.junit.Test;
  */
 public class MultiThreadEasyMLTest {
 
-    private final EasyML easyml = new EasyML();
+    private EasyML easyml;
 
     @Test
     public void testMultiThreads1() throws Exception {
+        easyml = new EasyML();
+
         final WorkerThread<List<Integer>> t1 = new WorkerThread(new ArrayList(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8)));
         final WorkerThread<List<Integer>> t2 = new WorkerThread(new ArrayList(Arrays.asList(8, 7, 6, 5, 4, 3, 2, 1)));
         final WorkerThread<List<Integer>> t3 = new WorkerThread(new ArrayList(Arrays.asList(1, 1, 1, 1, 1, 1, 1, 1)));
@@ -38,11 +40,12 @@ public class MultiThreadEasyMLTest {
 
     @Test
     public void testMultiThreads2() throws Exception {
+        easyml = new EasyMLBuilder().withDateFormat("dd-MM-yyyy'T'HH:mm:ss:SSS").build();
+
         final WorkerThread<List<Integer>> t1 = new WorkerThread(new ArrayList(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8)));
         final WorkerThread<List<Integer>> t2 = new WorkerThread(new ArrayList(Arrays.asList(8, 7, 6, 5, 4, 3, 2, 1)));
         final WorkerThread<List<Integer>> t3 = new WorkerThread(new ArrayList(Arrays.asList(1, 1, 1, 1, 1, 1, 1, 1)));
         final WorkerThread<Date> t4 = new WorkerThread(new Date());
-        easyml.setDateFormat("dd-MM-yyyy'T'HH:mm:ss:SSS");
         t1.start();
         t2.start();
         t3.start();
@@ -62,6 +65,8 @@ public class MultiThreadEasyMLTest {
 
     @Test
     public void testMultiThreads1new() throws Exception {
+        easyml = new EasyML();
+
         final WorkerThread<List<Integer>> t1 = new NewWorkerThread(new ArrayList(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8)));
         final WorkerThread<List<Integer>> t2 = new NewWorkerThread(new ArrayList(Arrays.asList(8, 7, 6, 5, 4, 3, 2, 1)));
         final WorkerThread<List<Integer>> t3 = new NewWorkerThread(new ArrayList(Arrays.asList(1, 1, 1, 1, 1, 1, 1, 1)));
@@ -81,11 +86,12 @@ public class MultiThreadEasyMLTest {
 
     @Test
     public void testMultiThreads2new() throws Exception {
+        easyml = new EasyMLBuilder().withDateFormat("dd-MM-yyyy'T'HH:mm:ss:SSS").build();
+
         final WorkerThread<List<Integer>> t1 = new NewWorkerThread(new ArrayList(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8)));
         final WorkerThread<List<Integer>> t2 = new NewWorkerThread(new ArrayList(Arrays.asList(8, 7, 6, 5, 4, 3, 2, 1)));
         final WorkerThread<List<Integer>> t3 = new NewWorkerThread(new ArrayList(Arrays.asList(1, 1, 1, 1, 1, 1, 1, 1)));
         final WorkerThread<Date> t4 = new NewWorkerThread(new Date());
-        easyml.setDateFormat("dd-MM-yyyy'T'HH:mm:ss:SSS");
         t1.start();
         t2.start();
         t3.start();

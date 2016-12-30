@@ -21,7 +21,9 @@ public class BugsTest {
 
     @Test
     public void testClassStrategyUsesAliasing() throws Exception {
-        easyml.alias(Person.class, "persoana");
+        easyml = new EasyMLBuilder()
+                .withAlias(Person.class, "Persona")
+                .build();
 
         final String xml = easyml.serialize(Person.class);
         final Object actual = easyml.deserialize(xml);
