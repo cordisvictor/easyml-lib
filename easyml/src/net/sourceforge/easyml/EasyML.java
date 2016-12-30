@@ -24,6 +24,7 @@ package net.sourceforge.easyml;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import net.sourceforge.easyml.marshalling.CompositeStrategy;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
@@ -67,7 +68,7 @@ import org.w3c.dom.Document;
 import org.xmlpull.v1.XmlPullParser;
 
 /**
- * EasyML class is the top-level facade, containing general functionalities such
+ * EasyML class is the top-level facade, containing general functionality such
  * as serializing and de-serializing.
  * <br/>
  * Usage example:
@@ -79,11 +80,9 @@ import org.xmlpull.v1.XmlPullParser;
  * final FileWriter fw= new FileWriter(FILE_NAME);
  * easyml.serialize(obj, fw);
  * fw.close();
- * </pre>
- *
- * Not all functionalities are accessible through EasyML, such as successive
- * serializing of objects in the same output. Hence, for multiple read/writes on
- * the same stream, use the <code>newReader()</code> and
+ * </pre> The entire functionality of this framework isn't accessible through
+ * EasyML. Features such as successive serializing of objects in the same output
+ * can be accessed by using the <code>newReader()</code> and
  * <code>newWriter()</code> methods, or the {@linkplain XMLReader}s and
  * {@linkplain XMLWriter}s directly, for example:
  * <br/>
@@ -96,77 +95,30 @@ import org.xmlpull.v1.XmlPullParser;
  * w.write(objN);
  * w.close();
  * </pre>
+ * <b>Note:</b> this implementation is thread-safe, by creating per-thread
+ * instances of {@linkplain XMLReader} and {@linkplain XMLWriter} with shared
+ * configuration, when invoking <code>serialize()</code> or
+ * <code>deserialize()</code> methods. All configuration and customization of an
+ * EasyML is done at {@linkplain EasyMLBuilder#build()} time, before concurrent
+ * threads will use the resulting EasyML instance for serializing/de-serializing
+ * objects.<br/>
  *
- * <b>Note:</b> this implementation is <b>mostly(1)</b> thread-safe, by creating
- * per-thread instances of {@linkplain XMLReader} and {@linkplain XMLWriter}
- * with shared configuration, when invoking <code>serialize()</code> or
- * <code>deserialize()</code> methods.
- * <p>
- * <b>(1):</b> configuration methods (for example: setXXX, alias, exclude,
- * register, unregister, and deserializationSecurityPolicy) change the state of
- * EasyML instances they are invoked on.<br/>
- * Hence, all configuration and customization of an EasyML instance must be made
- * before concurrent threads will use that EasyML instance for
- * serializing/de-serializing objects.<br/>
- * If, for any reason, an EasyML instance is reconfigured during various stages
- * of the user-program runtime, a read-write lock must be put in place.</br/>
- * The read-write lock must be implemented as follows:
- * <ul>
- * <li>read operations - EasyML serialization/de-serialization methods</li>
- * <li>write operations - EasyML configuration methods</li>
- * </ul>
- * <br/>
- * The most frequent use-case, however, is considered to be the instantiation
- * and configuration of EasyML objects in a single-threaded context, followed by
- * concurrent usage of those instances. Example of an EasyML instance,
- * configured within a singleton class, which is initialized only once, by the
- * class loader:
- * <pre>
- * public final class PersonDAO {
- *
- *   public static final PersonDAO INSTANCE = new PersonDAO();
- *
- *   private final EasyML easyml;
- *
- *   private PersonDAO() {
- *     // init with default conf:
- *     easyml = new EasyML();
- *     // set more readable XML, if put in files:
- *     easyml.setStyle(EasyML.Style.PRETTY);
- *     // set a custom XML parser, if needed:
- *     easyml.setXmlPullParserProvider(//..);
- *     // set a shorter, more readable class name:
- *     easyml.alias(Person.class, "person");
- *     // set excludes on sensitive-data fields:
- *     try {
- *         easyml.exclude(Person.class, "password");
- *     } catch (NoSuchFieldException ignored) {}
- *     // set blacklist on exploitable classes:
- *     easyml.deserializationSecurityPolicy().setBlacklistMode();
- *     easyml.deserializationSecurityPolicy().add(java.beans.EventHandler.class);
- *     //..
- *   }
- * //..
- * }
- * </pre>
+ * @author Victor Cordis ( cordis.victor at gmail.com)
+ * @version 1.4.0
+ * @since 1.0
  *
  * @see XMLReader
  * @see XMLWriter
- *
- * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
- * @version 1.3.9
  */
-public class EasyML {
+public final class EasyML {
 
     /**
      * Style enum defines standard XML outputting styles for the EasyML.
      *
-     * @see XMLWriter
-     *
      * @author Victor Cordis ( cordis.victor at gmail.com)
-     * @since 1.0
      * @version 1.3.7
+     * @see XMLWriter
+     * @since 1.0
      */
     public enum Style {
 
@@ -231,12 +183,11 @@ public class EasyML {
      * manually configuring {@linkplain XMLReader}, {@linkplain XMLWriter}
      * instances from scratch.
      *
+     * @author Victor Cordis ( cordis.victor at gmail.com)
+     * @version 1.3.5
      * @see XMLReader
      * @see XMLWriter
-     *
-     * @author Victor Cordis ( cordis.victor at gmail.com)
      * @since 1.0
-     * @version 1.3.5
      */
     public enum Profile {
 
@@ -248,16 +199,15 @@ public class EasyML {
          * should be as generic and aliased as possible.
          */
         GENERIC {
-
                     @Override
                     public void configure(XMLWriter writer) {
                         final XMLWriter.StrategyRegistry<SimpleStrategy> simple = writer.getSimpleStrategies();
                         // are included by default, because of the primitives API:
-//                        simple.add(ByteStrategy.INSTANCE);
-//                        simple.add(CharacterStrategy.INSTANCE);
-//                        simple.add(FloatStrategy.INSTANCE);
-//                        simple.add(LongStrategy.INSTANCE);
-//                        simple.add(ShortStrategy.INSTANCE);
+                        //                        simple.add(ByteStrategy.INSTANCE);
+                        //                        simple.add(CharacterStrategy.INSTANCE);
+                        //                        simple.add(FloatStrategy.INSTANCE);
+                        //                        simple.add(LongStrategy.INSTANCE);
+                        //                        simple.add(ShortStrategy.INSTANCE);
                         simple.add(FileStrategy.INSTANCE);
                         simple.add(CharsStrategy.INSTANCE);
                         simple.add(ClassStrategy.INSTANCE);
@@ -289,11 +239,11 @@ public class EasyML {
                     public void configure(XMLReader reader) {
                         final Map<String, SimpleStrategy> simple = reader.getSimpleStrategies();
                         // are included by default, because of the primitives API:
-//                        simple.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
-//                        simple.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
-//                        simple.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
-//                        simple.put(LongStrategy.NAME, LongStrategy.INSTANCE);
-//                        simple.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
+                        //                        simple.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
+                        //                        simple.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
+                        //                        simple.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
+                        //                        simple.put(LongStrategy.NAME, LongStrategy.INSTANCE);
+                        //                        simple.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
                         simple.put(FileStrategy.NAME, FileStrategy.INSTANCE);
                         simple.put(CharsStrategy.NAME, CharsStrategy.INSTANCE);
                         simple.put(ClassStrategy.NAME, ClassStrategy.INSTANCE);
@@ -328,16 +278,15 @@ public class EasyML {
          * are Java-API dependent, such as the Java IO Serialization.
          */
         SPECIFIC {
-
                     @Override
                     public void configure(XMLWriter writer) {
                         final XMLWriter.StrategyRegistry<SimpleStrategy> simple = writer.getSimpleStrategies();
                         // are included by default, because of the primitives API:
-//                        simple.add(ByteStrategy.INSTANCE);
-//                        simple.add(CharacterStrategy.INSTANCE);
-//                        simple.add(FloatStrategy.INSTANCE);
-//                        simple.add(LongStrategy.INSTANCE);
-//                        simple.add(ShortStrategy.INSTANCE);
+                        //                        simple.add(ByteStrategy.INSTANCE);
+                        //                        simple.add(CharacterStrategy.INSTANCE);
+                        //                        simple.add(FloatStrategy.INSTANCE);
+                        //                        simple.add(LongStrategy.INSTANCE);
+                        //                        simple.add(ShortStrategy.INSTANCE);
                         simple.add(FileStrategy.INSTANCE);
                         simple.add(CharsStrategy.INSTANCE);
                         simple.add(ClassStrategy.INSTANCE);
@@ -381,11 +330,11 @@ public class EasyML {
                     public void configure(XMLReader reader) {
                         final Map<String, SimpleStrategy> simple = reader.getSimpleStrategies();
                         // are included by default, because of the primitives API:
-//                        simple.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
-//                        simple.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
-//                        simple.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
-//                        simple.put(LongStrategy.NAME, LongStrategy.INSTANCE);
-//                        simple.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
+                        //                        simple.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
+                        //                        simple.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
+                        //                        simple.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
+                        //                        simple.put(LongStrategy.NAME, LongStrategy.INSTANCE);
+                        //                        simple.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
                         simple.put(FileStrategy.NAME, FileStrategy.INSTANCE);
                         simple.put(CharsStrategy.NAME, CharsStrategy.INSTANCE);
                         simple.put(ClassStrategy.NAME, ClassStrategy.INSTANCE);
@@ -459,8 +408,8 @@ public class EasyML {
      * <b>Note:</b> implementations of this interface MUST be thread-safe.
      *
      * @author Victor Cordis ( cordis.victor at gmail.com)
-     * @since 1.3.0
      * @version 1.3.0
+     * @since 1.3.0
      */
     public interface XmlPullParserProvider {
 
@@ -474,12 +423,17 @@ public class EasyML {
     }
 
     /**
-     * The writer configuration prototype. Is configured the same as it's reader
+     * Constant defining the default EasyML profile setting.
+     */
+    public static final Profile DEFAULT_PROFILE = Profile.SPECIFIC;
+
+    /**
+     * The writer configuration prototype, configured the same as it's reader
      * counterpart.
      */
     protected final XMLWriter writerPrototype;
     /**
-     * The reader configuration prototype. Is configured the same as it's writer
+     * The reader configuration prototype, configured the same as it's writer
      * counterpart.
      */
     protected final XMLReader readerPrototype;
@@ -496,35 +450,19 @@ public class EasyML {
      */
     protected XmlPullParserProvider xmlPullParserProvider = null;
 
-    /**
-     * Creates a new instance with the default profile of reader and writer
-     * strategies.
-     */
-    public EasyML() {
-        this(Profile.SPECIFIC);
-    }
-
-    /**
-     * Creates a new instance with the he given <code>profile</code> of reader
-     * and writer strategies.
-     *
-     * @param profile to use
-     */
-    public EasyML(Profile profile) {
+    private EasyML(Profile profile) {
         final ConcurrentHashMap<Class, Object> commonCtorCache = new ConcurrentHashMap<>();
         this.writerPrototype = new XMLWriter(commonCtorCache);
         this.readerPrototype = new XMLReader(commonCtorCache);
         profile.configure(this.writerPrototype);
         profile.configure(this.readerPrototype);
         this.perThreadWriter = new ThreadLocal<XMLWriter>() {
-
             @Override
             protected XMLWriter initialValue() {
                 return new XMLWriter(writerPrototype);
             }
         };
         this.perThreadReader = new ThreadLocal<XMLReader>() {
-
             @Override
             protected XMLReader initialValue() {
                 return new XMLReader(readerPrototype);
@@ -533,176 +471,99 @@ public class EasyML {
     }
 
     /**
-     * Sets a user-defined XML pull-parser provider, to be used at text xml
-     * de-serialization.
-     * <br/>
-     * <b>Note:</b> the custom parser instance will be ignored when
-     * de-serializing from DOM documents and not from text input streams.
-     *
-     * @param xmlPullParserProvider implementation to be used by the reader
+     * Creates a new instance with the default settings and default reader and
+     * writer strategies.
      */
-    public void setXmlPullParserProvider(XmlPullParserProvider xmlPullParserProvider) {
+    public EasyML() {
+        this(DEFAULT_PROFILE);
+    }
+
+    /*default*/ EasyML(Profile profile, Style style, XmlPullParserProvider xmlPullParserProvider,
+            String dateFormat, String customRootTag, NodeListStrategy customArrayTag, NodeStrategy customStringTag,
+            Map<Class, String> classToAlias, Map<Field, String> fieldToAlias, Set<Field> excludedFields,
+            XMLReader.SecurityPolicy deserializationSecurityPolicy,
+            Set<SimpleStrategy> registeredSimple, Set<CompositeStrategy> registeredComposite,
+            Set<SimpleStrategy> unregisteredSimple, Set<CompositeStrategy> unregisteredComposite) {
+        // profile:
+        this(profile != null ? profile : DEFAULT_PROFILE);
+        // style:
+        if (style != null) {
+            style.applyTo(this.writerPrototype);
+        }
+        // xmlPullParserProvider:
         this.xmlPullParserProvider = xmlPullParserProvider;
-    }
-
-    /**
-     * Sets the format to use at XML date formatting and parsing. This is done
-     * by re-configuring both the XML reader and writer with the given format.
-     *
-     * @param format to use at date formatting and parsing
-     */
-    public void setDateFormat(String format) {
-        this.writerPrototype.setDateFormat(format);
-        this.readerPrototype.setDateFormat(format);
-    }
-
-    /**
-     * Sets the given custom XML tag name to be used as the XML root tag,
-     * replacing the default {@linkplain DTD#ELEMENT_EASYML}.
-     *
-     * @param tag to be used as XML root tag name
-     *
-     * @throws IllegalArgumentException if tag is null or empty
-     * @throws IllegalStateException if reader or writer aren't in initial state
-     */
-    public void setCustomRootTag(String tag) {
-        this.writerPrototype.setRootTag(tag);
-        this.readerPrototype.setRootTag(tag);
-    }
-
-    /**
-     * Sets the given custom XML tag name for strings.
-     *
-     * @param tag to be used for strings
-     *
-     * @return true if set, false if tag name conflicting with other strategy
-     * names
-     */
-    public boolean setCustomStringTag(String tag) {
-        if (!this.readerPrototype.getSimpleStrategies().containsKey(tag)) {
-            final NodeStrategy ns = new NodeStrategy(tag);
-            this.writerPrototype.getSimpleStrategies().add(ns);
-            this.readerPrototype.getSimpleStrategies().put(tag, ns);
-            return true;
+        // dateFormat:
+        if (dateFormat != null) {
+            this.writerPrototype.setDateFormat(dateFormat);
+            this.readerPrototype.setDateFormat(dateFormat);
         }
-        return false;
-    }
-
-    /**
-     * Sets the given custom XML tag name for arrays.
-     *
-     * @param tag to be used for arrays
-     * @param array class of the array to use this custom tag
-     *
-     * @return true if set, false if tag name conflicting with other strategy
-     * names
-     */
-    public boolean setCustomArrayTag(String tag, Class array) {
-        if (!this.readerPrototype.getCompositeStrategies().containsKey(tag)) {
-            final NodeListStrategy nls = new NodeListStrategy(tag, array);
-            this.writerPrototype.getCompositeStrategies().add(nls);
-            this.readerPrototype.getCompositeStrategies().put(tag, nls);
-            return true;
+        // customRootTag:
+        if (customRootTag != null) {
+            this.writerPrototype.setRootTag(customRootTag);
+            this.readerPrototype.setRootTag(customRootTag);
         }
-        return false;
-    }
-
-    /**
-     * Sets the XML outputting style .
-     *
-     * @param style to use
-     */
-    public void setStyle(EasyML.Style style) {
-        style.applyTo(this.writerPrototype);
-    }
-
-    /**
-     * Aliases the given class with the given <code>alias</code>.
-     *
-     * @param c to alias
-     * @param alias to use
-     *
-     * @return the previous alias, if any,for the given class
-     */
-    public String alias(Class c, String alias) {
-        this.readerPrototype.alias(c, alias);
-        return this.writerPrototype.alias(c, alias);
-    }
-
-    /**
-     * Aliases the given field with the given <code>alias</code>.
-     *
-     * @param f to alias
-     * @param alias to use
-     *
-     * @return the previous alias, if any,for the given field
-     */
-    public String alias(Field f, String alias) {
-        this.readerPrototype.alias(f, alias);
-        return this.writerPrototype.alias(f, alias);
-    }
-
-    /**
-     * Aliases the given field, specified by <code>declaring</code> class and
-     * <code>field</code> name, with the given <code>alias</code>.
-     *
-     * @param declaring class declaring the field
-     * @param field the name of the field
-     * @param alias to use
-     *
-     * @throws NoSuchFieldException if field is not found in the declaring class
-     * @return the previous alias, if any,for the given field
-     */
-    public String alias(Class declaring, String field, String alias) throws NoSuchFieldException {
-        final Field f = declaring.getDeclaredField(field);
-        this.readerPrototype.alias(f, alias);
-        return this.writerPrototype.alias(f, alias);
-    }
-
-    /**
-     * Excludes the given field.
-     *
-     * @param f to exclude
-     */
-    public void exclude(Field f) {
-        this.writerPrototype.exclude(f);
-    }
-
-    /**
-     * Excludes the given field, specified by <code>declaring</code> class and
-     * <code>field</code> name.
-     *
-     * @param declaring class declaring the field
-     * @param field the name of the field to exclude
-     *
-     * @throws NoSuchFieldException if field is not found in the declaring class
-     */
-    public void exclude(Class declaring, String field) throws NoSuchFieldException {
-        this.writerPrototype.exclude(declaring.getDeclaredField(field));
-    }
-
-    /**
-     * Gets the deserialization security policy, which is used to create, for
-     * security reasons, black- or whitelists of classes to be checked when
-     * reading objects. If a security policy is defined and an illegal class is
-     * found at read time then the read will halt and throw a
-     * {@linkplain IllegalClassException}. The remaining XML structure is
-     * consumed and ignored so that subsequent reads can be done.
-     * <br/>
-     * <br/>
-     * <b>Note:</b> after an {@linkplain IllegalClassException} is thrown,
-     * subsequent reads can fail if they contain references to the object
-     * rejected by the previously failed read.
-     * <br/>
-     * <br/>
-     * <b>Note:</b> the readXXX methods used to read primitives directly,
-     * avoiding auto-boxing, do not take into account this setting as they are
-     * not vulnerable to XML injection.
-     *
-     * @return the security policy
-     */
-    public XMLReader.SecurityPolicy deserializationSecurityPolicy() {
-        return this.readerPrototype.getSecurityPolicy();
+        // customArrayTag:
+        if (customArrayTag != null) {
+            this.writerPrototype.getCompositeStrategies().add(customArrayTag);
+            this.readerPrototype.getCompositeStrategies().put(customArrayTag.name(), customArrayTag);
+        }
+        // customStringTag:
+        if (customStringTag != null) {
+            this.writerPrototype.getSimpleStrategies().add(customStringTag);
+            this.readerPrototype.getSimpleStrategies().put(customStringTag.name(), customStringTag);
+        }
+        // classToAlias:
+        if (classToAlias != null) {
+            for (Map.Entry<Class, String> alias : classToAlias.entrySet()) {
+                this.readerPrototype.alias(alias.getKey(), alias.getValue());
+                this.writerPrototype.alias(alias.getKey(), alias.getValue());
+            }
+        }
+        // fieldToAlias:
+        if (fieldToAlias != null) {
+            for (Map.Entry<Field, String> alias : fieldToAlias.entrySet()) {
+                this.readerPrototype.alias(alias.getKey(), alias.getValue());
+                this.writerPrototype.alias(alias.getKey(), alias.getValue());
+            }
+        }
+        // excludedFields:
+        if (excludedFields != null) {
+            for (Field excludedField : excludedFields) {
+                this.writerPrototype.exclude(excludedField);
+            }
+        }
+        // deserializationSecurityPolicy:
+        if (deserializationSecurityPolicy != null) {
+            this.readerPrototype.securityPolicy = deserializationSecurityPolicy;
+        }
+        // registeredSimple:
+        if (registeredSimple != null) {
+            for (SimpleStrategy s : registeredSimple) {
+                this.writerPrototype.getSimpleStrategies().add(s);
+                this.readerPrototype.getSimpleStrategies().put(s.name(), s);
+            }
+        }
+        // registeredComposite:
+        if (registeredComposite != null) {
+            for (CompositeStrategy s : registeredComposite) {
+                this.writerPrototype.getCompositeStrategies().add(s);
+                this.readerPrototype.getCompositeStrategies().put(s.name(), s);
+            }
+        }
+        // unregisteredSimple:
+        if (unregisteredSimple != null) {
+            for (SimpleStrategy s : unregisteredSimple) {
+                this.writerPrototype.getSimpleStrategies().remove(s);
+                this.readerPrototype.getSimpleStrategies().remove(s.name());
+            }
+        }
+        // unregisteredComposite:
+        if (unregisteredComposite != null) {
+            for (CompositeStrategy s : unregisteredComposite) {
+                this.writerPrototype.getCompositeStrategies().remove(s);
+                this.readerPrototype.getCompositeStrategies().remove(s.name());
+            }
+        }
     }
 
     /**
@@ -711,7 +572,6 @@ public class EasyML {
      * be interested in the {@linkplain SimpleStrategy#strict()} value.
      *
      * @param target class of the strategy target
-     *
      * @return the found strategy, if any
      */
     public SimpleStrategy lookupSimpleStrategyBy(Class target) {
@@ -723,7 +583,6 @@ public class EasyML {
      * or <code>null</code> if not found.
      *
      * @param name the name of the strategy
-     *
      * @return the found strategy, if any
      */
     public SimpleStrategy lookupSimpleStrategyBy(String name) {
@@ -736,7 +595,6 @@ public class EasyML {
      * be interested in the {@linkplain CompositeStrategy#strict()} value.
      *
      * @param target class of the strategy target
-     *
      * @return the found strategy, if any
      */
     public CompositeStrategy lookupCompositeStrategyBy(Class target) {
@@ -748,87 +606,10 @@ public class EasyML {
      * <code>name</code>, or <code>null</code> if not found.
      *
      * @param name the name of the strategy
-     *
      * @return the found strategy, if any
      */
     public CompositeStrategy lookupCompositeStrategyBy(String name) {
         return this.readerPrototype.getCompositeStrategies().get(name);
-    }
-
-    /**
-     * Registers the given strategy to both reader and writer.
-     *
-     * @param s to register
-     */
-    public void register(SimpleStrategy s) {
-        this.writerPrototype.getSimpleStrategies().add(s);
-        this.readerPrototype.getSimpleStrategies().put(s.name(), s);
-    }
-
-    /**
-     * Registers the given strategy to both reader and writer.
-     *
-     * @param c to register
-     */
-    public void register(CompositeStrategy c) {
-        this.writerPrototype.getCompositeStrategies().add(c);
-        this.readerPrototype.getCompositeStrategies().put(c.name(), c);
-    }
-
-    /**
-     * Unregisters the given strategy from both reader and writer.
-     *
-     * @param s to unregister
-     *
-     * @return the unregistered simple strategy, if any
-     */
-    public SimpleStrategy unregister(SimpleStrategy s) {
-        this.writerPrototype.getSimpleStrategies().remove(s);
-        return this.readerPrototype.getSimpleStrategies().remove(s.name());
-    }
-
-    /**
-     * Unregisters the given strategy from both reader and writer.
-     *
-     * @param c to unregister
-     *
-     * @return the unregistered composite strategy, if any
-     */
-    public CompositeStrategy unregister(CompositeStrategy c) {
-        this.writerPrototype.getCompositeStrategies().remove(c);
-        return this.readerPrototype.getCompositeStrategies().remove(c.name());
-    }
-
-    /**
-     * Unregisters the simple strategy, identified by name, from both reader and
-     * writer.
-     *
-     * @param strategyName name of the simple strategy
-     *
-     * @return the unregistered simple strategy, if any
-     */
-    public SimpleStrategy unregisterSimple(String strategyName) {
-        final SimpleStrategy found = this.readerPrototype.getSimpleStrategies().remove(strategyName);
-        if (found != null) {
-            this.writerPrototype.getSimpleStrategies().remove(found);
-        }
-        return found;
-    }
-
-    /**
-     * Unregisters the composite strategy, identified by name, from both reader
-     * and writer.
-     *
-     * @param strategyName name of the composite strategy
-     *
-     * @return the unregistered composite strategy, if any
-     */
-    public CompositeStrategy unregisterComposite(String strategyName) {
-        final CompositeStrategy found = this.readerPrototype.getCompositeStrategies().remove(strategyName);
-        if (found != null) {
-            this.writerPrototype.getCompositeStrategies().remove(found);
-        }
-        return found;
     }
 
     /**
@@ -841,7 +622,6 @@ public class EasyML {
      * <b>Note:</b> the returned writer shall be closed by the caller.
      *
      * @param out to write to
-     *
      * @return a new shared-configuration writer
      */
     public XMLWriter newWriter(Writer out) {
@@ -858,7 +638,6 @@ public class EasyML {
      * <b>Note:</b> the returned writer shall be closed by the caller.
      *
      * @param out to write to
-     *
      * @return a new shared-configuration writer
      */
     public XMLWriter newWriter(OutputStream out) {
@@ -878,7 +657,6 @@ public class EasyML {
      * OTHER REASONS THAN EASYML SERIALIZATION TO AN OUTPUTSTREAM</b>
      *
      * @param out to write to
-     *
      * @return a new shared-configuration writer
      */
     public XMLWriter newWriter(Document out) {
@@ -894,7 +672,6 @@ public class EasyML {
      * <b>Note:</b> the returned reader shall be closed by the caller.
      *
      * @param in to read from
-     *
      * @return a new shared-configuration reader
      */
     public XMLReader newReader(Reader in) {
@@ -912,7 +689,6 @@ public class EasyML {
      * <b>Note:</b> the returned reader shall be closed by the caller.
      *
      * @param in to read from
-     *
      * @return a new shared-configuration reader
      */
     public XMLReader newReader(InputStream in) {
@@ -931,7 +707,6 @@ public class EasyML {
      * OTHER REASONS THAN EASYML SERIALIZATION TO AN OUTPUTSTREAM</b>
      *
      * @param in to read from
-     *
      * @return a new shared-configuration reader
      */
     public XMLReader newReader(Document in) {
@@ -948,7 +723,7 @@ public class EasyML {
      * @param out to write with
      */
     public void serialize(Object o, Writer out) {
-        final XMLWriter writer = this.initPerThreadWriter();
+        final XMLWriter writer = this.perThreadWriter.get();
         writer.reset(out);
         writer.write(o);
         writer.flush();
@@ -972,7 +747,6 @@ public class EasyML {
      * not support multiple writes, because the returned string is immutable.
      *
      * @param o single object to serialize
-     *
      * @return the serialized object string
      */
     public String serialize(Object o) {
@@ -992,7 +766,7 @@ public class EasyML {
      * @param out empty DOM to populate
      */
     public void serialize(Object o, Document out) {
-        final XMLWriter writer = this.initPerThreadWriter();
+        final XMLWriter writer = this.perThreadWriter.get();
         writer.reset(out);
         writer.write(o);
         writer.flush();
@@ -1004,11 +778,10 @@ public class EasyML {
      * <b>Note:</b> the in parameter shall be closed by the caller.
      *
      * @param in to use
-     *
      * @return the de-serialized object
      */
     public Object deserialize(Reader in) {
-        final XMLReader reader = this.initPerThreadReader();
+        final XMLReader reader = this.perThreadReader.get();
         reader.reset(in, this.xmlPullParserProvider != null
                 ? this.xmlPullParserProvider.newXmlPullParser()
                 : null
@@ -1022,7 +795,6 @@ public class EasyML {
      * <b>Note:</b> the in parameter shall be closed by the caller.
      *
      * @param in to read from
-     *
      * @return the de-serialized object
      */
     public Object deserialize(InputStream in) {
@@ -1036,7 +808,6 @@ public class EasyML {
      *
      * @param easyml format to parse, generated by
      * {@linkplain #serialize(java.lang.Object)}
-     *
      * @return the de-serialized single object
      */
     public Object deserialize(String easyml) {
@@ -1050,40 +821,12 @@ public class EasyML {
      * OTHER REASONS THAN EASYML DE-SERIALIZATION</b>
      *
      * @param in to use
-     *
      * @return the de-serialized object
      */
     public Object deserialize(Document in) {
-        final XMLReader reader = this.initPerThreadReader();
+        final XMLReader reader = this.perThreadReader.get();
         reader.reset(in);
         return reader.read();
-    }
-
-    private XMLWriter initPerThreadWriter() {
-        final XMLWriter writer = this.perThreadWriter.get();
-        // ensure value-type conf changes are made visible
-        // on the per-thread writer:
-        writer.skipDefaults = this.writerPrototype.skipDefaults;
-        writer.prettyPrint = this.writerPrototype.prettyPrint;
-        writer.rootTag = this.writerPrototype.rootTag;
-        final String configuredPattern = this.writerPrototype.dateFormat.toPattern();
-        if (!configuredPattern.equals(writer.dateFormat.toPattern())) {
-            writer.dateFormat.applyPattern(configuredPattern);
-        }
-        return writer;
-    }
-
-    private XMLReader initPerThreadReader() {
-        final XMLReader reader = this.perThreadReader.get();
-        // ensure value-type conf changes are made visible
-        // on the per-thread reader:
-        reader.securityPolicy = this.readerPrototype.securityPolicy; // securityPolicy is lazy.
-        reader.rootTag = this.readerPrototype.rootTag;
-        final String configuredPattern = this.readerPrototype.dateFormat.toPattern();
-        if (!configuredPattern.equals(reader.dateFormat.toPattern())) {
-            reader.dateFormat.applyPattern(configuredPattern);
-        }
-        return reader;
     }
 
     /**
