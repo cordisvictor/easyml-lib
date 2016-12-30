@@ -7,7 +7,6 @@ import net.sourceforge.easyml.marshalling.dtd.StringStrategy;
 import net.sourceforge.easyml.testmodel.AbstractDTO;
 import net.sourceforge.easyml.testmodel.PersonDTO;
 import static org.junit.Assert.*;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -18,25 +17,24 @@ public class EasyMLTest {
 
     private EasyML easyml;
 
-    @Before
-    public void setup() {
-        easyml = new EasyML();
-    }
-
     @Test
     public void testLookupClass() {
+        easyml = new EasyML();
         assertEquals(StringStrategy.INSTANCE, easyml.lookupSimpleStrategyBy(String.class));
     }
 
     @Test
     public void testLookupName() {
+        easyml = new EasyML();
         assertEquals(StringStrategy.INSTANCE, easyml.lookupSimpleStrategyBy("string"));
     }
 
     @Test
     public void testClearCache() throws Exception {
-        easyml.alias(PersonDTO.class, "Person");
-        easyml.alias(PersonDTO.class, "lastName", "Person");
+        easyml = new EasyMLBuilder()
+                .withAlias(PersonDTO.class, "Person")
+                .withAlias(PersonDTO.class, "lastName", "Person")
+                .build();
 
         final PersonDTO expected = new PersonDTO(1, "fn", "ln");
         final Object actual = easyml.deserialize(easyml.serialize(expected));
@@ -56,7 +54,9 @@ public class EasyMLTest {
 
     @Test
     public void testCustomRootTag() throws Exception {
-        easyml.setCustomRootTag("thePersons");
+        easyml = new EasyMLBuilder()
+                .withCustomRootTag("thePersons")
+                .build();
 
         final PersonDTO expected = new PersonDTO(1, "fn", "ln");
 
@@ -67,9 +67,11 @@ public class EasyMLTest {
 
     @Test
     public void testAliasClassAndFields() throws Exception {
-        easyml.alias(PersonDTO.class, "Person");
-        easyml.alias(PersonDTO.class, "lastName", "Person");
-        easyml.alias(AbstractDTO.class, "id", "ID");
+        easyml = new EasyMLBuilder()
+                .withAlias(PersonDTO.class, "Person")
+                .withAlias(PersonDTO.class, "lastName", "Person")
+                .withAlias(AbstractDTO.class, "id", "ID")
+                .build();
 
         final PersonDTO expected = new PersonDTO(1, "fn", "ln");
 
@@ -78,17 +80,17 @@ public class EasyMLTest {
 
     @Test
     public void testWhitelist1() {
-        easyml.deserializationSecurityPolicy().setWhitelistMode();
-        easyml.deserializationSecurityPolicy().addHierarchy(List.class);
-        easyml.deserializationSecurityPolicy().add(Integer.class);
+        easyml = new EasyMLBuilder()
+                .withSecurityPolicy(true, new Class[]{Integer.class}, new Class[]{List.class})
+                .build();
         easyml.deserialize(easyml.serialize(new ArrayList(Arrays.asList(1, 2, 3))));
     }
 
     @Test(expected = IllegalClassException.class)
     public void testWhitelist2() {
-        easyml.deserializationSecurityPolicy().setWhitelistMode();
-        easyml.deserializationSecurityPolicy().addHierarchy(Number[].class);
-        easyml.deserializationSecurityPolicy().add(Integer.class);
+        easyml = new EasyMLBuilder()
+                .withSecurityPolicy(true, new Class[]{Integer.class}, new Class[]{Number[].class})
+                .build();
         easyml.deserialize(easyml.serialize(new Number[]{1, 2.1, 2}));
     }
 }

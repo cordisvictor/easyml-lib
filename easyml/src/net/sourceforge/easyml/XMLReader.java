@@ -30,6 +30,7 @@ import java.lang.reflect.Modifier;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,7 +80,7 @@ import org.xmlpull.v1.XmlPullParserException;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.9
+ * @version 1.4.0
  */
 public class XMLReader implements Closeable {
 
@@ -101,10 +102,10 @@ public class XMLReader implements Closeable {
             this.whitelist = false;
         }
 
-        private SecurityPolicy(SecurityPolicy other) {
-            this.strict = new HashSet<>(other.strict);
-            this.inheritance = new ArrayList<>(other.inheritance);
-            this.whitelist = other.whitelist;
+        /*default*/ SecurityPolicy(boolean whitelist, Class[] classes, Class[] classHierarchies) {
+            this.strict = new HashSet<>(Arrays.asList(classes));
+            this.inheritance = new ArrayList<>(Arrays.asList(classHierarchies));
+            this.whitelist = whitelist;
         }
 
         /**

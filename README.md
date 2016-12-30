@@ -9,6 +9,11 @@ EasyML
   (http://sourceforge.net/projects/kxml/files/kxml2/2.3.0/kxml2-min-2.3.0.jar/download)
 
 
+!Release 1.4.0
+- NON-BACKWARD COMPATIBLE refactor: EasyML now immutable(removed setters).
+- feature: EasyMLBuilder for easyml customization.
+
+
 !Release 1.3.9
 - feature: EasyML, XMLReader, XMLWriter custom XML root tag setting.
 - refactor: source level 1.7 warnings fixed.
