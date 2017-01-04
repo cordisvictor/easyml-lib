@@ -80,7 +80,7 @@ import org.w3c.dom.Document;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.9
+ * @version 1.4.1
  */
 public class XMLWriter implements Flushable, Closeable {
 
@@ -335,13 +335,13 @@ public class XMLWriter implements Flushable, Closeable {
      */
     public static abstract class Driver implements CompositeWriter, Flushable, Closeable {
 
-        protected static final int STATE_INITIAL = 0;
-        protected static final int STATE_START = 1;
-        protected static final int STATE_VALUE = 2;
-        protected static final int STATE_VALUE_END = 3;
+        protected static final byte STATE_INITIAL = 0;
+        protected static final byte STATE_START = 1;
+        protected static final byte STATE_VALUE = 2;
+        protected static final byte STATE_VALUE_END = 3;
         private final XMLWriter target;
         private String oneTimeUniqueId;
-        protected int state;
+        protected byte state;
 
         /**
          * Creates a new instance to be used by the <code>target</code>

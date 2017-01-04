@@ -9,9 +9,18 @@ EasyML
   (http://sourceforge.net/projects/kxml/files/kxml2/2.3.0/kxml2-min-2.3.0.jar/download)
 
 
+!Release 1.4.1
+- bugfix: XMLWriter text driver empty line when pretty printing.
+
+
 !Release 1.4.0
 - NON-BACKWARD COMPATIBLE refactor: EasyML now immutable(removed setters).
 - feature: EasyMLBuilder for easyml customization.
+
+
+!Release 1.3.10
+- bugfix: XMLWriter text driver empty line when pretty printing.
+- javadoc: improvements.
 
 
 !Release 1.3.9

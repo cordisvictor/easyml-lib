@@ -34,7 +34,7 @@ import net.sourceforge.easyml.util.XMLUtil;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.1.0
- * @version 1.3.9
+ * @version 1.4.1
  */
 /* default */ final class XMLWriterTextDriver extends XMLWriter.Driver {
 
@@ -100,15 +100,16 @@ import net.sourceforge.easyml.util.XMLUtil;
     @Override
     public void startElement(String name) {
         try {
-            if (this.state == XMLWriter.Driver.STATE_INITIAL) {
-                this.state = XMLWriter.Driver.STATE_VALUE;
-            } else if (this.state == XMLWriter.Driver.STATE_START) {
+            if (this.state == XMLWriter.Driver.STATE_START) {
                 this.writer.write('>');
-                this.state = XMLWriter.Driver.STATE_VALUE;
+                writeIndentedLt();
+            } else if (this.state == XMLWriter.Driver.STATE_INITIAL) {
+                this.writer.write('<');
             } else if (this.state != XMLWriter.Driver.STATE_VALUE) {
                 throw new IllegalStateException("cannot write element start");
+            } else {
+                writeIndentedLt();
             }
-            writeIndentedLt();
             this.writer.write(name);
             if (this.hasOneTimeUniqueId()) {
                 writeAttrEqValue(DTD.ATTRIBUTE_ID, this.oneTimeUniqueId());
