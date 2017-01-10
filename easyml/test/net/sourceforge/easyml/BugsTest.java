@@ -1,5 +1,6 @@
 package net.sourceforge.easyml;
 
+import java.util.BitSet;
 import net.sourceforge.easyml.marshalling.java.lang.ObjectStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.ObjectStrategyV1_3_4;
 import static org.junit.Assert.*;
@@ -46,6 +47,16 @@ public class BugsTest {
     @Test
     public void testBugObjectX_defValFieldHidesSuperDefValField() throws Exception {
         final NamedPerson expected = new NamedPerson("non-defP", "defNP");
+
+        assertEquals(expected, easyml.deserialize(easyml.serialize(expected)));
+    }
+
+    @Test
+    public void testBugSerial_PutGetFieldsCustomKeys() throws Exception {
+        final BitSet expected = new BitSet();
+        expected.set(1);
+        expected.set(3);
+        expected.set(5);
 
         assertEquals(expected, easyml.deserialize(easyml.serialize(expected)));
     }
