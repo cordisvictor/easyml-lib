@@ -54,7 +54,7 @@ import net.sourceforge.easyml.util.*;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.8
+ * @version 1.4.2
  */
 public class SerializableStrategy extends AbstractStrategy<Serializable>
         implements CompositeStrategy<Serializable> {
@@ -530,7 +530,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         public void writeFields() throws IOException {
             this.writer.startElement(SerializableStrategy.ELEMENT_FIELDS);
             if (this.lazyPutFieldImpl != null) {
-                for (Map.Entry<String, Object> field : this.lazyPutFieldImpl.content.entrySet()) {
+                for (Map.Entry<String, Object> field : this.lazyPutFieldImpl.fields.entrySet()) {
                     final String key = field.getKey();
                     final Object val = field.getValue();
                     this.writer.startElement(key);
@@ -587,51 +587,51 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
     private static final class PutFieldImpl extends ObjectOutputStream.PutField {
 
-        private final Map<String, Object> content = new HashMap<>();
+        private final Map<String, Object> fields = new HashMap<>();
 
         @Override
         public void put(String name, boolean val) {
-            this.content.put(name, val);
+            this.fields.put(name, val);
         }
 
         @Override
         public void put(String name, byte val) {
-            this.content.put(name, val);
+            this.fields.put(name, val);
         }
 
         @Override
         public void put(String name, char val) {
-            this.content.put(name, val);
+            this.fields.put(name, val);
         }
 
         @Override
         public void put(String name, short val) {
-            this.content.put(name, val);
+            this.fields.put(name, val);
         }
 
         @Override
         public void put(String name, int val) {
-            this.content.put(name, val);
+            this.fields.put(name, val);
         }
 
         @Override
         public void put(String name, long val) {
-            this.content.put(name, val);
+            this.fields.put(name, val);
         }
 
         @Override
         public void put(String name, float val) {
-            this.content.put(name, val);
+            this.fields.put(name, val);
         }
 
         @Override
         public void put(String name, double val) {
-            this.content.put(name, val);
+            this.fields.put(name, val);
         }
 
         @Override
         public void put(String name, Object val) {
-            this.content.put(name, val);
+            this.fields.put(name, val);
         }
 
         @Deprecated
@@ -718,25 +718,26 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                         fields.put(localPartName, null);
                     } else {
                         // check for an alias in case readFields reads XML written by defaultMarshalObject:
+                        ValueType keyVT;
                         try {
                             final Field aliasedF = this.context.fieldFor(this.level, localPartName);
-                            final ValueType keyVT = SerializableStrategy.valueTypeFor(aliasedF);
-                            if (keyVT != null) {
-                                try {
-                                    fields.put(localPartName, keyVT.parseValue(this.reader.readValue()));
-                                } catch (NumberFormatException nfx) {
-                                    throw new InvalidFormatException(this.context.readerPositionDescriptor(), nfx);
-                                } catch (IllegalArgumentException iax) {
-                                    throw new InvalidFormatException(this.context.readerPositionDescriptor(), iax);
-                                }
-                            } else { // move down and read object:
-                                if (!this.reader.next() || !this.reader.atElementStart()) {
-                                    throw new InvalidFormatException(this.context.readerPositionDescriptor(), "expected element start");
-                                }
-                                fields.put(localPartName, this.reader.read());
+                            keyVT = SerializableStrategy.valueTypeFor(aliasedF);
+                        } catch (NoSuchFieldException customFieldKey) {
+                            // must be a non-source field name.
+                            // we will read type from XML.
+                            keyVT = null;
+                        }
+                        if (keyVT != null) {
+                            try {
+                                fields.put(localPartName, keyVT.parseValue(this.reader.readValue()));
+                            } catch (IllegalArgumentException iax) {
+                                throw new InvalidFormatException(this.context.readerPositionDescriptor(), iax);
                             }
-                        } catch (NoSuchFieldException invalidLocalPartNameX) {
-                            throw new IOException(invalidLocalPartNameX);
+                        } else { // move down and read object:
+                            if (!this.reader.next() || !this.reader.atElementStart()) {
+                                throw new InvalidFormatException(this.context.readerPositionDescriptor(), "expected element start");
+                            }
+                            fields.put(localPartName, this.reader.read());
                         }
                     }
                 } else if (this.reader.atElementEnd() && this.reader.elementName().equals(SerializableStrategy.ELEMENT_FIELDS)) {
@@ -836,10 +837,10 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
     private static final class GetFieldImpl extends ObjectInputStream.GetField {
 
-        private final Map content;
+        private final Map fields;
 
-        public GetFieldImpl(Map content) {
-            this.content = content;
+        public GetFieldImpl(Map fields) {
+            this.fields = fields;
         }
 
         @Override
@@ -852,68 +853,60 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
             return false;
         }
 
-        public <T> T get0(String name, Class<T> c) {
-            final Object value = this.content.get(name);
+        private <T> T get0(String name, Class<T> c, T defValue) {
+            final Object value = this.fields.get(name);
             if (value != null) {
                 if (value.getClass() == c) {
                     return (T) value;
                 }
                 throw new IllegalArgumentException("field name does not map to required type: " + name + ", " + c.getName());
             }
-            return null;
+            return defValue;
         }
 
         @Override
         public boolean get(String name, boolean val) throws IOException {
-            final Boolean value = this.get0(name, Boolean.class);
-            return value != null ? value : val;
+            return this.get0(name, Boolean.class, val);
         }
 
         @Override
         public byte get(String name, byte val) throws IOException {
-            final Byte value = this.get0(name, Byte.class);
-            return value != null ? value : val;
+            return this.get0(name, Byte.class, val);
         }
 
         @Override
         public char get(String name, char val) throws IOException {
-            final Character value = this.get0(name, Character.class);
-            return value != null ? value : val;
+            return this.get0(name, Character.class, val);
         }
 
         @Override
         public short get(String name, short val) throws IOException {
-            final Short value = this.get0(name, Short.class);
-            return value != null ? value : val;
+            return this.get0(name, Short.class, val);
         }
 
         @Override
         public int get(String name, int val) throws IOException {
-            final Integer value = this.get0(name, Integer.class);
-            return value != null ? value : val;
+            return this.get0(name, Integer.class, val);
         }
 
         @Override
         public long get(String name, long val) throws IOException {
-            final Long value = this.get0(name, Long.class);
-            return value != null ? value : val;
+            return this.get0(name, Long.class, val);
         }
 
         @Override
         public float get(String name, float val) throws IOException {
-            final Float value = this.get0(name, Float.class);
-            return value != null ? value : val;
+            return this.get0(name, Float.class, val);
         }
 
         @Override
         public double get(String name, double val) throws IOException {
-            final Double value = this.get0(name, Double.class);
-            return value != null ? value : val;
+            return this.get0(name, Double.class, val);
         }
 
         @Override
         public Object get(String name, Object val) throws IOException {
-            final Object value = this.content.get(name);
+            final Object value = this.fields.get(name);
             return value != null ? value : val;
         }
     }//(+)class GetFieldImpl.
