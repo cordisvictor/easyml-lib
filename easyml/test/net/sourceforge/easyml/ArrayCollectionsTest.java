@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import net.sourceforge.easyml.marshalling.java.util.BitSetStrategy;
 import net.sourceforge.easyml.marshalling.java.util.SingletonListStrategy;
 import net.sourceforge.easyml.marshalling.java.util.SingletonMapStrategy;
 import net.sourceforge.easyml.marshalling.java.util.SingletonSetStrategy;
@@ -26,6 +27,26 @@ public class ArrayCollectionsTest {
     @After
     public void tearDown() {
         this.out.reset();
+    }
+
+    @Test
+    public void testBitSetStrategy() {
+        final BitSet expected = new BitSet();
+        expected.set(1);
+        expected.set(3);
+        expected.set(64);
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.getCompositeStrategies().add(BitSetStrategy.INSTANCE);
+        xos.write(expected);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getCompositeStrategies().put(BitSetStrategy.INSTANCE.name(), BitSetStrategy.INSTANCE);
+        assertEquals(expected, (BitSet) xis.read());
+        xis.close();
     }
 
     @Test

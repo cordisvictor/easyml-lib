@@ -47,6 +47,7 @@ import net.sourceforge.easyml.marshalling.java.math.BigIntegerStrategy;
 import net.sourceforge.easyml.marshalling.java.net.URIStrategy;
 import net.sourceforge.easyml.marshalling.java.net.URLStrategy;
 import net.sourceforge.easyml.marshalling.java.util.ArrayListStrategy;
+import net.sourceforge.easyml.marshalling.java.util.BitSetStrategy;
 import net.sourceforge.easyml.marshalling.java.util.HashMapStrategy;
 import net.sourceforge.easyml.marshalling.java.util.HashSetStrategy;
 import net.sourceforge.easyml.marshalling.java.util.HashtableStrategy;
@@ -184,7 +185,7 @@ public final class EasyML {
      * instances from scratch.
      *
      * @author Victor Cordis ( cordis.victor at gmail.com)
-     * @version 1.3.5
+     * @version 1.4.3
      * @see XMLReader
      * @see XMLWriter
      * @since 1.0
@@ -221,6 +222,7 @@ public final class EasyML {
                         simple.add(UUIDStrategy.INSTANCE);
                         final XMLWriter.StrategyRegistry<CompositeStrategy> composite = writer.getCompositeStrategies();
                         composite.add(ColorStrategy.INSTANCE);
+                        composite.add(BitSetStrategy.INSTANCE);
                         composite.add(ArrayListStrategy.INSTANCE);
                         composite.add(HashMapStrategy.INSTANCE);
                         composite.add(HashSetStrategy.INSTANCE);
@@ -257,6 +259,7 @@ public final class EasyML {
                         simple.put(UUIDStrategy.NAME, UUIDStrategy.INSTANCE);
                         final Map<String, CompositeStrategy> composite = reader.getCompositeStrategies();
                         composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
+                        composite.put(BitSetStrategy.NAME, BitSetStrategy.INSTANCE);
                         composite.put(ArrayListStrategy.NAME, ArrayListStrategy.INSTANCE);
                         composite.put(HashMapStrategy.NAME, HashMapStrategy.INSTANCE);
                         composite.put(HashSetStrategy.NAME, HashSetStrategy.INSTANCE);
@@ -305,6 +308,7 @@ public final class EasyML {
                         composite.add(ArrayStrategy.INSTANCE);
                         composite.add(ObjectStrategy.INSTANCE);
                         composite.add(SerializableStrategy.INSTANCE);
+                        // composite.add(BitSetStrategy.INSTANCE);
                         composite.add(ArrayListStrategy.INSTANCE);
                         composite.add(HashMapStrategy.INSTANCE);
                         composite.add(HashSetStrategy.INSTANCE);
@@ -357,6 +361,7 @@ public final class EasyML {
                         composite.put(ObjectStrategy.NAME, ObjectStrategy.INSTANCE);
                         composite.put(ObjectStrategyV1_3_4.NAME, ObjectStrategyV1_3_4.INSTANCE);
                         // backwards compatibility.
+                        // composite.put(BitSetStrategy.NAME, BitSetStrategy.INSTANCE);
                         composite.put(ArrayListStrategy.NAME, ArrayListStrategy.INSTANCE);
                         composite.put(HashMapStrategy.NAME, HashMapStrategy.INSTANCE);
                         composite.put(HashSetStrategy.NAME, HashSetStrategy.INSTANCE);

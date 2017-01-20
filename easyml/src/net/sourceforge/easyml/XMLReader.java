@@ -80,7 +80,7 @@ import org.xmlpull.v1.XmlPullParserException;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.4.0
+ * @version 1.4.3
  */
 public class XMLReader implements Closeable {
 
@@ -776,6 +776,16 @@ public class XMLReader implements Closeable {
     }
 
     /**
+     * Returns {@code true} if there is more to be read from the current input
+     * or {@code false} if the document end tag was reached.
+     *
+     * @return {@code true} if there are more objects to be read
+     */
+    public boolean hasMore() {
+        return !isRootEnd();
+    }
+
+    /**
      * Reads a boolean from XML.
      *
      * @return boolean read
@@ -1129,10 +1139,14 @@ public class XMLReader implements Closeable {
     }
 
     private void ensureRootEndClear() {
-        if (this.driver.atElementEnd() && this.driver.elementName().equals(this.rootTag)) {
+        if (isRootEnd()) {
             this.decoded.clear();
             this.beforeRoot = true;
         }
+    }
+
+    private boolean isRootEnd() {
+        return this.driver.atElementEnd() && this.driver.elementName().equals(this.rootTag);
     }
 
     /**
