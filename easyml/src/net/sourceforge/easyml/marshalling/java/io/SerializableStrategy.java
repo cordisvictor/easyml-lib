@@ -54,7 +54,7 @@ import net.sourceforge.easyml.util.*;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.4.2
+ * @version 1.4.3
  */
 public class SerializableStrategy extends AbstractStrategy<Serializable>
         implements CompositeStrategy<Serializable> {
@@ -481,7 +481,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public void write(int val) throws IOException {
-            this.writer.write((byte) val);
+            this.writer.writeByte((byte) val);
         }
 
         @Override
@@ -496,12 +496,12 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public void writeBoolean(boolean val) throws IOException {
-            this.writer.write(val);
+            this.writer.writeBoolean(val);
         }
 
         @Override
         public void writeByte(int val) throws IOException {
-            this.writer.write((byte) val);
+            this.writer.writeByte((byte) val);
         }
 
         @Override
@@ -511,7 +511,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public void writeChar(int val) throws IOException {
-            this.writer.write((char) val);
+            this.writer.writeChar((char) val);
         }
 
         @Override
@@ -523,7 +523,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public void writeDouble(double val) throws IOException {
-            this.writer.write(val);
+            this.writer.writeDouble(val);
         }
 
         @Override
@@ -551,17 +551,17 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public void writeFloat(float val) throws IOException {
-            this.writer.write(val);
+            this.writer.writeFloat(val);
         }
 
         @Override
         public void writeInt(int val) throws IOException {
-            this.writer.write(val);
+            this.writer.writeInt(val);
         }
 
         @Override
         public void writeLong(long val) throws IOException {
-            this.writer.write(val);
+            this.writer.writeLong(val);
         }
 
         @Override
@@ -571,7 +571,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public void writeShort(int val) throws IOException {
-            this.writer.write((short) val);
+            this.writer.writeShort((short) val);
         }
 
         @Override
@@ -673,7 +673,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public int read() throws IOException {
-            return (Integer) this.reader.read();
+            return (int) this.reader.readByte();
         }
 
         @Override
@@ -685,22 +685,22 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public boolean readBoolean() throws IOException {
-            return (Boolean) this.reader.read();
+            return this.reader.readBoolean();
         }
 
         @Override
         public byte readByte() throws IOException {
-            return (Byte) this.reader.read();
+            return this.reader.readByte();
         }
 
         @Override
         public char readChar() throws IOException {
-            return (Character) this.reader.read();
+            return this.reader.readChar();
         }
 
         @Override
         public double readDouble() throws IOException {
-            return (Double) this.reader.read();
+            return this.reader.readDouble();
         }
 
         @Override
@@ -751,7 +751,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public float readFloat() throws IOException {
-            return (Float) this.reader.read();
+            return this.reader.readFloat();
         }
 
         @Override
@@ -766,12 +766,12 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public int readInt() throws IOException {
-            return (Integer) this.reader.read();
+            return this.reader.readInt();
         }
 
         @Override
         public long readLong() throws IOException {
-            return (Long) this.reader.read();
+            return this.reader.readLong();
         }
 
         @Override
@@ -781,7 +781,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public short readShort() throws IOException {
-            return (Short) this.reader.read();
+            return this.reader.readShort();
         }
 
         @Override
@@ -796,12 +796,12 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Override
         public int readUnsignedByte() throws IOException {
-            return (Integer) this.reader.read();
+            return this.reader.readByte();
         }
 
         @Override
         public int readUnsignedShort() throws IOException {
-            return (Integer) this.reader.read();
+            return this.reader.readShort();
         }
 
         @Override

@@ -1,8 +1,10 @@
 package net.sourceforge.easyml;
 
 import java.util.BitSet;
+import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.ObjectStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.ObjectStrategyV1_3_4;
+import net.sourceforge.easyml.marshalling.java.util.BitSetStrategy;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,12 +55,27 @@ public class BugsTest {
 
     @Test
     public void testBugSerial_PutGetFieldsCustomKeys() throws Exception {
+        // we want to test the serialization protocol on the bitset as usecase
+        // so we make sure that SerializableStrategy will be used:
+        easyml = new EasyMLBuilder()
+                //.withStyle(EasyML.Style.PRETTY)
+                //.withProfile(EasyML.Profile.GENERIC)
+                .withStrategy(SerializableStrategy.INSTANCE)
+                .withoutStrategy(BitSetStrategy.INSTANCE)
+                .build();
+
         final BitSet expected = new BitSet();
         expected.set(1);
         expected.set(3);
-        expected.set(5);
+        expected.set(8);
+        expected.set(11);
+        expected.set(0);
+        expected.set(64);
 
-        assertEquals(expected, easyml.deserialize(easyml.serialize(expected)));
+        String xml = easyml.serialize(expected);
+        System.out.println(xml);
+
+        assertEquals(expected, easyml.deserialize(xml));
     }
 
     private static class Person {

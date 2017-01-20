@@ -9,6 +9,16 @@ EasyML
   (http://sourceforge.net/projects/kxml/files/kxml2/2.3.0/kxml2-min-2.3.0.jar/download)
 
 
+!Release 1.4.3
+- feature: new n.s.e.m.j.i.ExternalizableStrategy offers support for the
+Java Externalizable protocol.
+- feature: new n.s.e.XMLReader.hasMore method.
+- feature: new n.s.e.m.j.u.BitSetStrategy available and included into the
+EasyML.Profile.Generic for more portable XML.
+- performance: n.s.e.m.j.i.SerializableStrategy prevent auto-boxing in
+object input and output streams.
+
+
 !Release 1.4.2
 - bugfix: n.s.e.m.j.i.SerializableStrategy GetFieldImpl readFields fix.
 
