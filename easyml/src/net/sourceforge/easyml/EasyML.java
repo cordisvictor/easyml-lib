@@ -31,6 +31,7 @@ import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.custom.NodeListStrategy;
 import net.sourceforge.easyml.marshalling.custom.NodeStrategy;
 import net.sourceforge.easyml.marshalling.java.awt.ColorStrategy;
+import net.sourceforge.easyml.marshalling.java.io.ExternalizableStrategy;
 import net.sourceforge.easyml.marshalling.java.io.FileStrategy;
 import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.ArrayStrategy;
@@ -307,6 +308,7 @@ public final class EasyML {
                         composite.add(ColorStrategy.INSTANCE);
                         composite.add(ArrayStrategy.INSTANCE);
                         composite.add(ObjectStrategy.INSTANCE);
+                        composite.add(ExternalizableStrategy.INSTANCE);
                         composite.add(SerializableStrategy.INSTANCE);
                         // composite.add(BitSetStrategy.INSTANCE);
                         composite.add(ArrayListStrategy.INSTANCE);
@@ -354,6 +356,7 @@ public final class EasyML {
                         simple.put(UUIDStrategy.NAME, UUIDStrategy.INSTANCE);
                         final Map<String, CompositeStrategy> composite = reader.getCompositeStrategies();
                         composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
+                        composite.put(ExternalizableStrategy.NAME, ExternalizableStrategy.INSTANCE);
                         composite.put(SerializableStrategy.NAME, SerializableStrategy.INSTANCE);
                         // backwards compatibility: EasyML 1.3.5 with 1.3.4 or less:
                         composite.put(ArrayStrategy.NAME, ArrayStrategy.INSTANCE);
