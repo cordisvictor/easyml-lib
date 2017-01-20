@@ -10,6 +10,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
     net.sourceforge.easyml.util.TestSuite.class,
     net.sourceforge.easyml.marshalling.dtd.TestSuite.class,
+    ExternalizableSerializableTest.class,
     StrategyRegistryTest.class,
     SecurityPolicyTest.class,
     XMLWriterTest.class,

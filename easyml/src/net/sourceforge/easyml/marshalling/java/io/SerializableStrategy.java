@@ -220,7 +220,11 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
             writeReplaceM.setAccessible(true); // method may be private. Hence must be set accessible true.
             final Object replacement = writeReplaceM.invoke(theTarget);
             if (replacement == null) {
-                writer.write(null);
+                writer.write(null); // redirect to null.
+                return;
+            }
+            if (replacement instanceof Externalizable) {
+                writer.write(replacement); // redirect to Externalizable.
                 return;
             }
             if (!(replacement instanceof Serializable)) {
@@ -453,12 +457,13 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         }
 
         @Override
-        public void defaultWriteObject() throws IOException {
-            defaultMarshalObject(this.target, this.defs, this.writer, this.context, this.level, this.outerRef);
+        public void flush() throws IOException {
+            // non-op.
         }
 
         @Override
-        public void flush() throws IOException {
+        public void defaultWriteObject() throws IOException {
+            defaultMarshalObject(this.target, this.defs, this.writer, this.context, this.level, this.outerRef);
         }
 
         @Override
