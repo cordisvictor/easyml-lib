@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import net.sourceforge.easyml.testmodel.FacultyDTO;
+import net.sourceforge.easyml.testmodel.StudentPersonDTO;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -16,6 +18,42 @@ import org.junit.Test;
 public class MultiThreadEasyMLTest {
 
     private EasyML easyml;
+
+    @Test
+    public void testMultiThreadsCtorFieldCaching() throws Exception {
+        easyml = new EasyML();
+
+        final WorkerThread<FacultyDTO> t1 = new WorkerThread(new FacultyDTO(144, "Faculty Name", new StudentPersonDTO[]{new StudentPersonDTO()}));
+        final WorkerThread<StudentPersonDTO> t2 = new WorkerThread(new StudentPersonDTO(1, "fn1", "ln1", true, null));
+        final WorkerThread<StudentPersonDTO> t3 = new WorkerThread(new StudentPersonDTO(2, "fn2", "ln2", false, new FacultyDTO(22, "Faculty")));
+        t1.start();
+        t2.start();
+        t3.start();
+        t1.join();
+        t2.join();
+        t3.join();
+        assertEquals(t1.src, t1.dest);
+        assertEquals(t2.src, t2.dest);
+        assertEquals(t3.src, t3.dest);
+    }
+
+    @Test
+    public void testMultiThreadsCtorFieldCachingNewWritersReaders() throws Exception {
+        easyml = new EasyML();
+
+        final WorkerThread<FacultyDTO> t1 = new NewWorkerThread(new FacultyDTO(144, "Faculty Name", new StudentPersonDTO[]{new StudentPersonDTO()}));
+        final WorkerThread<StudentPersonDTO> t2 = new NewWorkerThread(new StudentPersonDTO(1, "fn1", "ln1", true, null));
+        final WorkerThread<StudentPersonDTO> t3 = new NewWorkerThread(new StudentPersonDTO(2, "fn2", "ln2", false, new FacultyDTO(22, "Faculty")));
+        t1.start();
+        t2.start();
+        t3.start();
+        t1.join();
+        t2.join();
+        t3.join();
+        assertEquals(t1.src, t1.dest);
+        assertEquals(t2.src, t2.dest);
+        assertEquals(t3.src, t3.dest);
+    }
 
     @Test
     public void testMultiThreads1() throws Exception {

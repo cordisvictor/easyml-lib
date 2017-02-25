@@ -33,7 +33,7 @@ package net.sourceforge.easyml.marshalling;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.2.4
+ * @version 1.4.4
  */
 public interface CompositeStrategy<T> extends Strategy<T> {
 
@@ -87,5 +87,5 @@ public interface CompositeStrategy<T> extends Strategy<T> {
      * @return the initialized instance, possibly not the one referred by
      * <code>target</code>
      */
-    T unmarshalInit(T target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException;
+    Object unmarshalInit(T target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException;
 }//interface CompositeStrategy.

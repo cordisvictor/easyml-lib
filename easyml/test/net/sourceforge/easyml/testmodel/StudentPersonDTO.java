@@ -1,5 +1,7 @@
 package net.sourceforge.easyml.testmodel;
 
+import java.util.Objects;
+
 /**
  * @author Victor Cordis
  */
@@ -21,7 +23,7 @@ public final class StudentPersonDTO extends PersonDTO {
 
     /**
      * Get the value of faculty
-     * 
+     *
      * @return the value of faculty
      */
     public FacultyDTO getFaculty() {
@@ -30,23 +32,45 @@ public final class StudentPersonDTO extends PersonDTO {
 
     /**
      * Get the value of active
-     * 
+     *
      * @return the value of active
      */
     public boolean isActive() {
         return active;
     }
 
-    // /**
-    // * Set the value of active
-    // *
-    // * @param active new value of active
-    // */
-    // public void setActive(boolean active) {
-    // this.active = active;
-    // }
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 17 * hash + (this.active ? 1 : 0);
+        if (this.faculty != null) {
+            hash = 17 * hash + Objects.hashCode(this.faculty.id);
+        }
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final StudentPersonDTO other = (StudentPersonDTO) obj;
+        if (this.active != other.active) {
+            return false;
+        }
+        if (this.faculty != null) {
+            if (!Objects.equals(this.faculty.id, other.faculty.id)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public String toString() {
-        return super.toString() + ", active=" + active + ", faculty=" + faculty;
+        return "StudentPersonDTO{" + "active=" + active + ", faculty=" + (faculty != null ? faculty.id : "unknown") + '}';
     }
 }

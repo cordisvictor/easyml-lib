@@ -66,6 +66,7 @@ import net.sourceforge.easyml.marshalling.java.util.TreeMapStrategy;
 import net.sourceforge.easyml.marshalling.java.util.UUIDStrategy;
 import net.sourceforge.easyml.marshalling.java.util.VectorStrategy;
 import net.sourceforge.easyml.marshalling.java.util.regex.PatternStrategy;
+import net.sourceforge.easyml.util.Caching;
 import org.w3c.dom.Document;
 import org.xmlpull.v1.XmlPullParser;
 
@@ -106,7 +107,7 @@ import org.xmlpull.v1.XmlPullParser;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.0
+ * @version 1.4.4
  * @since 1.0
  *
  * @see XMLReader
@@ -460,8 +461,10 @@ public final class EasyML {
 
     private EasyML(Profile profile) {
         final ConcurrentHashMap<Class, Object> commonCtorCache = new ConcurrentHashMap<>();
-        this.writerPrototype = new XMLWriter(commonCtorCache);
-        this.readerPrototype = new XMLReader(commonCtorCache);
+        final ConcurrentHashMap<String, Object> readerFieldCache = new ConcurrentHashMap<>();
+
+        this.writerPrototype = new XMLWriter(commonCtorCache, Caching.STRATEGY_PUT_IF_ABSENT);
+        this.readerPrototype = new XMLReader(commonCtorCache, readerFieldCache, Caching.STRATEGY_PUT_IF_ABSENT);
         profile.configure(this.writerPrototype);
         profile.configure(this.readerPrototype);
         this.perThreadWriter = new ThreadLocal<XMLWriter>() {
@@ -633,7 +636,9 @@ public final class EasyML {
      * @return a new shared-configuration writer
      */
     public XMLWriter newWriter(Writer out) {
-        return new XMLWriter(out, this.writerPrototype);
+        final XMLWriter ret = new XMLWriter(writerPrototype);
+        ret.reset(out);
+        return ret;
     }
 
     /**
@@ -649,7 +654,9 @@ public final class EasyML {
      * @return a new shared-configuration writer
      */
     public XMLWriter newWriter(OutputStream out) {
-        return new XMLWriter(out, this.writerPrototype);
+        final XMLWriter ret = new XMLWriter(writerPrototype);
+        ret.reset(out);
+        return ret;
     }
 
     /**
@@ -668,7 +675,9 @@ public final class EasyML {
      * @return a new shared-configuration writer
      */
     public XMLWriter newWriter(Document out) {
-        return new XMLWriter(out, this.writerPrototype);
+        final XMLWriter ret = new XMLWriter(writerPrototype);
+        ret.reset(out);
+        return ret;
     }
 
     /**
@@ -683,9 +692,9 @@ public final class EasyML {
      * @return a new shared-configuration reader
      */
     public XMLReader newReader(Reader in) {
-        return this.xmlPullParserProvider != null
-                ? new XMLReader(in, this.xmlPullParserProvider.newXmlPullParser(), this.readerPrototype)
-                : new XMLReader(in, this.readerPrototype);
+        final XMLReader ret = new XMLReader(readerPrototype);
+        ret.reset(in, maybeProvidedXmlPullParser());
+        return ret;
     }
 
     /**
@@ -718,7 +727,9 @@ public final class EasyML {
      * @return a new shared-configuration reader
      */
     public XMLReader newReader(Document in) {
-        return new XMLReader(in, this.readerPrototype);
+        final XMLReader ret = new XMLReader(readerPrototype);
+        ret.reset(in);
+        return ret;
     }
 
     /**
@@ -790,11 +801,14 @@ public final class EasyML {
      */
     public Object deserialize(Reader in) {
         final XMLReader reader = this.perThreadReader.get();
-        reader.reset(in, this.xmlPullParserProvider != null
-                ? this.xmlPullParserProvider.newXmlPullParser()
-                : null
-        );
+        reader.reset(in, maybeProvidedXmlPullParser());
         return reader.read();
+    }
+
+    private XmlPullParser maybeProvidedXmlPullParser() {
+        return this.xmlPullParserProvider != null
+                ? this.xmlPullParserProvider.newXmlPullParser()
+                : null;
     }
 
     /**

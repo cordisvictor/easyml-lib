@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import net.sourceforge.easyml.marshalling.CompositeStrategy;
 import net.sourceforge.easyml.marshalling.CompositeWriter;
 import net.sourceforge.easyml.marshalling.MarshalContext;
@@ -80,7 +79,7 @@ import org.w3c.dom.Document;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.4.1
+ * @version 1.4.4
  */
 public class XMLWriter implements Flushable, Closeable {
 
@@ -509,25 +508,25 @@ public class XMLWriter implements Flushable, Closeable {
     /* default*/ String rootTag;
     /* default*/ SimpleDateFormat dateFormat;
     private MarshalContextImpl context;
-    /* default*/ ConcurrentHashMap<Class, Object> cachedDefCtors;
+    /* default*/ Map<Class, Object> cachedDefCtors;
+    private Caching.CachePutStrategy cachePut;
     private Map<Object, String> aliasing;
     private Set<Field> exclusions;
     private StrategyRegistry<SimpleStrategy> simpleStrategies;
     private StrategyRegistry<CompositeStrategy> compositeStrategies;
 
     /**
-     * Creates a new instance. To be used by {@linkplain EasyML} only.
+     * Creates a new configuration prototype instance, to be used by
+     * {@linkplain EasyML} only.
      */
-    /* default*/ XMLWriter(ConcurrentHashMap<Class, Object> commonCtorCache) {
+    /* default*/ XMLWriter(Map<Class, Object> ctorCache, Caching.CachePutStrategy ctorCachePut) {
         this.driver = null;
-        this.cachedDefCtors = commonCtorCache;
-        this.init();
+        this.init(ctorCache, ctorCachePut);
     }
 
     /**
-     * Creates a new instance. To be used by {@linkplain EasyML} only.
-     *
-     * @param configured writer prototype
+     * Creates a new shared-configuration instance, to be used by
+     * {@linkplain EasyML} only.
      */
     /* default*/ XMLWriter(XMLWriter configured) {
         this.driver = null;
@@ -545,18 +544,6 @@ public class XMLWriter implements Flushable, Closeable {
     }
 
     /**
-     * Creates a new shared-configuration instance with the given
-     * <code>writer</code>.
-     *
-     * @param writer to write output with
-     * @param configured xml writer prototype
-     */
-    public XMLWriter(Writer writer, XMLWriter configured) {
-        this.driver = new XMLWriterTextDriver(this, writer);
-        this.initIdentically(configured);
-    }
-
-    /**
      * Creates a new instance with the given <code>out</code> stream to write
      * to.
      *
@@ -565,18 +552,6 @@ public class XMLWriter implements Flushable, Closeable {
     public XMLWriter(OutputStream out) {
         this.driver = new XMLWriterTextDriver(this, new OutputStreamWriter(out));
         this.init();
-    }
-
-    /**
-     * Creates a new shared-configuration instance with the given
-     * <code>out</code> stream to write to.
-     *
-     * @param out stream to output to
-     * @param configured xml writer prototype
-     */
-    public XMLWriter(OutputStream out, XMLWriter configured) {
-        this.driver = new XMLWriterTextDriver(this, new OutputStreamWriter(out));
-        this.initIdentically(configured);
     }
 
     /**
@@ -589,26 +564,16 @@ public class XMLWriter implements Flushable, Closeable {
         this.init();
     }
 
-    /**
-     * Creates a new shared-configuration instance with the given
-     * <code>out</code> DOM to append to.
-     *
-     * @param out empty DOM to append to
-     * @param configured xml writer prototype
-     */
-    public XMLWriter(Document out, XMLWriter configured) {
-        this.driver = new XMLWriterDOMDriver(this, out);
-        this.initIdentically(configured);
+    private void init() {
+        this.init(new HashMap<Class, Object>(), Caching.STRATEGY_PUT);
     }
 
-    private void init() {
+    private void init(Map<Class, Object> ctorCache, Caching.CachePutStrategy ctorCachePut) {
         this.encoded = new IdentityHashMap<>();
         this.sharedConfiguration = false;
         this.context = new MarshalContextImpl();
-        // The cache must be concurrent in case this instance will be used as a prototype:
-        if (this.cachedDefCtors == null) {
-            this.cachedDefCtors = new ConcurrentHashMap<>();
-        }
+        this.cachedDefCtors = ctorCache;
+        this.cachePut = ctorCachePut;
         this.aliasing = new HashMap<>();
         this.exclusions = new HashSet<>();
         this.skipDefaults = true;
@@ -637,6 +602,7 @@ public class XMLWriter implements Flushable, Closeable {
         this.sharedConfiguration = true;
         this.context = new MarshalContextImpl();
         this.cachedDefCtors = other.cachedDefCtors;
+        this.cachePut = other.cachePut;
         this.aliasing = other.aliasing;
         this.exclusions = other.exclusions;
         this.skipDefaults = other.skipDefaults;
@@ -1162,11 +1128,11 @@ public class XMLWriter implements Flushable, Closeable {
             try {
                 final Constructor<T> ctor = ReflectionUtil.defaultConstructor(c);
                 T ret = ctor.newInstance();
-                cachedDefCtors.putIfAbsent(c, ctor);
+                cachePut.put(cachedDefCtors, c, ctor);
                 return ret;
             } catch (NoSuchMethodException | InstantiationException |
                     InvocationTargetException | IllegalAccessException noDefCtorX) {
-                cachedDefCtors.putIfAbsent(c, noDefCtorX);
+                cachePut.put(cachedDefCtors, c, noDefCtorX);
                 throw noDefCtorX;
             }
         }

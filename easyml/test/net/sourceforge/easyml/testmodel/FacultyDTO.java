@@ -1,5 +1,8 @@
 package net.sourceforge.easyml.testmodel;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 /**
  * @author Victor Cordis
  */
@@ -23,6 +26,12 @@ public class FacultyDTO extends AbstractDTO {
         this.name = name;
     }
 
+    public FacultyDTO(int id, String name, StudentPersonDTO[] students) {
+        super(id);
+        this.name = name;
+        this.students = students;
+    }
+
     public String getName() {
         return name;
     }
@@ -36,15 +45,31 @@ public class FacultyDTO extends AbstractDTO {
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(super.toString());
-        sb.append(", name=").append(name);
-        if (this.students != null) {
-            for (StudentPersonDTO student : this.students) {
-                sb.append(',');
-                sb.append(student);
-            }
-        }
-        return sb.toString();
+    public int hashCode() {
+        int hash = 3;
+        hash = 23 * hash + Objects.hashCode(this.name);
+        hash = 23 * hash + Arrays.deepHashCode(this.students);
+        return hash;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final FacultyDTO other = (FacultyDTO) obj;
+        if (!Objects.equals(this.name, other.name)) {
+            return false;
+        }
+        return Arrays.deepEquals(this.students, other.students);
+    }
+
+    @Override
+    public String toString() {
+        return "FacultyDTO{" + "name=" + name + ", students=" + Arrays.toString(students) + '}';
+    }
+
 }

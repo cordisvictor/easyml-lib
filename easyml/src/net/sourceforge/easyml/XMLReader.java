@@ -38,7 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.CompositeStrategy;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
@@ -80,7 +79,7 @@ import org.xmlpull.v1.XmlPullParserException;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.4.3
+ * @version 1.4.4
  */
 public class XMLReader implements Closeable {
 
@@ -430,26 +429,26 @@ public class XMLReader implements Closeable {
     private Map<String, Object> decoded;
     private boolean sharedConfiguration;
     private UnmarshalContextImpl context;
-    /* default*/ ConcurrentHashMap<String, Object> cachedAliasingReflection;
-    /* default*/ ConcurrentHashMap<Class, Object> cachedDefCtors;
+    /* default*/ Map<String, Object> cachedAliasingReflection;
+    /* default*/ Map<Class, Object> cachedDefCtors;
+    private Caching.CachePutStrategy cachesPut;
     private Map<String, SimpleStrategy> simpleStrategies;
     private Map<String, CompositeStrategy> compositeStrategies;
     /* default*/ SimpleDateFormat dateFormat;
     /* default*/ SecurityPolicy securityPolicy;
 
     /**
-     * Creates a new instance. To be used by {@linkplain EasyML} only.
+     * Creates a new configuration prototype instance, to be used by
+     * {@linkplain EasyML} only.
      */
-    /* default*/ XMLReader(ConcurrentHashMap<Class, Object> commonCtorCache) {
+    /* default*/ XMLReader(Map<Class, Object> ctorCache, Map<String, Object> aliasFieldCache, Caching.CachePutStrategy cachesPut) {
         this.driver = null;
-        this.cachedDefCtors = commonCtorCache;
-        this.init();
+        this.init(ctorCache, aliasFieldCache, cachesPut);
     }
 
     /**
-     * Creates a new instance. To be used by {@linkplain EasyML} only.
-     *
-     * @param configured reader prototype
+     * Creates a new shared-configuration instance, to be used by
+     * {@linkplain EasyML} only.
      */
     /* default*/ XMLReader(XMLReader configured) {
         this.driver = null;
@@ -469,19 +468,6 @@ public class XMLReader implements Closeable {
     }
 
     /**
-     * Creates a new shared-configuration instance with the given
-     * <code>reader</code> to use and the <code>kXML2</code> parser as default.
-     * The parser is set to the given reader.
-     *
-     * @param reader to read input with
-     * @param configured xml reader prototype
-     */
-    public XMLReader(Reader reader, XMLReader configured) {
-        this.driver = new XMLReaderTextDriver(this, reader);
-        this.initIdentically(configured);
-    }
-
-    /**
      * Creates a new instance with the given <code>in</code> stream to read from
      * and the <code>kXML2</code> parser as default. The parser is set to the
      * given stream.
@@ -491,19 +477,6 @@ public class XMLReader implements Closeable {
     public XMLReader(InputStream in) {
         this.driver = new XMLReaderTextDriver(this, new InputStreamReader(in));
         this.init();
-    }
-
-    /**
-     * Creates a new shared-configuration instance with the given
-     * <code>in</code> stream to read from and the <code>kXML2</code> parser as
-     * default. The parser is set to the given stream.
-     *
-     * @param in stream from which to read
-     * @param configured xml reader prototype
-     */
-    public XMLReader(InputStream in, XMLReader configured) {
-        this.driver = new XMLReaderTextDriver(this, new InputStreamReader(in));
-        this.initIdentically(configured);
     }
 
     /**
@@ -520,20 +493,6 @@ public class XMLReader implements Closeable {
     }
 
     /**
-     * Creates a new shared-configuration instance with the given
-     * <code>reader</code> to use and the <code>parser</code> to process XML
-     * with. The parser is set (or reset) to the given reader.
-     *
-     * @param reader to read input with
-     * @param parser to process the in XML with
-     * @param configured xml reader prototype
-     */
-    public XMLReader(Reader reader, XmlPullParser parser, XMLReader configured) {
-        this.driver = new XMLReaderTextDriver(this, reader, parser);
-        this.initIdentically(configured);
-    }
-
-    /**
      * Creates a new instance with the given <code>in</code> stream to read from
      * and the <code>parser</code> to process XML with. The parser is set to the
      * given stream.
@@ -547,20 +506,6 @@ public class XMLReader implements Closeable {
     }
 
     /**
-     * Creates a new shared-configuration instance with the given
-     * <code>in</code> stream to read from and the <code>parser</code> to
-     * process XML with. The parser is set to the given stream.
-     *
-     * @param in stream from which to read
-     * @param parser to process the in XML with
-     * @param configured xml reader prototype
-     */
-    public XMLReader(InputStream in, XmlPullParser parser, XMLReader configured) {
-        this.driver = new XMLReaderTextDriver(this, new InputStreamReader(in), parser);
-        this.initIdentically(configured);
-    }
-
-    /**
      * Creates a new instance with the given <code>in</code> DOM document to
      * read from.
      *
@@ -571,29 +516,19 @@ public class XMLReader implements Closeable {
         this.init();
     }
 
-    /**
-     * Creates a new shared-configuration instance with the given
-     * <code>in</code> DOM document to read from.
-     *
-     * @param in stream from which to read
-     * @param configured xml reader prototype
-     */
-    public XMLReader(Document in, XMLReader configured) {
-        this.driver = new XMLReaderDOMDriver(this, in);
-        this.initIdentically(configured);
+    private void init() {
+        this.init(new HashMap<Class, Object>(), new HashMap<String, Object>(), Caching.STRATEGY_PUT);
     }
 
-    private void init() {
+    private void init(Map<Class, Object> ctorCache, Map<String, Object> aliasFieldCache, Caching.CachePutStrategy cachesPut) {
         this.beforeRoot = true;
         this.rootTag = DTD.ELEMENT_EASYML;
         this.decoded = new HashMap<>();
         this.sharedConfiguration = false;
         this.context = new UnmarshalContextImpl();
-        // The caches must be concurrent in case this instance will be used as a prototype:
-        this.cachedAliasingReflection = new ConcurrentHashMap<>();
-        if (this.cachedDefCtors == null) {
-            this.cachedDefCtors = new ConcurrentHashMap<>();
-        }
+        this.cachedDefCtors = ctorCache;
+        this.cachedAliasingReflection = aliasFieldCache;
+        this.cachesPut = cachesPut;
         this.simpleStrategies = new StrategyHashMap<>();
         this.compositeStrategies = new StrategyHashMap<>();
         this.dateFormat = new SimpleDateFormat(DTD.FORMAT_DATE);
@@ -621,6 +556,7 @@ public class XMLReader implements Closeable {
         this.context = new UnmarshalContextImpl();
         this.cachedAliasingReflection = other.cachedAliasingReflection;
         this.cachedDefCtors = other.cachedDefCtors;
+        this.cachesPut = other.cachesPut;
         this.simpleStrategies = other.simpleStrategies;
         this.compositeStrategies = other.compositeStrategies;
         this.dateFormat = new SimpleDateFormat(other.dateFormat.toPattern());
@@ -1250,10 +1186,10 @@ public class XMLReader implements Closeable {
             }
             try {
                 final Constructor<T> ctor = ReflectionUtil.defaultConstructor(c);
-                cachedDefCtors.putIfAbsent(c, ctor);
+                cachesPut.put(cachedDefCtors, c, ctor);
                 return ctor;
             } catch (NoSuchMethodException noDefCtorX) {
-                cachedDefCtors.putIfAbsent(c, noDefCtorX);
+                cachesPut.put(cachedDefCtors, c, noDefCtorX);
                 throw noDefCtorX;
             }
         }
@@ -1291,7 +1227,7 @@ public class XMLReader implements Closeable {
             }
             // else cache class:
             final Class ret = ReflectionUtil.classForName(aliasOrName);
-            cachedAliasingReflection.putIfAbsent(aliasOrName, ret);
+            cachesPut.put(cachedAliasingReflection, aliasOrName, ret);
             return ret;
         }
 
@@ -1304,7 +1240,7 @@ public class XMLReader implements Closeable {
             }
             // else cache field:
             final Field ret = declaring.getDeclaredField(aliasOrName);
-            cachedAliasingReflection.putIfAbsent(fieldFQN, ret);
+            cachesPut.put(cachedAliasingReflection, fieldFQN, ret);
             return ret;
         }
 

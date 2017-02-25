@@ -59,9 +59,9 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @version 1.4.3
- * @since 1.4.3
+ * @since 1.4.4
  */
-public class ExternalizableStrategy extends AbstractStrategy<Serializable> implements CompositeStrategy<Serializable> {
+public class ExternalizableStrategy extends AbstractStrategy<Externalizable> implements CompositeStrategy<Externalizable> {
 
     /**
      * Constant defining the value used for the strategy name.
@@ -97,7 +97,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Serializable> imple
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<Serializable> c) {
+    public boolean appliesTo(Class<Externalizable> c) {
         return Externalizable.class.isAssignableFrom(c);
     }
 
@@ -126,8 +126,8 @@ public class ExternalizableStrategy extends AbstractStrategy<Serializable> imple
      * {@inheritDoc }
      */
     @Override
-    public void marshal(Serializable target, CompositeWriter writer, MarshalContext ctx) {
-        Externalizable theTarget = (Externalizable) target;
+    public void marshal(Externalizable target, CompositeWriter writer, MarshalContext ctx) {
+        Externalizable theTarget = target;
         // check for writeReplace():
         try {
             final Method writeReplaceM = target.getClass().getDeclaredMethod(METHOD_WRITEREPLACE);
@@ -167,7 +167,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Serializable> imple
      * {@inheritDoc }
      */
     @Override
-    public Serializable unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
+    public Externalizable unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         final String classAttrVal = reader.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS);
         final Class cls = ctx.classFor(classAttrVal);
@@ -185,7 +185,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Serializable> imple
      * {@inheritDoc }
      */
     @Override
-    public Serializable unmarshalInit(Serializable target, CompositeReader reader, UnmarshalContext ctx)
+    public Object unmarshalInit(Externalizable target, CompositeReader reader, UnmarshalContext ctx)
             throws IllegalAccessException {
         // read object attributes: in exactly the same order as they were written:
         if (!reader.next() || !reader.atElementStart()) {
@@ -194,7 +194,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Serializable> imple
         }
         final Class cls = target.getClass();
         try {
-            ((Externalizable) target).readExternal(new EInputStream(reader));
+            target.readExternal(new EInputStream(reader));
         } catch (ClassNotFoundException | IOException ex) {
             throw new IllegalArgumentException(ex);
         }
