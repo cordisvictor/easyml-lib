@@ -9,6 +9,13 @@ EasyML
   (http://sourceforge.net/projects/kxml/files/kxml2/2.3.0/kxml2-min-2.3.0.jar/download)
 
 
+!Release 1.4.4
+- refactor: made n.s.e.m.CompositeStrategy.unmarshalInit return type more
+loose to better support readResolve in n.s.e.m.j.i.ExternalizableStrategy.
+- refactor: n.s.e.XMLReader and n.s.e.XMLWriter use HashMap instead of
+ConcurrentHashMap if not in shared mode (i.e. if in standalone mode).
+
+
 !Release 1.4.3
 - feature: new n.s.e.m.j.i.ExternalizableStrategy offers support for the
 Java Externalizable protocol.
