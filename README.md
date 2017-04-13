@@ -1,13 +1,64 @@
-# easyml-lib
-Repository for the EasyML to and from XML library.
+## EasyML is a Java serialization library, to and from XML, similar to [Gson](http://github.com/google/gson).
 
-EasyML
-- offers basic DTD-type support and full Java support
-  (see EasyML and EasyML.Profile configuration).
-- Dependencies:
-  "kxml2-min-2.3.0.jar" - compile+runtime
-  (http://sourceforge.net/projects/kxml/files/kxml2/2.3.0/kxml2-min-2.3.0.jar/download)
+EasyML library converts Java objects into XML and back again, without the need for annotations or other
+types of configuration. EasyML offers extensive support for JDK classes and also supports customization
+through user settings, user extensions, or through the Java Serialization API.
 
+EasyML provides support for:
+ * reading from and writing to XML text
+ * reading from and writing to org.w3c.dom.Document structures
+ * Java Collections framework
+ * Java Serialization framework
+ * Multi-threading
+ * Java Generics
+
+
+### Example
+
+Creating a default EasyML instance:
+```java
+EasyML easyml = new EasyML();
+```
+
+Creating a custom EasyML instance:
+```java
+EasyML easyml = new EasyMLBuilder()
+            .withStyle(EasyML.Style.PRETTY)
+            .withCustomRootTag("persons")
+            .withAlias(PersonDTO.class, "person")
+            .build();
+```
+EasyML can also be customized with user-defined serialization strategies.
+Security policies can also be defined, specifying black- or whitelists of
+types which are allowed at deserialization time.
+
+Serializing:
+```java
+easyml.serialize(srcObj, outFile);
+
+easyml.serialize(srcObj, outDOM);
+
+String xml= easyml.serialize(srcObj);
+```
+
+Deserializing:
+```java
+Object o= easyml.deserialize(inFile);
+
+Object o= easyml.deserialize(inDOM);
+
+Object o= easyml.deserialize(inStr);
+```
+The low-level components, XMLWriter and XMLReader, can be used directly,
+for a higher control compared to the EasyML Facade.
+
+### Dependencies
+
+  KXml2
+  [kxml2-min-2.3.0.jar](http://sourceforge.net/projects/kxml/files/kxml2/2.3.0/kxml2-min-2.3.0.jar/download)
+
+
+### Release Notes
 
 !Release 1.4.4
 - refactor: made n.s.e.m.CompositeStrategy.unmarshalInit return type more
@@ -240,3 +291,4 @@ object input and output streams.
 - bugfix: n.s.e.m.j.i.SerializableStrategy: fixed Java IO Serialization
     PutFields/GetFields EasyML impl such that it is not mandatory to
     define both methods when custom serialization of a class is used.
+
