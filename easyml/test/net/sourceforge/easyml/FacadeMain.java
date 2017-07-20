@@ -27,9 +27,9 @@ public class FacadeMain {
 //    public static void main(String[] args) {
 //        final Person in = new Person(1, "da");
 //
-//        final EasyML easyml = new EasyML();
-//        easyml.setStyle(EasyML.Style.PRETTY);
-////        easyml.alias(Person.class, "Persoana");
+//        final EasyML easyml = new EasyMLBuilder()
+//                .withStyle(EasyML.Style.PRETTY)
+//                .build();
 //        long time = System.currentTimeMillis();
 //        for (int i = 0; i < 100000; i++) {
 //            easyml.deserialize(easyml.serialize(in));

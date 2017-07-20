@@ -29,7 +29,7 @@ import java.util.Map;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.3.8
+ * @version 1.4.5
  */
 public final class ReflectionUtil {
 
@@ -223,7 +223,7 @@ public final class ReflectionUtil {
      * @return new instance of c
      */
     public static <T> T instantiateUnsafely(Class<T> c) {
-        return Unsafe.instantiator.instantiate(c);
+        return UnsafeInstantiator.instantiator.instantiate(c);
     }
 
     /**
@@ -242,20 +242,13 @@ public final class ReflectionUtil {
     }
 
     /**
-     * UnsafeInstantiator interface defines the API for instantiating classes
-     * with no default (zero-arg) constructors.
+     * UnsafeInstantiator lazy inits the JVM-dependent unsafe instantiator and
+     * provides the API for instantiating classes with no default (zero-arg)
+     * constructors.
      */
-    private interface UnsafeInstantiator {
+    private static abstract class UnsafeInstantiator {
 
-        <T> T instantiate(Class<T> c);
-    }
-
-    /**
-     * Unsafe class lazy inits the JVM dependent unsafe instantiator.
-     */
-    private static final class Unsafe {
-
-        private static final UnsafeInstantiator instantiator = Unsafe.create();
+        private static final UnsafeInstantiator instantiator = create();
 
         private static UnsafeInstantiator create() {
             // if available, use sun.misc.Unsafe:
@@ -323,8 +316,10 @@ public final class ReflectionUtil {
             };
         }
 
-        private Unsafe() {
+        private UnsafeInstantiator() {
         }
+
+        public abstract <T> T instantiate(Class<T> c);
     }
 
     /**

@@ -60,6 +60,12 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+!Release 1.4.5
+- performance: improved n.s.e.EasyML.deserialize() speed by reusing the
+XmlPullParser when available.
+- refactor: minor code improvements.
+
+
 !Release 1.4.4
 - refactor: made n.s.e.m.CompositeStrategy.unmarshalInit return type more
 loose to better support readResolve in n.s.e.m.j.i.ExternalizableStrategy.

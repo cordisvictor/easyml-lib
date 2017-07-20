@@ -76,7 +76,7 @@ import org.xmlpull.v1.XmlPullParserException;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.0
- * @version 1.4.4
+ * @version 1.4.5
  */
 public class XMLReader implements Closeable {
 
@@ -1089,10 +1089,18 @@ public class XMLReader implements Closeable {
      * @param parser to use, null if default
      */
     public void reset(Reader reader, XmlPullParser parser) {
-        this.driver = parser != null ? new XMLReaderTextDriver(this, reader, parser)
-                : new XMLReaderTextDriver(this, reader);
+        if (isReusableXMLReaderTextDriver()) {
+            ((XMLReaderTextDriver) this.driver).reset(reader, parser);
+        } else {
+            this.driver = parser != null ? new XMLReaderTextDriver(this, reader, parser)
+                    : new XMLReaderTextDriver(this, reader);
+        }
         this.decoded.clear();
         this.beforeRoot = true;
+    }
+
+    private boolean isReusableXMLReaderTextDriver() {
+        return this.driver != null && this.driver.getClass() == XMLReaderTextDriver.class;
     }
 
     /**
