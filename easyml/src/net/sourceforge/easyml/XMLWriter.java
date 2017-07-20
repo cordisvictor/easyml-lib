@@ -1021,7 +1021,6 @@ public class XMLWriter implements Flushable, Closeable {
         if (!this.isInitialState()) {
             this.driver.endElement(); // DTD.ELEMENT_EASYML.
             this.driver.flush();
-            this.driver.state = XMLWriter.Driver.STATE_INITIAL;
             this.encoded.clear();
         }
     }

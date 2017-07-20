@@ -33,7 +33,7 @@ import org.xmlpull.v1.XmlPullParserException;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @since 1.1.0
- * @version 1.3.3
+ * @version 1.4.5
  */
 /* default */ final class XMLReaderTextDriver extends XMLReader.Driver {
 
@@ -59,8 +59,12 @@ import org.xmlpull.v1.XmlPullParserException;
      */
     public XMLReaderTextDriver(XMLReader target, Reader in, XmlPullParser parser) {
         super(target);
+        this.parser = parser;
+        this.init(in);
+    }
+
+    private void init(Reader in) {
         try {
-            this.parser = parser;
             this.parser.setInput(in);
             this.readerToClose = in;
         } catch (XmlPullParserException xppX) {
@@ -202,6 +206,23 @@ import org.xmlpull.v1.XmlPullParserException;
         } catch (XmlPullParserException | IOException xppX) {
             throw new InvalidFormatException(this.positionDescriptor(), xppX);
         }
+    }
+
+    /**
+     * Resets this current instance to read using the given reader and,
+     * optionally, to parse using the given custom pull-parser. This method is
+     * needed for performance reasons since the pull-parsers can be expensive to
+     * recreate and should be reused.
+     *
+     * @param in the required input reader
+     * @param parser optional custom parser to replace the default pull-parse
+     * implementation
+     */
+    public void reset(Reader in, XmlPullParser parser) {
+        if (parser != null) {
+            this.parser = parser;
+        }
+        this.init(in);
     }
 
     /**
