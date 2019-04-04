@@ -18,17 +18,18 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.Stack;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.util.Stack;
 
 /**
  * StackStrategy class that extends the {@linkplain CollectionStrategy} for the
  * {@linkplain Stack}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0.3
  * @version 1.0.3
+ * @since 1.0.3
  */
 public final class StackStrategy extends CollectionStrategy<Stack> {
 
@@ -56,14 +57,6 @@ public final class StackStrategy extends CollectionStrategy<Stack> {
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<Stack> c) {
-        return c == Stack.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String name() {
         return StackStrategy.NAME;
     }
@@ -72,8 +65,7 @@ public final class StackStrategy extends CollectionStrategy<Stack> {
      * {@inheritDoc }
      */
     @Override
-    public Stack unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Stack unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         return new Stack();
     }
 }

@@ -18,18 +18,19 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.LinkedHashSet;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.util.LinkedHashSet;
 
 /**
  * LinkedHashSetStrategy class that extends the {@linkplain CollectionStrategy}
  * for the {@linkplain LinkedHashSet}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class LinkedHashSetStrategy extends CollectionStrategy<LinkedHashSet> {
 
@@ -57,14 +58,6 @@ public final class LinkedHashSetStrategy extends CollectionStrategy<LinkedHashSe
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<LinkedHashSet> c) {
-        return c == LinkedHashSet.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String name() {
         return LinkedHashSetStrategy.NAME;
     }
@@ -73,8 +66,7 @@ public final class LinkedHashSetStrategy extends CollectionStrategy<LinkedHashSe
      * {@inheritDoc }
      */
     @Override
-    public LinkedHashSet unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public LinkedHashSet unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         try {
             return new LinkedHashSet(Integer.parseInt(reader.elementRequiredAttribute(ATTRIBUTE_SIZE)));
         } catch (NumberFormatException nfx) {

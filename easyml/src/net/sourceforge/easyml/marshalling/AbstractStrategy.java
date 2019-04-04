@@ -23,10 +23,9 @@ package net.sourceforge.easyml.marshalling;
  * leaving it abstract, only to implement other behavior characteristics.
  *
  * @param <T> target class
- *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public abstract class AbstractStrategy<T> implements Strategy<T> {
 
@@ -56,4 +55,4 @@ public abstract class AbstractStrategy<T> implements Strategy<T> {
     public String toString() {
         return this.name();
     }
-}//class AbstractStrategy.
+}

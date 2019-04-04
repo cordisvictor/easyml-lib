@@ -18,17 +18,17 @@
  */
 package net.sourceforge.easyml;
 
-import java.util.BitSet;
 import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.ObjectStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.ObjectStrategyV1_3_4;
 import net.sourceforge.easyml.marshalling.java.util.BitSetStrategy;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.BitSet;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
- *
  * @author victor
  */
 public class BugsTest {
@@ -38,6 +38,16 @@ public class BugsTest {
     @Before
     public void setup() {
         easyml = new EasyML();
+    }
+
+    @Test
+    public void testEnumStrategyUsesNameNotToString() throws Exception {
+        easyml = new EasyMLBuilder().build();
+
+        final String xml = easyml.serialize(PolyEnum.VALUE1);
+        final Object actual = easyml.deserialize(xml);
+
+        assertEquals(PolyEnum.VALUE1, actual);
     }
 
     @Test
@@ -51,17 +61,6 @@ public class BugsTest {
 
         assertTrue(!xml.contains(Person.class.getName()));
         assertEquals(Person.class, actual);
-    }
-
-    @Test
-    public void testBackwardsCompatibility_v1_3_5_with_v1_3_4() throws Exception {
-        final EasyML easyml134 = new EasyML();
-        easyml134.writerPrototype.getCompositeStrategies().remove(ObjectStrategy.INSTANCE);
-        easyml134.writerPrototype.getCompositeStrategies().add(ObjectStrategyV1_3_4.INSTANCE);
-
-        final Person expected = new Person("fn");
-
-        assertEquals(expected, easyml.deserialize(easyml134.serialize(expected)));
     }
 
     @Test
@@ -182,6 +181,21 @@ public class BugsTest {
         @Override
         public String toString() {
             return "NamedPerson{superName=" + getName() + "name=" + name + '}';
+        }
+    }
+
+    private enum PolyEnum {
+        VALUE1 {
+            @Override
+            public String toString() {
+                return "val1";
+            }
+        },
+        VALUE2 {
+            @Override
+            public String toString() {
+                return "val2";
+            }
         }
     }
 }

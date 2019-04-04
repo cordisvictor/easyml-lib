@@ -29,8 +29,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public final class StringBufferStrategy extends AbstractStrategy<StringBuffer>
         implements SimpleStrategy<StringBuffer> {
@@ -94,4 +94,4 @@ public final class StringBufferStrategy extends AbstractStrategy<StringBuffer>
     public StringBuffer unmarshal(String text, UnmarshalContext ctx) {
         return new StringBuffer(text);
     }
-}//class StringBufferStrategy.
+}

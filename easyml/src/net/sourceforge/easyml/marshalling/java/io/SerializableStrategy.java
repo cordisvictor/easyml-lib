@@ -18,6 +18,12 @@
  */
 package net.sourceforge.easyml.marshalling.java.io;
 
+import net.sourceforge.easyml.DTD;
+import net.sourceforge.easyml.InvalidFormatException;
+import net.sourceforge.easyml.marshalling.*;
+import net.sourceforge.easyml.util.ReflectionUtil;
+import net.sourceforge.easyml.util.ValueType;
+
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -26,10 +32,6 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import net.sourceforge.easyml.DTD;
-import net.sourceforge.easyml.InvalidFormatException;
-import net.sourceforge.easyml.marshalling.*;
-import net.sourceforge.easyml.util.*;
 
 /**
  * SerializableStrategy class that implements the {@linkplain CompositeStrategy}
@@ -42,16 +44,16 @@ import net.sourceforge.easyml.util.*;
  * </ul> The <code>writeObject(ObjectOutputStream)</code> and
  * <code>readObject(ObjectInputStream)</code> do not support the following: <ul> <li>{@linkplain ObjectOutputStream#writeUnshared(java.lang.Object)
  * }</li> <li>{@linkplain ObjectInputStream#readUnshared() }</li>
- * <li>{@linkplain ObjectInputStream#registerValidation(java.io.ObjectInputValidation,int)}</li>
+ * <li>{@linkplain ObjectInputStream#registerValidation(java.io.ObjectInputValidation, int)}</li>
  * </ul>
- *
+ * <p>
  * <br/> Non-pure Java reflection is used when un-marshalling objects of classes
  * which do not define a default constructor.<br/>This implementation is
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
+ * @version 1.4.6
  * @since 1.0
- * @version 1.4.3
  */
 public class SerializableStrategy extends AbstractStrategy<Serializable>
         implements CompositeStrategy<Serializable> {
@@ -67,24 +69,15 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
     private static final String ELEMENT_OUTER = "this.out";
     private static final String ELEMENT_FIELDS = "this.fields";
     private static final String ATTRIBUTE_NIL = "nil";
+    private static final String FIELD_PERSISTENTFIELDS = "serialPersistentFields";
+    private static final int MODIFIERS_PERSISTENTFIELDS = Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL;
     private static final String METHOD_WRITEOBJECT = "writeObject";
     private static final String METHOD_READOBJECT = "readObject";
     private static final String METHOD_WRITEREPLACE = "writeReplace";
     private static final String METHOD_READRESOLVE = "readResolve";
+    private static final NoSuchMethodException NO_SUCH_METHOD_EXCEPTION = new NoSuchMethodException();
     private static final Class[] PARAMS_OOS = new Class[]{ObjectOutputStream.class};
     private static final Class[] PARAMS_OIS = new Class[]{ObjectInputStream.class};
-
-    private static ValueType valueTypeFor(Class declaring, String field) {
-        try {
-            return valueTypeFor(declaring.getDeclaredField(field));
-        } catch (NoSuchFieldException nsfX) {
-            return null;
-        }
-    }
-
-    private static ValueType valueTypeFor(Field f) {
-        return Modifier.isStatic(f.getModifiers()) ? null : ValueType.of(f.getType());
-    }
 
     protected SerializableStrategy() {
     }
@@ -127,81 +120,10 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
      * will end at the given level.
      *
      * @param level of inheritance to check if process should continue for
-     *
      * @return true if continue, false otherwise
      */
     protected boolean continueProcessFor(Class level) {
         return Serializable.class.isAssignableFrom(level);
-    }
-
-    private void defaultMarshalObject(Serializable target, Serializable defTarget, CompositeWriter writer, MarshalContext ctx, Class level, Field outerRef) {
-        writer.startElement(ELEMENT_FIELDS);
-        for (Field f : level.getDeclaredFields()) { // process composition:
-            // process field:
-            final int fMod = f.getModifiers();
-            if (Modifier.isStatic(fMod)
-                    || Modifier.isTransient(fMod)
-                    || (outerRef != null && f.getName().equals(outerRef.getName()))
-                    || ctx.excluded(f)) {
-                continue; // skip static, transient, already encoded outer-refed object, or excluded field.
-            }
-            if (!f.isAccessible()) {
-                f.setAccessible(true);
-            }
-            // process field value:
-            Object attributeValue = null;
-            Object defaultValue = null;
-            if (ctx.skipDefaults() && defTarget != null) { // default target defined:
-                try {
-                    attributeValue = f.get(target);
-                    defaultValue = f.get(defTarget);
-                } catch (IllegalAccessException neverThrown) {
-                    // ignored.
-                }
-                // null-safe equality test:
-                if (attributeValue == null) {
-                    if (defaultValue == null) {
-                        continue; // skip default value.
-                    }
-                } else {
-                    if (attributeValue.equals(defaultValue)) {
-                        continue; // skip default value.
-                    }
-                }
-            } else { // comparison default value undefined:
-                try {
-                    attributeValue = f.get(target);
-                } catch (IllegalAccessException neverThrown) {
-                    // ignored.
-                }
-            }
-            // encode non-default attribute value:
-            writer.startElement(ctx.aliasFor(f, f.getName()));
-            if (attributeValue == null) {
-                writer.setAttribute(ATTRIBUTE_NIL, Boolean.toString(true));
-            } else { // non-null:
-                if (ValueType.is(f.getType())) {
-                    writer.writeValue(attributeValue.toString());
-                } else {
-                    writer.write(attributeValue);
-                }
-            }
-            writer.endElement();
-        }
-        writer.endElement();
-    }
-
-    /**
-     * Marshalling writing root attributes stage. Writes the <code>class</code>
-     * attribute.
-     *
-     * @param target target to extract attribute values from
-     * @param writer to write attributes with
-     * @param ctx the context
-     */
-    protected void marshalDoAttributes(Serializable target, CompositeAttributeWriter writer, MarshalContext ctx) {
-        final Class c = target.getClass();
-        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasFor(c, c.getName()));
     }
 
     /**
@@ -213,7 +135,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         Serializable theDef = null;
         // check for writeReplace():
         try {
-            final Method writeReplaceM = theTarget.getClass().getDeclaredMethod(METHOD_WRITEREPLACE);
+            final Method writeReplaceM = findHierarchicalDeclaredMethod(theTarget.getClass(), METHOD_WRITEREPLACE);
             writeReplaceM.setAccessible(true); // method may be private. Hence must be set accessible true.
             final Object replacement = writeReplaceM.invoke(theTarget);
             if (replacement == null) {
@@ -282,7 +204,177 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         writer.endElement();
     }
 
-    private void defaultUnmarshalObject(Object instance, CompositeReader reader, UnmarshalContext ctx, Class level) {
+    private static Method findHierarchicalDeclaredMethod(Class classHierarchy, String methodName, Class... paramTypes) throws NoSuchMethodException {
+        Class crt = classHierarchy;
+        do {
+            try {
+                return crt.getDeclaredMethod(methodName, paramTypes);
+            } catch (NoSuchMethodException e) {
+                crt = crt.getSuperclass();
+            }
+        } while (crt instanceof Serializable);
+        throw NO_SUCH_METHOD_EXCEPTION;
+    }
+
+    /**
+     * Marshalling writing root attributes stage. Writes the <code>class</code>
+     * attribute.
+     *
+     * @param target target to extract attribute values from
+     * @param writer to write attributes with
+     * @param ctx    the context
+     */
+    protected void marshalDoAttributes(Serializable target, CompositeAttributeWriter writer, MarshalContext ctx) {
+        final Class c = target.getClass();
+        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasOrNameFor(c));
+    }
+
+    private static void defaultMarshalObject(Serializable target, Serializable defTarget, CompositeWriter writer, MarshalContext ctx, Class level, Field outerRef) {
+        writer.startElement(ELEMENT_FIELDS);
+        for (Field f : level.getDeclaredFields()) { // process composition:
+            // process field:
+            final int fMod = f.getModifiers();
+            if (Modifier.isStatic(fMod)
+                    || Modifier.isTransient(fMod)
+                    || (outerRef != null && f.getName().equals(outerRef.getName()))
+                    || ctx.excluded(f)) {
+                continue; // skip static, transient, already encoded outer-refed object, or excluded field.
+            }
+            if (!f.isAccessible()) {
+                f.setAccessible(true);
+            }
+            // process field value:
+            Object attributeValue = null;
+            Object defaultValue = null;
+            if (ctx.skipDefaults() && defTarget != null) { // default target defined:
+                try {
+                    attributeValue = f.get(target);
+                    defaultValue = f.get(defTarget);
+                } catch (IllegalAccessException neverThrown) {
+                    // ignored.
+                }
+                // null-safe equality test:
+                if (attributeValue == null) {
+                    if (defaultValue == null) {
+                        continue; // skip default value.
+                    }
+                } else {
+                    if (attributeValue.equals(defaultValue)) {
+                        continue; // skip default value.
+                    }
+                }
+            } else { // comparison default value undefined:
+                try {
+                    attributeValue = f.get(target);
+                } catch (IllegalAccessException neverThrown) {
+                    // ignored.
+                }
+            }
+            // encode non-default attribute value:
+            writer.startElement(ctx.aliasOrNameFor(f));
+            if (attributeValue == null) {
+                writer.setAttribute(ATTRIBUTE_NIL, Boolean.toString(true));
+            } else { // non-null:
+                if (ValueType.is(f.getType())) {
+                    writer.writeValue(attributeValue.toString());
+                } else {
+                    writer.write(attributeValue);
+                }
+            }
+            writer.endElement();
+        }
+        writer.endElement();
+    }
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public Serializable unmarshalNew(CompositeReader reader, UnmarshalContext ctx) throws ClassNotFoundException {
+        final String classAttrVal = reader.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS);
+        final Class cls = ctx.classFor(classAttrVal);
+        if (Serializable.class.isAssignableFrom(cls)) {
+            Object ret;
+            try {
+                if (ReflectionUtil.hasOuterRefField(cls)) {
+                    if (!reader.next() || !reader.atElementStart() || !reader.elementName().equals(SerializableStrategy.ELEMENT_OUTER)) {
+                        throw new InvalidFormatException(ctx.readerPositionDescriptor(),
+                                "expected element start: " + SerializableStrategy.ELEMENT_OUTER);
+                    }
+                    reader.next(); // consumed start this.outer.
+                    final Object outer = reader.read();
+                    // do not consume this.outer end: let the second step while do it.
+                    ret = ReflectionUtil.instantiateInner(cls, outer);
+                } else {
+                    ret = ctx.defaultConstructorFor(cls).newInstance();
+                }
+            } catch (ReflectiveOperationException defaultConstructorX) {
+                ret = ReflectionUtil.instantiateUnsafely(cls);
+            }
+            return (Serializable) ret;
+        }
+        throw new IllegalArgumentException("class not serializable: " + classAttrVal);
+    }
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public Serializable unmarshalInit(Serializable target, CompositeReader reader, UnmarshalContext ctx) {
+        // read object attributes: in exactly the same order as they were written:
+        if (!reader.next() || !reader.atElementStart()) {
+            throw new InvalidFormatException(ctx.readerPositionDescriptor(),
+                    "expected: start element, found: " + reader.elementName());
+        }
+        final Class cls = target.getClass();
+        try {
+            final SInputStream sis = new SInputStream(target, reader, ctx, cls);
+            do {
+                try {
+                    // check for readObject():
+                    final Method readObject = sis.level.getDeclaredMethod(METHOD_READOBJECT, PARAMS_OIS);
+                    readObject.setAccessible(true); // method should be private. Hence must be set accessible true.
+                    readObject.invoke(target, sis);
+                } catch (NoSuchMethodException nsmX) {
+                    this.defaultUnmarshalObject(target, reader, ctx, sis.level, sis);
+                } catch (InvocationTargetException itX) {
+                    throw new IllegalArgumentException(itX);
+                } catch (IllegalAccessException neverThrown) {
+                    // ignored.
+                }
+                sis.level = sis.level.getSuperclass();
+            } while (this.continueProcessFor(sis.level));
+        } catch (IOException neverThrown) {
+            // ignored.
+        }
+        if (reader.atElementEnd() && reader.elementName().equals(this.name())) {
+            // check for readResolve():
+            try {
+                final Method readResolveM = findHierarchicalDeclaredMethod(cls, METHOD_READRESOLVE);
+                readResolveM.setAccessible(true); // method may be private. Hence must be set accessible true.
+                final Object resolved = readResolveM.invoke(target);
+                if (resolved == null) {
+                    return null;
+                }
+                if (!(resolved instanceof Serializable)) {
+                    throw new RuntimeException(new NotSerializableException(resolved.getClass().getName()));
+                }
+                return (Serializable) resolved;
+            } catch (NoSuchMethodException | IllegalAccessException readResolveNotFound) {
+                // ignore.
+            } catch (InvocationTargetException readResolveFailure) {
+                throw new RuntimeException(readResolveFailure);
+            }
+            return target;
+        }
+        throw new InvalidFormatException(ctx.readerPositionDescriptor(), "missing element end: " + this.name());
+    }
+
+    private static void defaultUnmarshalObject(Object instance, CompositeReader reader, UnmarshalContext ctx, Class level, SInputStream inputStream) {
+        if (serializablePersistentFieldsFor(level, ctx) != null) {
+            inputStream.readFields();
+            return;
+        }
         if (!reader.atElementStart() || !reader.elementName().equals(SerializableStrategy.ELEMENT_FIELDS)) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(),
                     "expected: " + SerializableStrategy.ELEMENT_FIELDS);
@@ -341,90 +433,31 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                 "missing element end: " + SerializableStrategy.ELEMENT_FIELDS);
     }
 
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Serializable unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        final String classAttrVal = reader.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS);
-        final Class cls = ctx.classFor(classAttrVal);
-        if (Serializable.class.isAssignableFrom(cls)) {
-            Object ret;
-            try {
-                if (ReflectionUtil.hasOuterRefField(cls)) {
-                    if (!reader.next() || !reader.atElementStart() || !reader.elementName().equals(SerializableStrategy.ELEMENT_OUTER)) {
-                        throw new InvalidFormatException(ctx.readerPositionDescriptor(),
-                                "expected element start: " + SerializableStrategy.ELEMENT_OUTER);
-                    }
-                    reader.next(); // consumed start this.outer.
-                    final Object outer = reader.read();
-                    // do not consume this.outer end: let the second step while do it.
-                    ret = ReflectionUtil.instantiateInner(cls, outer);
-                } else {
-                    ret = ctx.defaultConstructorFor(cls).newInstance();
-                }
-            } catch (ReflectiveOperationException defaultConstructorX) {
-                ret = ReflectionUtil.instantiateUnsafely(cls);
+    private static ObjectStreamField[] serializablePersistentFieldsFor(Class cls, UnmarshalContext ctx) {
+        try {
+            final Field serialPersistentFields = cls.getDeclaredField(FIELD_PERSISTENTFIELDS);
+            if (((serialPersistentFields.getModifiers() & MODIFIERS_PERSISTENTFIELDS) == MODIFIERS_PERSISTENTFIELDS)
+                    && (serialPersistentFields.getType().isArray() && serialPersistentFields.getType().getComponentType() == ObjectStreamField.class)) {
+                serialPersistentFields.setAccessible(true);
+                return (ObjectStreamField[]) serialPersistentFields.get(null);
             }
-            return (Serializable) ret;
+        } catch (IllegalAccessException inaccessibleSerialPersistentFields) {
+            throw new InvalidFormatException(ctx.readerPositionDescriptor(), inaccessibleSerialPersistentFields);
+        } catch (NoSuchFieldException noSerialPersistentFields) {
         }
-        throw new IllegalArgumentException("class not serializable: " + classAttrVal);
+        return null;
     }
 
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Serializable unmarshalInit(Serializable target, CompositeReader reader, UnmarshalContext ctx)
-            throws IllegalAccessException {
-        // read object attributes: in exactly the same order as they were written:
-        if (!reader.next() || !reader.atElementStart()) {
-            throw new InvalidFormatException(ctx.readerPositionDescriptor(),
-                    "expected: start element, found: " + reader.elementName());
-        }
-        final Class cls = target.getClass();
+    private static ValueType valueTypeFor(Class declaring, String field) {
         try {
-            final SInputStream sis = new SInputStream(target, reader, ctx, cls);
-            do {
-                try {
-                    // check for readObject():
-                    final Method readObject = sis.level.getDeclaredMethod(METHOD_READOBJECT, PARAMS_OIS);
-                    readObject.setAccessible(true); // method should be private. Hence must be set accessible true.
-                    readObject.invoke(target, sis);
-                } catch (NoSuchMethodException nsmX) {
-                    this.defaultUnmarshalObject(target, reader, ctx, sis.level);
-                } catch (InvocationTargetException itX) {
-                    throw new IllegalArgumentException(itX);
-                } catch (IllegalAccessException neverThrown) {
-                    // ignored.
-                }
-                sis.level = sis.level.getSuperclass();
-            } while (this.continueProcessFor(sis.level));
-        } catch (IOException neverThrown) {
-            // ignored.
+            return valueTypeFor(declaring.getDeclaredField(field));
+        } catch (NoSuchFieldException nsfX) {
+            return null;
         }
-        if (reader.atElementEnd() && reader.elementName().equals(this.name())) {
-            // check for readResolve():
-            try {
-                final Method readResolveM = cls.getDeclaredMethod(METHOD_READRESOLVE);
-                readResolveM.setAccessible(true); // method may be private. Hence must be set accessible true.
-                final Object resolved = readResolveM.invoke(target);
-                if (resolved == null) {
-                    return null;
-                }
-                if (!(resolved instanceof Serializable)) {
-                    throw new RuntimeException(new NotSerializableException(resolved.getClass().getName()));
-                }
-                return (Serializable) resolved;
-            } catch (NoSuchMethodException | IllegalAccessException readResolveNotFound) {
-                // ignore.
-            } catch (InvocationTargetException readResolveFailure) {
-                throw new RuntimeException(readResolveFailure);
-            }
-            return target;
-        }
-        throw new InvalidFormatException(ctx.readerPositionDescriptor(), "missing element end: " + this.name());
+    }
+
+    private static ValueType valueTypeFor(Field f) {
+        return Modifier.isStatic(f.getModifiers()) ? null : ValueType.of(f.getType());
     }
 
     private final class SOutputStream extends ObjectOutputStream {
@@ -449,22 +482,22 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             // non-op.
         }
 
         @Override
-        public void flush() throws IOException {
+        public void flush() {
             // non-op.
         }
 
         @Override
-        public void defaultWriteObject() throws IOException {
+        public void defaultWriteObject() {
             defaultMarshalObject(this.target, this.defs, this.writer, this.context, this.level, this.outerRef);
         }
 
         @Override
-        public PutField putFields() throws IOException {
+        public PutField putFields() {
             if (this.lazyPutFieldImpl == null) {
                 this.lazyPutFieldImpl = new PutFieldImpl();
             }
@@ -472,64 +505,64 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         }
 
         @Override
-        public void reset() throws IOException {
+        public void reset() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void useProtocolVersion(int version) throws IOException {
+        public void useProtocolVersion(int version) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void write(int val) throws IOException {
+        public void write(int val) {
             this.writer.writeByte((byte) val);
         }
 
         @Override
-        public void write(byte[] buf) throws IOException {
+        public void write(byte[] buf) {
             this.writer.write(buf);
         }
 
         @Override
-        public void write(byte[] buf, int off, int len) throws IOException {
+        public void write(byte[] buf, int off, int len) {
             this.writer.write(Arrays.copyOfRange(buf, off, len - off));
         }
 
         @Override
-        public void writeBoolean(boolean val) throws IOException {
+        public void writeBoolean(boolean val) {
             this.writer.writeBoolean(val);
         }
 
         @Override
-        public void writeByte(int val) throws IOException {
+        public void writeByte(int val) {
             this.writer.writeByte((byte) val);
         }
 
         @Override
-        public void writeBytes(String str) throws IOException {
+        public void writeBytes(String str) {
             this.writer.write(str.getBytes());
         }
 
         @Override
-        public void writeChar(int val) throws IOException {
+        public void writeChar(int val) {
             this.writer.writeChar((char) val);
         }
 
         @Override
-        public void writeChars(String str) throws IOException {
+        public void writeChars(String str) {
             final char[] chars = new char[str.length()];
             str.getChars(0, chars.length, chars, 0);
             this.writer.write(chars);
         }
 
         @Override
-        public void writeDouble(double val) throws IOException {
+        public void writeDouble(double val) {
             this.writer.writeDouble(val);
         }
 
         @Override
-        public void writeFields() throws IOException {
+        public void writeFields() {
             this.writer.startElement(SerializableStrategy.ELEMENT_FIELDS);
             if (this.lazyPutFieldImpl != null) {
                 for (Map.Entry<String, Object> field : this.lazyPutFieldImpl.fields.entrySet()) {
@@ -552,40 +585,40 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         }
 
         @Override
-        public void writeFloat(float val) throws IOException {
+        public void writeFloat(float val) {
             this.writer.writeFloat(val);
         }
 
         @Override
-        public void writeInt(int val) throws IOException {
+        public void writeInt(int val) {
             this.writer.writeInt(val);
         }
 
         @Override
-        public void writeLong(long val) throws IOException {
+        public void writeLong(long val) {
             this.writer.writeLong(val);
         }
 
         @Override
-        protected void writeObjectOverride(Object obj) throws IOException {
+        protected void writeObjectOverride(Object obj) {
             this.writer.write(obj);
         }
 
         @Override
-        public void writeShort(int val) throws IOException {
+        public void writeShort(int val) {
             this.writer.writeShort((short) val);
         }
 
         @Override
-        public void writeUTF(String str) throws IOException {
+        public void writeUTF(String str) {
             this.writer.write(str);
         }
 
         @Override
-        public void writeUnshared(Object obj) throws IOException {
+        public void writeUnshared(Object obj) {
             throw new UnsupportedOperationException();
         }
-    }//(+)class SOutputStream.
+    }
 
     private static final class PutFieldImpl extends ObjectOutputStream.PutField {
 
@@ -638,10 +671,10 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
 
         @Deprecated
         @Override
-        public void write(ObjectOutput out) throws IOException {
+        public void write(ObjectOutput out) {
             throw new UnsupportedOperationException("Deprecated");
         }
-    }//(+)class PutFieldImpl.
+    }
 
     private final class SInputStream extends ObjectInputStream {
 
@@ -658,55 +691,55 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         }
 
         @Override
-        public void registerValidation(ObjectInputValidation obj, int prio) throws NotActiveException, InvalidObjectException {
+        public void registerValidation(ObjectInputValidation obj, int prio) {
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             this.reader = null;
             this.instance = null;
             this.level = null;
         }
 
         @Override
-        public void defaultReadObject() throws IOException, ClassNotFoundException {
-            defaultUnmarshalObject(this.instance, this.reader, this.context, this.level);
+        public void defaultReadObject() {
+            defaultUnmarshalObject(this.instance, this.reader, this.context, this.level, this);
         }
 
         @Override
-        public int read() throws IOException {
+        public int read() {
             return (int) this.reader.readByte();
         }
 
         @Override
-        public int read(byte[] buf, int off, int len) throws IOException {
+        public int read(byte[] buf, int off, int len) {
             final byte[] read = (byte[]) this.reader.readArray(byte.class);
             System.arraycopy(read, 0, buf, off, len);
             return read.length;
         }
 
         @Override
-        public boolean readBoolean() throws IOException {
+        public boolean readBoolean() {
             return this.reader.readBoolean();
         }
 
         @Override
-        public byte readByte() throws IOException {
+        public byte readByte() {
             return this.reader.readByte();
         }
 
         @Override
-        public char readChar() throws IOException {
+        public char readChar() {
             return this.reader.readChar();
         }
 
         @Override
-        public double readDouble() throws IOException {
+        public double readDouble() {
             return this.reader.readDouble();
         }
 
         @Override
-        public GetField readFields() throws IOException, ClassNotFoundException {
+        public GetField readFields() {
             if (!this.reader.atElementStart() || !this.reader.elementName().equals(SerializableStrategy.ELEMENT_FIELDS)) {
                 throw new InvalidFormatException(this.context.readerPositionDescriptor(),
                         "expected: " + SerializableStrategy.ELEMENT_FIELDS + ", found: " + this.reader.elementName());
@@ -752,62 +785,62 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         }
 
         @Override
-        public float readFloat() throws IOException {
+        public float readFloat() {
             return this.reader.readFloat();
         }
 
         @Override
-        public void readFully(byte[] buf) throws IOException {
+        public void readFully(byte[] buf) {
             this.read(buf, 0, buf.length);
         }
 
         @Override
-        public void readFully(byte[] buf, int off, int len) throws IOException {
+        public void readFully(byte[] buf, int off, int len) {
             this.read(buf, off, len);
         }
 
         @Override
-        public int readInt() throws IOException {
+        public int readInt() {
             return this.reader.readInt();
         }
 
         @Override
-        public long readLong() throws IOException {
+        public long readLong() {
             return this.reader.readLong();
         }
 
         @Override
-        protected Object readObjectOverride() throws IOException, ClassNotFoundException {
+        protected Object readObjectOverride() {
             return this.reader.read();
         }
 
         @Override
-        public short readShort() throws IOException {
+        public short readShort() {
             return this.reader.readShort();
         }
 
         @Override
-        public String readUTF() throws IOException {
+        public String readUTF() {
             return (String) this.reader.read();
         }
 
         @Override
-        public Object readUnshared() throws IOException, ClassNotFoundException {
+        public Object readUnshared() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public int readUnsignedByte() throws IOException {
+        public int readUnsignedByte() {
             return this.reader.readByte();
         }
 
         @Override
-        public int readUnsignedShort() throws IOException {
+        public int readUnsignedShort() {
             return this.reader.readShort();
         }
 
         @Override
-        public int skipBytes(int len) throws IOException {
+        public int skipBytes(int len) {
             throw new UnsupportedOperationException();
         }
 
@@ -822,20 +855,20 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         }
 
         @Override
-        public int read(byte[] b) throws IOException {
+        public int read(byte[] b) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public synchronized void reset() throws IOException {
+        public synchronized void reset() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public long skip(long n) throws IOException {
+        public long skip(long n) {
             throw new UnsupportedOperationException();
         }
-    }//(+)class SInputStream.
+    }
 
     private static final class GetFieldImpl extends ObjectInputStream.GetField {
 
@@ -851,7 +884,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         }
 
         @Override
-        public boolean defaulted(String name) throws IOException {
+        public boolean defaulted(String name) {
             return false;
         }
 
@@ -867,49 +900,49 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         }
 
         @Override
-        public boolean get(String name, boolean val) throws IOException {
+        public boolean get(String name, boolean val) {
             return this.get0(name, Boolean.class, val);
         }
 
         @Override
-        public byte get(String name, byte val) throws IOException {
+        public byte get(String name, byte val) {
             return this.get0(name, Byte.class, val);
         }
 
         @Override
-        public char get(String name, char val) throws IOException {
+        public char get(String name, char val) {
             return this.get0(name, Character.class, val);
         }
 
         @Override
-        public short get(String name, short val) throws IOException {
+        public short get(String name, short val) {
             return this.get0(name, Short.class, val);
         }
 
         @Override
-        public int get(String name, int val) throws IOException {
+        public int get(String name, int val) {
             return this.get0(name, Integer.class, val);
         }
 
         @Override
-        public long get(String name, long val) throws IOException {
+        public long get(String name, long val) {
             return this.get0(name, Long.class, val);
         }
 
         @Override
-        public float get(String name, float val) throws IOException {
+        public float get(String name, float val) {
             return this.get0(name, Float.class, val);
         }
 
         @Override
-        public double get(String name, double val) throws IOException {
+        public double get(String name, double val) {
             return this.get0(name, Double.class, val);
         }
 
         @Override
-        public Object get(String name, Object val) throws IOException {
+        public Object get(String name, Object val) {
             final Object value = this.fields.get(name);
             return value != null ? value : val;
         }
-    }//(+)class GetFieldImpl.
-}//class SerializableStrategy.
+    }
+}

@@ -30,8 +30,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.7
+ * @since 1.0
  */
 public final class EnumStrategy extends AbstractStrategy<Enum>
         implements SimpleStrategy<Enum> {
@@ -91,10 +91,10 @@ public final class EnumStrategy extends AbstractStrategy<Enum>
             cls = cls.getSuperclass();
         }
         // build enum name and constant name:
-        final StringBuilder sb = new StringBuilder(ctx.aliasFor(cls, cls.getName()));
-        sb.append(EnumStrategy.SEPARATOR);
-        sb.append(target);
-        return sb.toString();
+        return new StringBuilder(ctx.aliasOrNameFor(cls))
+                .append(EnumStrategy.SEPARATOR)
+                .append(target.name())
+                .toString();
     }
 
     /**
@@ -110,11 +110,9 @@ public final class EnumStrategy extends AbstractStrategy<Enum>
         final String aliasOrName = text.substring(0, index);
         try {
             // find enum class and value:
-            return Enum.valueOf(
-                    ctx.classFor(aliasOrName),
-                    text.substring(index + 1));
+            return Enum.valueOf(ctx.classFor(aliasOrName), text.substring(index + 1));
         } catch (ClassNotFoundException cnfx) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), cnfx);
         }
     }
-}//class EnumStrategy.
+}

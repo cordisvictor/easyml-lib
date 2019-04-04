@@ -18,18 +18,19 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.Vector;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.util.Vector;
 
 /**
  * VectorStrategy class that extends the {@linkplain CollectionStrategy} for the
  * {@linkplain Vector}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class VectorStrategy extends CollectionStrategy<Vector> {
 
@@ -57,14 +58,6 @@ public final class VectorStrategy extends CollectionStrategy<Vector> {
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<Vector> c) {
-        return c == Vector.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String name() {
         return VectorStrategy.NAME;
     }
@@ -73,8 +66,7 @@ public final class VectorStrategy extends CollectionStrategy<Vector> {
      * {@inheritDoc }
      */
     @Override
-    public Vector unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Vector unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         try {
             return new Vector(Integer.parseInt(reader.elementRequiredAttribute(ATTRIBUTE_SIZE)));
         } catch (NumberFormatException nfx) {

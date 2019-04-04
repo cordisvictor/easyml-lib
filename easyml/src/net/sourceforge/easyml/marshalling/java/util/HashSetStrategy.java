@@ -18,18 +18,19 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.HashSet;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.util.HashSet;
 
 /**
  * HashSetStrategy class that extends the {@linkplain CollectionStrategy} for
  * the {@linkplain HashSet}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class HashSetStrategy extends CollectionStrategy<HashSet> {
 
@@ -57,14 +58,6 @@ public final class HashSetStrategy extends CollectionStrategy<HashSet> {
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<HashSet> c) {
-        return c == HashSet.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String name() {
         return HashSetStrategy.NAME;
     }
@@ -73,8 +66,7 @@ public final class HashSetStrategy extends CollectionStrategy<HashSet> {
      * {@inheritDoc }
      */
     @Override
-    public HashSet unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public HashSet unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         try {
             return new HashSet(Integer.parseInt(reader.elementRequiredAttribute(ATTRIBUTE_SIZE)));
         } catch (NumberFormatException nfx) {

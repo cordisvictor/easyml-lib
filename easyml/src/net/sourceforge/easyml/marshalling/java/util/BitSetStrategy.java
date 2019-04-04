@@ -18,14 +18,10 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.BitSet;
 import net.sourceforge.easyml.InvalidFormatException;
-import net.sourceforge.easyml.marshalling.AbstractStrategy;
-import net.sourceforge.easyml.marshalling.CompositeReader;
-import net.sourceforge.easyml.marshalling.CompositeStrategy;
-import net.sourceforge.easyml.marshalling.CompositeWriter;
-import net.sourceforge.easyml.marshalling.MarshalContext;
-import net.sourceforge.easyml.marshalling.UnmarshalContext;
+import net.sourceforge.easyml.marshalling.*;
+
+import java.util.BitSet;
 
 /**
  * BitSetStrategy class that implements the {@linkplain CompositeStrategy}
@@ -33,8 +29,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.4.3
  * @version 1.4.3
+ * @since 1.4.3
  */
 public final class BitSetStrategy extends AbstractStrategy<BitSet> implements CompositeStrategy<BitSet> {
 
@@ -104,8 +100,7 @@ public final class BitSetStrategy extends AbstractStrategy<BitSet> implements Co
      * {@inheritDoc }
      */
     @Override
-    public BitSet unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public BitSet unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         return new BitSet();
     }
 
@@ -113,8 +108,7 @@ public final class BitSetStrategy extends AbstractStrategy<BitSet> implements Co
      * {@inheritDoc }
      */
     @Override
-    public BitSet unmarshalInit(BitSet target, CompositeReader reader, UnmarshalContext ctx)
-            throws IllegalAccessException {
+    public BitSet unmarshalInit(BitSet target, CompositeReader reader, UnmarshalContext ctx) {
         // consume root element start tag:
         reader.next();
         // read elements:

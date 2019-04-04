@@ -28,39 +28,17 @@ import java.util.Date;
  * {@linkplain Strategy} instances at un-marshalling stage.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
+ * @version 1.4.6
  * @since 1.0
- * @version 1.3.9
  */
 public interface UnmarshalContext {
-
-    /**
-     * Returns the class for the given alias, or <code>null</code> if the given
-     * alias is not configured.
-     *
-     * @param alias of the class
-     *
-     * @return the class or null
-     */
-    Class aliasedClassFor(String alias);
-
-    /**
-     * Returns the field for the given class-alias pair, or <code>null</code> if
-     * the given class-alias is not configured.
-     *
-     * @param declaring class declaring the field
-     * @param alias of the field
-     *
-     * @return the field or null
-     */
-    Field aliasedFieldFor(Class declaring, String alias);
 
     /**
      * Returns the given class' default constructor, if any. If found but not
      * accessible, it will be set to be accessible.
      *
      * @param <T> underlying type for the given class c
-     * @param c the class to reflect the default constructor for
-     *
+     * @param c   the class to reflect the default constructor for
      * @return class' default constructor
      * @throws NoSuchMethodException if no default constructor defined for class
      */
@@ -72,7 +50,6 @@ public interface UnmarshalContext {
      * known class alias or class name.
      *
      * @param aliasOrName a configured class alias or a class name
-     *
      * @return the class
      * @throws ClassNotFoundException
      */
@@ -84,9 +61,8 @@ public interface UnmarshalContext {
      * given <code>aliasOrName</code> is not a known field alias or field name,
      * within the given declaring class.
      *
-     * @param declaring class declaring the field
+     * @param declaring   class declaring the field
      * @param aliasOrName a configured field alias or a field name
-     *
      * @return the field
      * @throws NoSuchFieldException
      */
@@ -105,7 +81,6 @@ public interface UnmarshalContext {
      * Parses the given date using the date format context configuration.
      *
      * @param date to parse
-     *
      * @return the parsed date
      * @throws ParseException when date is invalid w.r.t. the configuration
      */

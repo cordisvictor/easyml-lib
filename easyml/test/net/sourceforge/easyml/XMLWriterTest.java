@@ -18,10 +18,6 @@
  */
 package net.sourceforge.easyml;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.ObjectStrategy;
 import net.sourceforge.easyml.testmodel.DefaultCompositeObject;
@@ -29,9 +25,15 @@ import net.sourceforge.easyml.testmodel.FacultyDTO;
 import net.sourceforge.easyml.testmodel.PersonDTO;
 import net.sourceforge.easyml.testmodel.StudentPersonDTO;
 import org.junit.After;
-import static org.junit.Assert.*;
 import org.junit.Test;
 import org.w3c.dom.Document;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+
+import static org.junit.Assert.*;
 
 /**
  *
@@ -113,7 +115,6 @@ public class XMLWriterTest {
 
         final XMLWriter xw = new XMLWriter(this.out);
         xw.getCompositeStrategies().add(ObjectStrategy.INSTANCE);
-        xw.setPrettyPrint(true);
         xw.write(dco);
         xw.flush();
 
@@ -147,7 +148,6 @@ public class XMLWriterTest {
 
         final XMLWriter xw = new XMLWriter(this.out);
         xw.getCompositeStrategies().add(SerializableStrategy.INSTANCE);
-        xw.setPrettyPrint(true);
         xw.write(dco);
         xw.flush();
 
@@ -194,7 +194,6 @@ public class XMLWriterTest {
         n0.next.next = n0;
 
         final XMLWriter xw = new XMLWriter(this.out);
-        xw.setPrettyPrint(true);
         try {
             xw.write(n0);
             xw.write(new NoFields());
@@ -218,7 +217,6 @@ public class XMLWriterTest {
         Document dom = dBuilder.newDocument();
 
         final XMLWriter xw = new XMLWriter(dom);
-        xw.setPrettyPrint(true);
         try {
             xw.write(n0);
             xw.flush();

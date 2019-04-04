@@ -31,8 +31,8 @@ import net.sourceforge.migbase64.util.Base64;
  * implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public final class Base64Strategy extends AbstractStrategy<byte[]> implements SimpleStrategy<byte[]> {
 
@@ -91,4 +91,4 @@ public final class Base64Strategy extends AbstractStrategy<byte[]> implements Si
     public byte[] unmarshal(String text, UnmarshalContext ctx) {
         return Base64.decode(text);
     }
-}//class Base64Strategy.
+}

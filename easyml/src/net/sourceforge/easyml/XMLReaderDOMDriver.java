@@ -31,10 +31,10 @@ import org.w3c.dom.NodeList;
  * transforming the DOM to text so that it can be inputed as text to EasyML.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.1.0
  * @version 1.3.9
+ * @since 1.1.0
  */
-/* default */ final class XMLReaderDOMDriver extends XMLReader.Driver {
+final class XMLReaderDOMDriver extends XMLReader.Driver {
 
     private Document root;
     private Element crt;
@@ -44,7 +44,7 @@ import org.w3c.dom.NodeList;
      * Creates a new instance.
      *
      * @param target to use and be used by
-     * @param in to read from
+     * @param in     to read from
      */
     public XMLReaderDOMDriver(XMLReader target, Document in) {
         super(target);

@@ -18,14 +18,15 @@
  */
 package net.sourceforge.easyml.marshalling.dtd;
 
-import java.text.ParseException;
-import java.util.Date;
 import net.sourceforge.easyml.DTD;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.AbstractStrategy;
 import net.sourceforge.easyml.marshalling.MarshalContext;
-import net.sourceforge.easyml.marshalling.UnmarshalContext;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
+import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.text.ParseException;
+import java.util.Date;
 
 /**
  * DateStrategy class that implements the {@linkplain SimpleStrategy} interface
@@ -33,8 +34,8 @@ import net.sourceforge.easyml.marshalling.SimpleStrategy;
  * ISO8601 without time zone information. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.5
+ * @since 1.0
  */
 public final class DateStrategy extends AbstractStrategy<Date> implements SimpleStrategy<Date> {
 
@@ -97,4 +98,4 @@ public final class DateStrategy extends AbstractStrategy<Date> implements Simple
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), px);
         }
     }
-}//class DateStrategy.
+}

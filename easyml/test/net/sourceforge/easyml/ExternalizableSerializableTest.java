@@ -18,23 +18,20 @@
  */
 package net.sourceforge.easyml;
 
-import static org.junit.Assert.*;
+import net.sourceforge.easyml.marshalling.java.io.ExternalizableStrategy;
+import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
+import net.sourceforge.easyml.marshalling.java.lang.ArrayStrategy;
+import net.sourceforge.easyml.marshalling.java.lang.ClassStrategy;
+import net.sourceforge.easyml.marshalling.java.lang.EnumStrategy;
 import org.junit.After;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.InvalidObjectException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.Serializable;
-import net.sourceforge.easyml.marshalling.java.io.ExternalizableStrategy;
-import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
+import java.io.*;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Victor Cordis ( cordis.victor at gmail.com)
@@ -49,11 +46,53 @@ public class ExternalizableSerializableTest {
     }
 
     @Test
+    public void testEnumSetStrategy() {
+        final EnumSet expected = EnumSet.allOf(EasyML.Style.class);
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.alias(EasyML.Style.class, "emlStype");
+        xos.getSimpleStrategies().add(EnumStrategy.INSTANCE);
+        xos.getSimpleStrategies().add(ClassStrategy.INSTANCE);
+        xos.getCompositeStrategies().add(ArrayStrategy.INSTANCE);
+        xos.getCompositeStrategies().add(SerializableStrategy.INSTANCE);
+        xos.write(expected);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.alias(EasyML.Style.class, "emlStype");
+        xis.getSimpleStrategies().put(EnumStrategy.INSTANCE.name(), EnumStrategy.INSTANCE);
+        xis.getSimpleStrategies().put(ClassStrategy.INSTANCE.name(), ClassStrategy.INSTANCE);
+        xis.getCompositeStrategies().put(ArrayStrategy.INSTANCE.name(), ArrayStrategy.INSTANCE);
+        xis.getCompositeStrategies().put(SerializableStrategy.INSTANCE.name(), SerializableStrategy.INSTANCE);
+        assertEquals(expected, xis.read());
+        xis.close();
+    }
+
+    @Test
+    public void testSerialPersistentFields() {
+        final Map expected = new ConcurrentHashMap(2);
+        expected.put(1, "unu");
+        expected.put(2, "doi");
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.getCompositeStrategies().add(ArrayStrategy.INSTANCE);
+        xos.getCompositeStrategies().add(SerializableStrategy.INSTANCE);
+        xos.write(expected);
+        xos.close();
+        System.out.println(this.out);
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getCompositeStrategies().put(ArrayStrategy.NAME, ArrayStrategy.INSTANCE);
+        xis.getCompositeStrategies().put(SerializableStrategy.NAME, SerializableStrategy.INSTANCE);
+        assertEquals(expected, xis.read());
+        xis.close();
+    }
+
+    @Test
     public void testExternToSerial() {
         final Duration expected = new Duration(3, 52);
 
         final XMLWriter xos = new XMLWriter(this.out);
-        xos.setPrettyPrint(true);
         xos.getCompositeStrategies().add(ExternalizableStrategy.INSTANCE);
         xos.getCompositeStrategies().add(SerializableStrategy.INSTANCE);
         xos.write(expected);

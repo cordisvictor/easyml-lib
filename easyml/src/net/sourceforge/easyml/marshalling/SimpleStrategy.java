@@ -25,10 +25,9 @@ package net.sourceforge.easyml.marshalling;
  * the XML output and input stream classes.
  *
  * @param <T> target class
- *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public interface SimpleStrategy<T> extends Strategy<T> {
 
@@ -37,21 +36,19 @@ public interface SimpleStrategy<T> extends Strategy<T> {
      * encoding XML special characters is left to the encoder.
      *
      * @param target to marshal
-     * @param ctx the marshalling context
-     *
+     * @param ctx    the marshalling context
      * @return the text
      */
     String marshal(T target, MarshalContext ctx);
 
     /**
-     * Un-marshals the given non-null text to it's equivalent object. The
+     * Un-marshals the given non-null text to its equivalent object. The
      * responsibility of decoding XML special characters is left to the decoder.
      * Hence, the
      * <code>text</code> parameter contains the un-escaped XML text.
      *
      * @param text the input text
-     * @param ctx the un-marshalling context
-     *
+     * @param ctx  the un-marshalling context
      * @return the un-marshaled object
      */
     T unmarshal(String text, UnmarshalContext ctx);

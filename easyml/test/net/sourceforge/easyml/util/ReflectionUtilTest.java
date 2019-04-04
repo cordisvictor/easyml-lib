@@ -19,8 +19,9 @@
 package net.sourceforge.easyml.util;
 
 import net.sourceforge.easyml.testmodel.PersonDTO;
-import static org.junit.Assert.*;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * @author victor
@@ -150,5 +151,4 @@ public class ReflectionUtilTest {
             return true;
         }
     }
-
 }

@@ -18,24 +18,14 @@
  */
 package net.sourceforge.easyml.marshalling.java.io;
 
-import java.io.IOException;
-import java.io.NotSerializableException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.io.Externalizable;
-import java.io.Serializable;
+import net.sourceforge.easyml.DTD;
+import net.sourceforge.easyml.InvalidFormatException;
+import net.sourceforge.easyml.marshalling.*;
+
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import net.sourceforge.easyml.DTD;
-import net.sourceforge.easyml.InvalidFormatException;
-import net.sourceforge.easyml.marshalling.AbstractStrategy;
-import net.sourceforge.easyml.marshalling.CompositeAttributeWriter;
-import net.sourceforge.easyml.marshalling.CompositeReader;
-import net.sourceforge.easyml.marshalling.CompositeStrategy;
-import net.sourceforge.easyml.marshalling.CompositeWriter;
-import net.sourceforge.easyml.marshalling.MarshalContext;
-import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
 /**
  * ExternalizableStrategy class that implements the
@@ -48,7 +38,7 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * <li><code>readResolve()</code></li>
  * </ul>
  * <br/>Pure Java reflection is used when un-marshalling objects, because the
- * Externalizable interface states that it's implementations must define "public
+ * Externalizable interface states that its implementations must define "public
  * no-arg constructors".
  * <br/>
  * This implementation is thread-safe.
@@ -112,11 +102,11 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
      *
      * @param target target to extract attribute values from
      * @param writer to write attributes with
-     * @param ctx the context
+     * @param ctx    the context
      */
     protected void marshalDoAttributes(Externalizable target, CompositeAttributeWriter writer, MarshalContext ctx) {
         final Class c = target.getClass();
-        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasFor(c, c.getName()));
+        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasOrNameFor(c));
     }
 
     /**
@@ -182,8 +172,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
      * {@inheritDoc }
      */
     @Override
-    public Object unmarshalInit(Externalizable target, CompositeReader reader, UnmarshalContext ctx)
-            throws IllegalAccessException {
+    public Object unmarshalInit(Externalizable target, CompositeReader reader, UnmarshalContext ctx) {
         // read object attributes: in exactly the same order as they were written:
         if (!reader.next() || !reader.atElementStart()) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(),
@@ -227,92 +216,92 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             // non-op.
         }
 
         @Override
-        public void flush() throws IOException {
+        public void flush() {
             // non-op.
         }
 
         @Override
-        public void write(int val) throws IOException {
+        public void write(int val) {
             this.writer.writeByte((byte) val);
         }
 
         @Override
-        public void write(byte[] buf) throws IOException {
+        public void write(byte[] buf) {
             this.writer.write(buf);
         }
 
         @Override
-        public void write(byte[] buf, int off, int len) throws IOException {
+        public void write(byte[] buf, int off, int len) {
             this.writer.write(Arrays.copyOfRange(buf, off, len - off));
         }
 
         @Override
-        public void writeBoolean(boolean val) throws IOException {
+        public void writeBoolean(boolean val) {
             this.writer.writeBoolean(val);
         }
 
         @Override
-        public void writeByte(int val) throws IOException {
+        public void writeByte(int val) {
             this.writer.writeByte((byte) val);
         }
 
         @Override
-        public void writeBytes(String str) throws IOException {
+        public void writeBytes(String str) {
             this.writer.write(str.getBytes());
         }
 
         @Override
-        public void writeChar(int val) throws IOException {
+        public void writeChar(int val) {
             this.writer.writeChar((char) val);
         }
 
         @Override
-        public void writeChars(String str) throws IOException {
+        public void writeChars(String str) {
             final char[] chars = new char[str.length()];
             str.getChars(0, chars.length, chars, 0);
             this.writer.write(chars);
         }
 
         @Override
-        public void writeDouble(double val) throws IOException {
+        public void writeDouble(double val) {
             this.writer.writeDouble(val);
         }
 
         @Override
-        public void writeFloat(float val) throws IOException {
+        public void writeFloat(float val) {
             this.writer.writeFloat(val);
         }
 
         @Override
-        public void writeInt(int val) throws IOException {
+        public void writeInt(int val) {
             this.writer.writeInt(val);
         }
 
         @Override
-        public void writeLong(long val) throws IOException {
+        public void writeLong(long val) {
             this.writer.writeLong(val);
         }
 
         @Override
-        public void writeShort(int val) throws IOException {
+        public void writeShort(int val) {
             this.writer.writeShort((short) val);
         }
 
         @Override
-        public void writeUTF(String str) throws IOException {
+        public void writeUTF(String str) {
             this.writer.write(str);
         }
 
         @Override
-        public void writeObject(Object obj) throws IOException {
+        public void writeObject(Object obj) {
             this.writer.write(obj);
         }
-    }//(+)class EOutputStream.
+    }
 
     private final class EInputStream implements ObjectInput {
 
@@ -323,115 +312,115 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             // non-op.
         }
 
         @Override
-        public int read() throws IOException {
+        public int read() {
             return (int) this.reader.readByte();
         }
 
         @Override
-        public int read(byte[] buf, int off, int len) throws IOException {
+        public int read(byte[] buf, int off, int len) {
             final byte[] read = (byte[]) this.reader.readArray(byte.class);
             System.arraycopy(read, 0, buf, off, len);
             return read.length;
         }
 
         @Override
-        public boolean readBoolean() throws IOException {
+        public boolean readBoolean() {
             return this.reader.readBoolean();
         }
 
         @Override
-        public byte readByte() throws IOException {
+        public byte readByte() {
             return this.reader.readByte();
         }
 
         @Override
-        public char readChar() throws IOException {
+        public char readChar() {
             return this.reader.readChar();
         }
 
         @Override
-        public double readDouble() throws IOException {
+        public double readDouble() {
             return this.reader.readDouble();
         }
 
         @Override
-        public float readFloat() throws IOException {
+        public float readFloat() {
             return this.reader.readFloat();
         }
 
         @Override
-        public void readFully(byte[] buf) throws IOException {
+        public void readFully(byte[] buf) {
             this.read(buf, 0, buf.length);
         }
 
         @Override
-        public void readFully(byte[] buf, int off, int len) throws IOException {
+        public void readFully(byte[] buf, int off, int len) {
             this.read(buf, off, len);
         }
 
         @Override
-        public int readInt() throws IOException {
+        public int readInt() {
             return this.reader.readInt();
         }
 
         @Override
-        public long readLong() throws IOException {
+        public long readLong() {
             return this.reader.readLong();
         }
 
         @Override
-        public short readShort() throws IOException {
+        public short readShort() {
             return this.reader.readShort();
         }
 
         @Override
-        public String readUTF() throws IOException {
+        public String readUTF() {
             return (String) this.reader.read();
         }
 
         @Override
-        public int readUnsignedByte() throws IOException {
+        public int readUnsignedByte() {
             return this.reader.readByte();
         }
 
         @Override
-        public int readUnsignedShort() throws IOException {
+        public int readUnsignedShort() {
             return this.reader.readShort();
         }
 
         @Override
-        public int skipBytes(int len) throws IOException {
+        public int skipBytes(int len) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public int read(byte[] b) throws IOException {
+        public int read(byte[] b) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Object readObject() throws ClassNotFoundException, IOException {
+        public Object readObject() {
             return this.reader.read();
         }
 
         @Override
-        public String readLine() throws IOException {
+        public String readLine() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public long skip(long n) throws IOException {
+        public long skip(long n) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public int available() throws IOException {
+        public int available() {
             throw new UnsupportedOperationException();
         }
-    }//(+)class EInputStream.
-}//class ExternalizableStrategy.
+    }
+}

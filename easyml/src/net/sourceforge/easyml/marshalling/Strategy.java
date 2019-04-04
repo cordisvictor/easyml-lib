@@ -22,10 +22,9 @@ package net.sourceforge.easyml.marshalling;
  * Strategy interface used to marshal a data type to EasyML and back again.
  *
  * @param <T> target class
- *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public interface Strategy<T> {
 
@@ -53,7 +52,6 @@ public interface Strategy<T> {
      * otherwise.
      *
      * @param c to test
-     *
      * @return true if can be marshalled and un-marshalled using this strategy
      */
     boolean appliesTo(Class<T> c);
@@ -66,4 +64,4 @@ public interface Strategy<T> {
      * @return the non-null and non-empty name
      */
     String name();
-}//interface Strategy.
+}

@@ -18,21 +18,22 @@
  */
 package net.sourceforge.easyml.marshalling.java.net;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.AbstractStrategy;
 import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 /**
  * URLStrategy class that implements the {@linkplain SimpleStrategy} interface
  * for the Java {@linkplain URL}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class URLStrategy extends AbstractStrategy<URL>
         implements SimpleStrategy<URL> {
@@ -100,4 +101,4 @@ public final class URLStrategy extends AbstractStrategy<URL>
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), murlX);
         }
     }
-}//class URLStrategy.
+}

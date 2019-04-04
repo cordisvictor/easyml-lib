@@ -24,8 +24,8 @@ package net.sourceforge.easyml;
  * {@linkplain XMLReader}'s security policy.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.2.5
  * @version 1.3.3
+ * @since 1.2.5
  */
 public class IllegalClassException extends RuntimeException {
 

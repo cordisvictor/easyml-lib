@@ -18,29 +18,30 @@
  */
 package net.sourceforge.easyml.marshalling.java.lang;
 
-import java.lang.reflect.Array;
 import net.sourceforge.easyml.DTD;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.util.ValueType;
 
+import java.lang.reflect.Array;
+
 /**
  * ArrayStrategy class that implements the {@linkplain CompositeStrategy}
  * interface for Java arrays. This is a reflection-based implementation used for
  * arrays only.
- *
+ * <p>
  * <br/>This implementation acts as an override for the XML writer's
  * <code>writeArray</code> and XML reader's <code>readArray</code> deprecating
  * the {@linkplain net.sourceforge.easyml.XMLReader#readArray(java.lang.Class)
  * }
  * method and encodes only the non-default array elements (i.e. skips the
  * default element values w.r.t. the target array class).
- *
+ * <p>
  * <br/>This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.7
+ * @since 1.0
  */
 public final class ArrayStrategy extends AbstractStrategy implements CompositeStrategy {
 
@@ -48,13 +49,6 @@ public final class ArrayStrategy extends AbstractStrategy implements CompositeSt
      * Constant defining the value used for the strategy name.
      */
     public static final String NAME = "arrayx";
-    /**
-     * <b>Backward compatibility:</b> Constant defining the value used for the
-     * strategy name prior to EasyML 1.3.5.
-     *
-     * @deprecated use {@linkplain #NAME} instead.
-     */
-    public static final String NAME_1_3_4 = "array-o";
     /**
      * Constant defining the singleton instance.
      */
@@ -105,7 +99,7 @@ public final class ArrayStrategy extends AbstractStrategy implements CompositeSt
         final Class cls = target.getClass();
         final int length = Array.getLength(target);
         writer.startElement(ArrayStrategy.NAME);
-        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasFor(cls, cls.getName()));
+        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasOrNameFor(cls));
         writer.setAttribute(DTD.ATTRIBUTE_LENGTH, Integer.toString(length));
         // if skipDefaults then compute array default element value:
         final boolean skipDefaults = ctx.skipDefaults();
@@ -160,8 +154,7 @@ public final class ArrayStrategy extends AbstractStrategy implements CompositeSt
      * {@inheritDoc }
      */
     @Override
-    public Object unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Object unmarshalNew(CompositeReader reader, UnmarshalContext ctx) throws ClassNotFoundException {
         final Class cls = ctx.classFor(reader.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS));
         if (cls.isArray()) {
             try {
@@ -178,8 +171,7 @@ public final class ArrayStrategy extends AbstractStrategy implements CompositeSt
      * {@inheritDoc }
      */
     @Override
-    public Object unmarshalInit(Object target, CompositeReader reader, UnmarshalContext ctx)
-            throws IllegalAccessException {
+    public Object unmarshalInit(Object target, CompositeReader reader, UnmarshalContext ctx) {
         // consume root element start:
         reader.next();
         // read elements:
@@ -219,4 +211,4 @@ public final class ArrayStrategy extends AbstractStrategy implements CompositeSt
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), nfx);
         }
     }
-}//class ArrayStrategy.
+}

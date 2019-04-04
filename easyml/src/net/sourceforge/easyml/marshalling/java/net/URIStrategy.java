@@ -18,21 +18,22 @@
  */
 package net.sourceforge.easyml.marshalling.java.net;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.AbstractStrategy;
 import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 /**
  * URIStrategy class that implements the {@linkplain SimpleStrategy} interface
  * for the Java {@linkplain URI}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class URIStrategy extends AbstractStrategy<URI>
         implements SimpleStrategy<URI> {
@@ -100,4 +101,4 @@ public final class URIStrategy extends AbstractStrategy<URI>
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), urisX);
         }
     }
-}//class URIStrategy.
+}

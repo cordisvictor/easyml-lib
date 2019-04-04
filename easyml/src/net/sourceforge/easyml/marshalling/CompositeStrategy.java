@@ -27,10 +27,9 @@ package net.sourceforge.easyml.marshalling;
  * {@linkplain SimpleStrategy} instances.
  *
  * @param <T> target class
- *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.4.4
+ * @since 1.0
  */
 public interface CompositeStrategy<T> extends Strategy<T> {
 
@@ -43,7 +42,7 @@ public interface CompositeStrategy<T> extends Strategy<T> {
      *
      * @param target to marshal
      * @param writer writes XML elements
-     * @param ctx the marshalling context
+     * @param ctx    the marshalling context
      */
     void marshal(T target, CompositeWriter writer, MarshalContext ctx);
 
@@ -55,13 +54,11 @@ public interface CompositeStrategy<T> extends Strategy<T> {
      * root element end.
      *
      * @param reader reads XML
-     * @param ctx the un-marshalling context
-     *
+     * @param ctx    the un-marshalling context
+     * @return the non-initialized instance
      * @throws ClassNotFoundException if a class instantiation fails
      * @throws InstantiationException if a class instantiation fails
      * @throws IllegalAccessException if a class instantiation fails
-     *
-     * @return the non-initialized instance
      */
     T unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException;
@@ -77,12 +74,10 @@ public interface CompositeStrategy<T> extends Strategy<T> {
      *
      * @param target to initialize
      * @param reader reads XML elements
-     * @param ctx the un-marshalling context
-     *
-     * @throws IllegalAccessException if a class initialization fails
-     *
+     * @param ctx    the un-marshalling context
      * @return the initialized instance, possibly not the one referred by
      * <code>target</code>
+     * @throws IllegalAccessException if a class initialization fails
      */
     Object unmarshalInit(T target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException;
-}//interface CompositeStrategy.
+}

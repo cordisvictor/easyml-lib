@@ -23,8 +23,8 @@ package net.sourceforge.easyml;
  * being parsed is invalid w.r.t. the EasyML DTD.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.3
+ * @since 1.0
  */
 public class InvalidFormatException extends RuntimeException {
 
@@ -34,7 +34,7 @@ public class InvalidFormatException extends RuntimeException {
      * Creates a new instance of <code>InvalidFormatException</code>.
      *
      * @param positionDescriptor detailing the current reader position
-     * @param msg the detail message
+     * @param msg                the detail message
      */
     public InvalidFormatException(String positionDescriptor, String msg) {
         this(positionDescriptor, msg, null);
@@ -44,7 +44,7 @@ public class InvalidFormatException extends RuntimeException {
      * Creates a new instance of <code>InvalidFormatException</code>.
      *
      * @param positionDescriptor detailing the current reader position
-     * @param cause the cause
+     * @param cause              the cause
      */
     public InvalidFormatException(String positionDescriptor, Throwable cause) {
         super(positionDescriptor, cause);
@@ -55,8 +55,8 @@ public class InvalidFormatException extends RuntimeException {
      * Creates a new instance of <code>InvalidFormatException</code> .
      *
      * @param positionDescriptor detailing the current reader position
-     * @param msg the detail message
-     * @param cause the cause
+     * @param msg                the detail message
+     * @param cause              the cause
      */
     public InvalidFormatException(String positionDescriptor, String msg, Throwable cause) {
         super(positionDescriptor + ": " + msg, cause);

@@ -18,12 +18,13 @@
  */
 package net.sourceforge.easyml.marshalling.java.math;
 
-import java.math.BigInteger;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.AbstractStrategy;
 import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.math.BigInteger;
 
 /**
  * BigIntegerStrategy class that implements the {@linkplain SimpleStrategy}
@@ -31,8 +32,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class BigIntegerStrategy extends AbstractStrategy<BigInteger>
         implements SimpleStrategy<BigInteger> {
@@ -100,4 +101,4 @@ public final class BigIntegerStrategy extends AbstractStrategy<BigInteger>
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), nfx);
         }
     }
-}//class BigIntegerStrategy.
+}

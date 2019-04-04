@@ -27,10 +27,10 @@ import org.w3c.dom.Node;
  * XML to DOM documents.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.1.0
  * @version 1.3.9
+ * @since 1.1.0
  */
-/* default */ final class XMLWriterDOMDriver extends XMLWriter.Driver {
+final class XMLWriterDOMDriver extends XMLWriter.Driver {
 
     private Document root;
     private Element crt;
@@ -39,7 +39,7 @@ import org.w3c.dom.Node;
      * Creates a new instance.
      *
      * @param target to use and be used by
-     * @param out to write to
+     * @param out    to write to
      */
     public XMLWriterDOMDriver(XMLWriter target, Document out) {
         super(target);

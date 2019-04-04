@@ -23,8 +23,8 @@ package net.sourceforge.easyml.marshalling;
  * instances to read composite datatype XML attributes.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public interface CompositeAttributeReader {
 
@@ -36,7 +36,6 @@ public interface CompositeAttributeReader {
      * <b>Note:</b> this reader must be at an element start tag.
      *
      * @param name the attribute name
-     *
      * @return the attribute value or null
      */
     String elementAttribute(String name);
@@ -49,7 +48,6 @@ public interface CompositeAttributeReader {
      * <b>Note:</b> this reader must be at an element start tag.
      *
      * @param name the attribute name
-     *
      * @return the non-null attribute value
      */
     String elementRequiredAttribute(String name);

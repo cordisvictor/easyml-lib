@@ -18,11 +18,12 @@
  */
 package net.sourceforge.easyml;
 
-import java.io.IOException;
-import java.io.Reader;
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+import java.io.Reader;
 
 /**
  * XMLReaderTextDriver class is the XML reader driver implementation for reading
@@ -32,10 +33,10 @@ import org.xmlpull.v1.XmlPullParserException;
  * parameters.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.1.0
  * @version 1.4.5
+ * @since 1.1.0
  */
-/* default */ final class XMLReaderTextDriver extends XMLReader.Driver {
+final class XMLReaderTextDriver extends XMLReader.Driver {
 
     private XmlPullParser parser;
     private Reader readerToClose;
@@ -44,7 +45,7 @@ import org.xmlpull.v1.XmlPullParserException;
      * Creates a new instance.
      *
      * @param target to use and be used by
-     * @param in to read from
+     * @param in     to read from
      */
     public XMLReaderTextDriver(XMLReader target, Reader in) {
         this(target, in, new KXmlParser());// single LOC depending on kXML2.
@@ -54,7 +55,7 @@ import org.xmlpull.v1.XmlPullParserException;
      * Creates a new instance.
      *
      * @param target to use and be used by
-     * @param in to read from
+     * @param in     to read from
      * @param parser user defined parser class instance
      */
     public XMLReaderTextDriver(XMLReader target, Reader in, XmlPullParser parser) {
@@ -214,9 +215,9 @@ import org.xmlpull.v1.XmlPullParserException;
      * needed for performance reasons since the pull-parsers can be expensive to
      * recreate and should be reused.
      *
-     * @param in the required input reader
+     * @param in     the required input reader
      * @param parser optional custom parser to replace the default pull-parse
-     * implementation
+     *               implementation
      */
     public void reset(Reader in, XmlPullParser parser) {
         if (parser != null) {

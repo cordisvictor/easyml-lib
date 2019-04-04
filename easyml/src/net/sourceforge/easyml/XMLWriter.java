@@ -18,36 +18,19 @@
  */
 package net.sourceforge.easyml;
 
-import java.io.*;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-import net.sourceforge.easyml.marshalling.CompositeStrategy;
-import net.sourceforge.easyml.marshalling.CompositeWriter;
-import net.sourceforge.easyml.marshalling.MarshalContext;
-import net.sourceforge.easyml.marshalling.SimpleStrategy;
-import net.sourceforge.easyml.marshalling.Strategy;
+import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.marshalling.dtd.*;
-import net.sourceforge.easyml.marshalling.java.lang.ByteStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.CharacterStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.FloatStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.LongStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.ShortStrategy;
-import net.sourceforge.easyml.util.*;
+import net.sourceforge.easyml.marshalling.java.lang.*;
+import net.sourceforge.easyml.util.Caching;
+import net.sourceforge.easyml.util.ReflectionUtil;
+import net.sourceforge.easyml.util.ValueType;
+import net.sourceforge.easyml.util.XMLUtil;
 import org.w3c.dom.Document;
+
+import java.io.*;
+import java.lang.reflect.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * XMLWriter class is responsible for writing object graphs output streams, the
@@ -72,11 +55,10 @@ import org.w3c.dom.Document;
  * <b>Note:</b> this implementation is NOT thread-safe, but instances with
  * shared configuration can be created, via constructors.
  *
- * @see XMLReader
- *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.4.4
+ * @see XMLReader
+ * @since 1.0
  */
 public class XMLWriter implements Flushable, Closeable {
 
@@ -146,7 +128,6 @@ public class XMLWriter implements Flushable, Closeable {
          * this instance, <code>false</code> otherwise.
          *
          * @param s to search
-         *
          * @return true if strategy has been found, false otherwise
          */
         public boolean contains(S s) {
@@ -173,7 +154,6 @@ public class XMLWriter implements Flushable, Closeable {
          * <code>s</code> will replace the contained strategy.
          *
          * @param s to add
-         *
          * @return the replaced strict strategy, if any, or null
          */
         public S add(S s) {
@@ -200,7 +180,6 @@ public class XMLWriter implements Flushable, Closeable {
          * target, else it will be searched by name.
          *
          * @param s to remove
-         *
          * @return true if strategy has been removed, false otherwise
          */
         public boolean remove(S s) {
@@ -229,15 +208,6 @@ public class XMLWriter implements Flushable, Closeable {
             }
         }
 
-        private void validateForPrioritize(S s) {
-            if (s.strict()) {
-                throw new IllegalArgumentException(s.name() + ": not prioritizable: is strict");
-            }
-            if (!this.range.contains(s)) {
-                throw new IllegalArgumentException(s.name() + ": not contained or is backup");
-            }
-        }
-
         /**
          * Prioritizes the given <code>high</code> strategy over the given
          * <code>low</code> strategy, iff <code>high</code> has a lower priority
@@ -247,10 +217,9 @@ public class XMLWriter implements Flushable, Closeable {
          * non-{@linkplain Strategy#strict()}.
          *
          * @param high the non-strict strategy to ensure higher priority for
-         * @param low the non-strict strategy to be shadowed by high
-         *
+         * @param low  the non-strict strategy to be shadowed by high
          * @throws IllegalArgumentException if high and/or low is strict or not
-         * contained as non-backup by this instance
+         *                                  contained as non-backup by this instance
          */
         public void prioritize(S high, S low) {
             //validate:
@@ -277,6 +246,15 @@ public class XMLWriter implements Flushable, Closeable {
             }
         }
 
+        private void validateForPrioritize(S s) {
+            if (s.strict()) {
+                throw new IllegalArgumentException(s.name() + ": not prioritizable: is strict");
+            }
+            if (!this.range.contains(s)) {
+                throw new IllegalArgumentException(s.name() + ": not contained or is backup");
+            }
+        }
+
         /**
          * Returns the strategy applicable for the given class or
          * <code>null</code> if no such strategy is found. A strategy that
@@ -286,7 +264,6 @@ public class XMLWriter implements Flushable, Closeable {
          * last resort.
          *
          * @param target to lookup strategy for
-         *
          * @return the applicable strategy or null
          */
         public S lookup(Class target) {
@@ -322,7 +299,7 @@ public class XMLWriter implements Flushable, Closeable {
                     .append(", backup=").append(this.backup)
                     .toString();
         }
-    }//class StrategyRegistry.
+    }
 
     /**
      * Driver class is an abstraction layer, separating the XMLWriter encoding
@@ -383,7 +360,7 @@ public class XMLWriter implements Flushable, Closeable {
             return result;
         }
 
-        /* default*/ final void setOneTimeUniqueIdTo(String uniqueId) {
+        private final void setOneTimeUniqueIdTo(String uniqueId) {
             this.oneTimeUniqueId = uniqueId;
         }
 
@@ -495,7 +472,7 @@ public class XMLWriter implements Flushable, Closeable {
         public void close() {
             this.flush();
         }
-    }//(+)class Driver.
+    }
 
     private Driver driver;
     private Map<Object, Integer> encoded;
@@ -516,49 +493,9 @@ public class XMLWriter implements Flushable, Closeable {
      * Creates a new configuration prototype instance, to be used by
      * {@linkplain EasyML} only.
      */
-    /* default*/ XMLWriter(Map<Class, Object> ctorCache, Caching.CachePutStrategy ctorCachePut) {
+    XMLWriter(Map<Class, Object> ctorCache, Caching.CachePutStrategy ctorCachePut) {
         this.driver = null;
         this.init(ctorCache, ctorCachePut);
-    }
-
-    /**
-     * Creates a new shared-configuration instance, to be used by
-     * {@linkplain EasyML} only.
-     */
-    /* default*/ XMLWriter(XMLWriter configured) {
-        this.driver = null;
-        this.initIdentically(configured);
-    }
-
-    /**
-     * Creates a new instance with the given <code>writer</code>.
-     *
-     * @param writer to write output with
-     */
-    public XMLWriter(Writer writer) {
-        this.driver = new XMLWriterTextDriver(this, writer);
-        this.init();
-    }
-
-    /**
-     * Creates a new instance with the given <code>out</code> stream to write
-     * to.
-     *
-     * @param out stream to output to
-     */
-    public XMLWriter(OutputStream out) {
-        this.driver = new XMLWriterTextDriver(this, new OutputStreamWriter(out));
-        this.init();
-    }
-
-    /**
-     * Creates a new instance with the given <code>out</code> DOM to append to.
-     *
-     * @param out empty DOM to append to
-     */
-    public XMLWriter(Document out) {
-        this.driver = new XMLWriterDOMDriver(this, out);
-        this.init();
     }
 
     private void init() {
@@ -594,6 +531,15 @@ public class XMLWriter implements Flushable, Closeable {
         this.simpleStrategies.add(ShortStrategy.INSTANCE);
     }
 
+    /**
+     * Creates a new shared-configuration instance, to be used by
+     * {@linkplain EasyML} only.
+     */
+    XMLWriter(XMLWriter configured) {
+        this.driver = null;
+        this.initIdentically(configured);
+    }
+
     private void initIdentically(XMLWriter other) {
         this.encoded = new IdentityHashMap<>();
         this.sharedConfiguration = true;
@@ -610,16 +556,39 @@ public class XMLWriter implements Flushable, Closeable {
         this.compositeStrategies = other.compositeStrategies;
     }
 
-    private void checkNotSharedConfiguration() {
-        if (this.sharedConfiguration) {
-            throw new IllegalStateException("modifying this writer's shared configuration not allowed");
-        }
+    /**
+     * Creates a new instance with the given <code>writer</code>.
+     *
+     * @param writer to write output with
+     */
+    public XMLWriter(Writer writer) {
+        this.driver = new XMLWriterTextDriver(this, writer);
+        this.init();
+    }
+
+    /**
+     * Creates a new instance with the given <code>out</code> stream to write to.
+     *
+     * @param out stream to output to
+     */
+    public XMLWriter(OutputStream out) {
+        this.driver = new XMLWriterTextDriver(this, new OutputStreamWriter(out));
+        this.init();
+    }
+
+    /**
+     * Creates a new instance with the given <code>out</code> DOM to append to.
+     *
+     * @param out empty DOM to append to
+     */
+    public XMLWriter(Document out) {
+        this.driver = new XMLWriterDOMDriver(this, out);
+        this.init();
     }
 
     /**
      * Gets the {@linkplain #sharedConfiguration} property.<br/>
-     * If <code>true</code> then this instance may not have it's configuration
-     * altered.
+     * If <code>true</code> then this instance may not have its configuration altered.
      *
      * @return the property value
      */
@@ -642,12 +611,17 @@ public class XMLWriter implements Flushable, Closeable {
      * being used by this instance.
      *
      * @param skipDefaults true if skip default-value objects, false otherwise
-     *
      * @throws IllegalStateException if shared configuration
      */
     public void setSkipDefaults(boolean skipDefaults) {
         this.checkNotSharedConfiguration();
         this.skipDefaults = skipDefaults;
+    }
+
+    private void checkNotSharedConfiguration() {
+        if (this.sharedConfiguration) {
+            throw new IllegalStateException("modifying this writer's shared configuration not allowed");
+        }
     }
 
     /**
@@ -663,7 +637,6 @@ public class XMLWriter implements Flushable, Closeable {
      * Sets the {@linkplain #prettyPrint} property.
      *
      * @param prettyPrint true if format the XML pretty, false otherwise
-     *
      * @throws IllegalStateException if shared configuration
      */
     public void setPrettyPrint(boolean prettyPrint) {
@@ -684,9 +657,8 @@ public class XMLWriter implements Flushable, Closeable {
      * Sets the {@linkplain #rootTag} property.
      *
      * @param rootTag to be used as XML root tag
-     *
      * @throws IllegalArgumentException if tag is null or empty
-     * @throws IllegalStateException if write isn't in initial state
+     * @throws IllegalStateException    if write isn't in initial state
      */
     public void setRootTag(String rootTag) {
         if (!XMLUtil.isLegalXMLTag(rootTag)) {
@@ -703,9 +675,8 @@ public class XMLWriter implements Flushable, Closeable {
      * Sets the {@linkplain #dateFormat} property.
      *
      * @param dateFormat to be used by strategies at formatting dates
-     *
      * @throws IllegalArgumentException if null dateFormat
-     * @throws IllegalStateException if shared configuration
+     * @throws IllegalStateException    if shared configuration
      */
     public void setDateFormat(String dateFormat) {
         if (dateFormat == null) {
@@ -719,7 +690,6 @@ public class XMLWriter implements Flushable, Closeable {
      * Gets the {@linkplain #simpleStrategies} property.
      *
      * @return the simple strategy registry
-     *
      * @throws IllegalStateException if shared configuration
      */
     public StrategyRegistry<SimpleStrategy> getSimpleStrategies() {
@@ -731,7 +701,6 @@ public class XMLWriter implements Flushable, Closeable {
      * Gets the {@linkplain #compositeStrategies} property.
      *
      * @return the composite strategy registry
-     *
      * @throws IllegalStateException if shared configuration
      */
     public StrategyRegistry<CompositeStrategy> getCompositeStrategies() {
@@ -744,13 +713,11 @@ public class XMLWriter implements Flushable, Closeable {
      * given alias must not be non-null, not-empty and must not contain illegal
      * characters w.r.t. the XML format.
      *
-     * @param c to alias
+     * @param c     to alias
      * @param alias the alias to set
-     *
      * @return the previous alias, if any, or null
-     *
      * @throws IllegalArgumentException if alias contains invalid XML chars
-     * @throws IllegalStateException if shared configuration
+     * @throws IllegalStateException    if shared configuration
      */
     public String alias(Class c, String alias) {
         XMLUtil.validateAlias(alias);
@@ -763,13 +730,11 @@ public class XMLWriter implements Flushable, Closeable {
      * given alias must not be non-null, not-empty and must not contain illegal
      * characters w.r.t. the XML format.
      *
-     * @param f to alias
+     * @param f     to alias
      * @param alias the alias to set
-     *
      * @return the previous alias, if any, or null
-     *
      * @throws IllegalArgumentException if alias contains invalid XML chars
-     * @throws IllegalStateException if shared configuration
+     * @throws IllegalStateException    if shared configuration
      */
     public String alias(Field f, String alias) {
         XMLUtil.validateAlias(alias);
@@ -781,7 +746,6 @@ public class XMLWriter implements Flushable, Closeable {
      * Excludes the given field.
      *
      * @param f to exclude
-     *
      * @throws IllegalStateException if shared configuration
      */
     public void exclude(Field f) {
@@ -796,6 +760,14 @@ public class XMLWriter implements Flushable, Closeable {
      */
     public void writeBoolean(boolean b) {
         this.writeValue(DTD.TYPE_BOOLEAN, Boolean.toString(b));
+    }
+
+    // write values for the above api:
+    private void writeValue(String element, String value) {
+        this.ensureRootWritten();
+        this.driver.startElement(element);
+        this.driver.writeValue(value);
+        this.driver.endElement();
     }
 
     /**
@@ -880,64 +852,36 @@ public class XMLWriter implements Flushable, Closeable {
         this.writeValue(DTD.TYPE_STRING, s);
     }
 
-    // write values for the above api:
-    private void writeValue(String element, String value) {
+    /**
+     * Writes the object-graph containing values (primitives and wrappers),
+     * objects, and arrays, starting from the given <code>o</code> node.
+     *
+     * @param o the write start-point node
+     * @throws IllegalArgumentException if an illegal (non values/bean/array) is
+     *                                  encountered
+     */
+    public final void write(Object o) {
         this.ensureRootWritten();
-        this.driver.startElement(element);
-        this.driver.writeValue(value);
-        this.driver.endElement();
+        try {
+            this.write0(o);
+        } catch (NoSuchMethodException nDC) {
+            throw new IllegalArgumentException("o: no default constructor: " + nDC.getMessage(), nDC);
+        } catch (InvocationTargetException | InstantiationException iDC) {
+            throw new IllegalArgumentException("o: invalid default constructor: " + iDC.getMessage(), iDC);
+        } catch (IllegalAccessException iDCM) {
+            throw new IllegalArgumentException("o: invalid default constructor modifier: " + iDCM.getMessage(), iDCM);
+        }
     }
 
-    // array: the array of unknown class to write as XML
-    private void writeArray(Object array)
-            throws NoSuchMethodException, InvocationTargetException,
-            InstantiationException, IllegalAccessException, SecurityException {
-        final int length = Array.getLength(array);
-        this.driver.startElement(DTD.ELEMENT_ARRAY);
-        this.driver.setAttribute(DTD.ATTRIBUTE_LENGTH, Integer.toString(length));
-        final ValueType pvt = ValueType.ofPrimitive(array.getClass().getComponentType());
-        if (pvt != null) {// primitives array:
-            for (int i = 0; i < length; i++) {
-                pvt.getWriteArrayItem(this.driver, array, i, false);
-            }
-        } else { // objects array:
-            final Object[] objArray = (Object[]) array;
-            for (int i = 0; i < length; i++) {
-                this.write0(objArray[i]);
-            }
+    private void ensureRootWritten() {
+        if (this.isInitialState()) {
+            this.driver.startElement(this.rootTag);
         }
-        this.driver.endElement();
     }
 
-    // obj: "object with properties" to write
-    private void writeObject(Object obj)
-            throws NoSuchMethodException, InstantiationException,
-            InvocationTargetException, IllegalAccessException, SecurityException {
-        // begin bean encoding:
-        this.driver.startElement(DTD.ELEMENT_OBJECT);
-        Class cls = obj.getClass();
-        final String mappedName = this.context.aliasFor(cls);
-        this.driver.setAttribute(DTD.ATTRIBUTE_CLASS, (mappedName != null ? mappedName : cls.getName()));
-        // encode properties:
-        while (cls != Object.class) { // process inheritance:
-            for (Field f : cls.getDeclaredFields()) { // process composition:
-                if (Modifier.isStatic(f.getModifiers()) || !ReflectionUtil.hasClassFieldProperty(cls, f) || this.context.excluded(f)) {
-                    continue; // skip static or non-property or excluded field.
-                }
-                // get property field:
-                if (!f.isAccessible()) {
-                    f.setAccessible(true);
-                }
-                // write property value:
-                final String aliasedFieldName = this.context.aliasFor(f, f.getName());
-                this.driver.startElement(aliasedFieldName);
-                this.write0(f.get(obj));
-                this.driver.endElement();
-            }
-            cls = cls.getSuperclass();
-        }
-        // end bean encoding:
-        this.driver.endElement();
+    private boolean isInitialState() {
+        // driver is null when this is instantiated by EasyML constructor and before first write:
+        return this.driver == null || this.driver.state == XMLWriter.Driver.STATE_INITIAL;
     }
 
     private void write0(Object data)
@@ -984,32 +928,55 @@ public class XMLWriter implements Flushable, Closeable {
         }
     }
 
-    /**
-     * Writes the object-graph containing values (primitives and wrappers),
-     * objects, and arrays, starting from the given <code>o</code> node.
-     *
-     * @param o the write start-point node
-     *
-     * @throws IllegalArgumentException if an illegal (non values/bean/array) is
-     * encountered
-     */
-    public final void write(Object o) {
-        this.ensureRootWritten();
-        try {
-            this.write0(o);
-        } catch (NoSuchMethodException nDC) {
-            throw new IllegalArgumentException("o: no default constructor: " + nDC.getMessage(), nDC);
-        } catch (InvocationTargetException | InstantiationException iDC) {
-            throw new IllegalArgumentException("o: invalid default constructor: " + iDC.getMessage(), iDC);
-        } catch (IllegalAccessException iDCM) {
-            throw new IllegalArgumentException("o: invalid default constructor modifier: " + iDCM.getMessage(), iDCM);
+    // array: the array of unknown class to write as XML
+    private void writeArray(Object array)
+            throws NoSuchMethodException, InvocationTargetException,
+            InstantiationException, IllegalAccessException, SecurityException {
+        final int length = Array.getLength(array);
+        this.driver.startElement(DTD.ELEMENT_ARRAY);
+        this.driver.setAttribute(DTD.ATTRIBUTE_LENGTH, Integer.toString(length));
+        final ValueType pvt = ValueType.ofPrimitive(array.getClass().getComponentType());
+        if (pvt != null) {// primitives array:
+            for (int i = 0; i < length; i++) {
+                pvt.getWriteArrayItem(this.driver, array, i, false);
+            }
+        } else { // objects array:
+            final Object[] objArray = (Object[]) array;
+            for (int i = 0; i < length; i++) {
+                this.write0(objArray[i]);
+            }
         }
+        this.driver.endElement();
     }
 
-    private void ensureRootWritten() {
-        if (this.isInitialState()) {
-            this.driver.startElement(this.rootTag);
+    // obj: "object with properties" to write
+    private void writeObject(Object obj)
+            throws NoSuchMethodException, InstantiationException,
+            InvocationTargetException, IllegalAccessException, SecurityException {
+        // begin bean encoding:
+        this.driver.startElement(DTD.ELEMENT_OBJECT);
+        Class cls = obj.getClass();
+        this.driver.setAttribute(DTD.ATTRIBUTE_CLASS, this.context.aliasOrNameFor(cls));
+        // encode properties:
+        while (cls != Object.class) { // process inheritance:
+            for (Field f : cls.getDeclaredFields()) { // process composition:
+                if (Modifier.isStatic(f.getModifiers()) || !ReflectionUtil.hasClassFieldProperty(cls, f) || this.context.excluded(f)) {
+                    continue; // skip static or non-property or excluded field.
+                }
+                // get property field:
+                if (!f.isAccessible()) {
+                    f.setAccessible(true);
+                }
+                // write property value:
+                final String aliasedFieldName = this.context.aliasOrNameFor(f);
+                this.driver.startElement(aliasedFieldName);
+                this.write0(f.get(obj));
+                this.driver.endElement();
+            }
+            cls = cls.getSuperclass();
         }
+        // end bean encoding:
+        this.driver.endElement();
     }
 
     /**
@@ -1023,11 +990,6 @@ public class XMLWriter implements Flushable, Closeable {
             this.driver.flush();
             this.encoded.clear();
         }
-    }
-
-    private boolean isInitialState() {
-        // driver is null when this is instantiated by EasyML constructor and before first write:
-        return this.driver == null || this.driver.state == XMLWriter.Driver.STATE_INITIAL;
     }
 
     /**
@@ -1134,25 +1096,15 @@ public class XMLWriter implements Flushable, Closeable {
         }
 
         @Override
-        public String aliasFor(Class c) {
-            return aliasing.get(c);
-        }
-
-        @Override
-        public String aliasFor(Class c, String defValue) {
+        public String aliasOrNameFor(Class c) {
             final String value = aliasing.get(c);
-            return value != null ? value : defValue;
+            return value != null ? value : c.getName();
         }
 
         @Override
-        public String aliasFor(Field f) {
-            return aliasing.get(f);
-        }
-
-        @Override
-        public String aliasFor(Field f, String defValue) {
+        public String aliasOrNameFor(Field f) {
             final String value = aliasing.get(f);
-            return value != null ? value : defValue;
+            return value != null ? value : f.getName();
         }
 
         @Override
@@ -1179,5 +1131,5 @@ public class XMLWriter implements Flushable, Closeable {
         public String formatDate(Date d) {
             return dateFormat.format(d);
         }
-    }//(+)class MarshalContextImpl.
+    }
 }

@@ -28,8 +28,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * for the Java char array. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.7
+ * @since 1.0
  */
 public final class CharsStrategy extends AbstractStrategy<char[]>
         implements SimpleStrategy<char[]> {
@@ -93,4 +93,4 @@ public final class CharsStrategy extends AbstractStrategy<char[]>
     public char[] unmarshal(String text, UnmarshalContext ctx) {
         return text.toCharArray();
     }
-}//class CharsStrategy.
+}

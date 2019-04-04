@@ -29,8 +29,8 @@ import net.sourceforge.easyml.marshalling.SimpleStrategy;
  * interface for the DTD string datatype. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public final class StringStrategy extends AbstractStrategy<String> implements SimpleStrategy<String> {
 
@@ -89,4 +89,4 @@ public final class StringStrategy extends AbstractStrategy<String> implements Si
     public String unmarshal(String text, UnmarshalContext ctx) {
         return text;
     }
-}//class StringStrategy.
+}

@@ -25,22 +25,22 @@ import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
 import java.util.Comparator;
-import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
- * TreeMapStrategy class that extends the {@linkplain MapStrategy} for the
- * {@linkplain TreeMap}. This implementation is thread-safe.
+ * TreeSetStrategy class that extends the {@linkplain CollectionStrategy} for the
+ * {@linkplain TreeSet}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.3
- * @since 1.0.3
+ * @version 1.4.6
+ * @since 1.4.6
  */
-public final class TreeMapStrategy extends MapStrategy<TreeMap> {
+public final class TreeSetStrategy extends CollectionStrategy<TreeSet> {
 
     /**
      * Constant defining the value used for the strategy name.
      */
-    public static final String NAME = "treemap";
+    public static final String NAME = "treeset";
     /**
      * Constant defining comparator attribute name.
      */
@@ -49,9 +49,9 @@ public final class TreeMapStrategy extends MapStrategy<TreeMap> {
     /**
      * Constant defining the singleton instance.
      */
-    public static final TreeMapStrategy INSTANCE = new TreeMapStrategy();
+    public static final TreeSetStrategy INSTANCE = new TreeSetStrategy();
 
-    private TreeMapStrategy() {
+    private TreeSetStrategy() {
     }
 
     /**
@@ -59,7 +59,7 @@ public final class TreeMapStrategy extends MapStrategy<TreeMap> {
      */
     @Override
     public Class target() {
-        return TreeMap.class;
+        return TreeSet.class;
     }
 
     /**
@@ -67,17 +67,17 @@ public final class TreeMapStrategy extends MapStrategy<TreeMap> {
      */
     @Override
     public String name() {
-        return TreeMapStrategy.NAME;
+        return TreeSetStrategy.NAME;
     }
 
     /**
-     * Override which takes into account the tree map comparator.
+     * Override which takes into account the tree set comparator.
      * <p>
      * {@inheritDoc }
      */
     @Override
-    public void marshal(TreeMap target, CompositeWriter writer, MarshalContext ctx) {
-        writer.startElement(TreeMapStrategy.NAME);
+    public void marshal(TreeSet target, CompositeWriter writer, MarshalContext ctx) {
+        writer.startElement(TreeSetStrategy.NAME);
         final Comparator comparator = target.comparator();
         if (comparator != null) {
             writer.setAttribute(ATTRIBUTE_COMPARATOR, Boolean.toString(true));
@@ -85,17 +85,17 @@ public final class TreeMapStrategy extends MapStrategy<TreeMap> {
             writer.write(comparator);
             writer.endElement();
         }
-        this.marshalEntrySet(target, writer);
+        this.marshalElements(target, writer);
         writer.endElement();
     }
 
     /**
-     * Override which takes into account the tree map comparator.
+     * Override which takes into account the tree set comparator.
      * <p>
      * {@inheritDoc }
      */
     @Override
-    public TreeMap unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
+    public TreeSet unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         if (Boolean.parseBoolean(reader.elementAttribute(ATTRIBUTE_COMPARATOR))) {
             reader.next(); // consumed root start.
             reader.next(); // consumed comparator element start.
@@ -105,8 +105,8 @@ public final class TreeMapStrategy extends MapStrategy<TreeMap> {
             if (!(comparator instanceof Comparator)) {
                 throw new InvalidFormatException(ctx.readerPositionDescriptor(), "tree comparator invalid");
             }
-            return new TreeMap((Comparator) comparator);
+            return new TreeSet((Comparator) comparator);
         }
-        return new TreeMap();
+        return new TreeSet();
     }
 }

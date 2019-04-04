@@ -27,8 +27,8 @@ import java.util.Date;
  * {@linkplain Strategy} instances at marshalling stage.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
+ * @version 1.4.6
  * @since 1.0
- * @version 1.3.9
  */
 public interface MarshalContext {
 
@@ -36,61 +36,35 @@ public interface MarshalContext {
      * Returns a default instance for the given class, if any.
      *
      * @param <T> underlying type for the given class c
-     * @param c the class to instantiate
-     *
+     * @param c   the class to instantiate
      * @return a default instance
      */
-    <T> T defaultInstanceFor(Class<T> c) throws NoSuchMethodException,
-            InstantiationException, IllegalAccessException, InvocationTargetException;
+    <T> T defaultInstanceFor(Class<T> c)
+            throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException;
 
     /**
-     * Returns the alias for the given class, or <code>null</code> if the given
-     * class is not aliased.
-     *
-     * @param c the class who's name to alias
-     *
-     * @return the alias or null
-     */
-    String aliasFor(Class c);
-
-    /**
-     * Returns the alias for the given class, or <code>defValue</code> if the
+     * Returns the alias for the given class, or <code>class.name</code> if the
      * given class is not aliased.
      *
      * @param c the class who's name to alias
-     * @param defValue the default value to return in case of non-aliased class
-     *
-     * @return the alias or the given default
+     * @return the alias or the class name
      */
-    String aliasFor(Class c, String defValue);
+    String aliasOrNameFor(Class c);
 
     /**
-     * Returns the alias for the given field, or <code>null</code> if the given
-     * field is not aliased.
-     *
-     * @param f the field who's name to alias
-     *
-     * @return the alias or null
-     */
-    String aliasFor(Field f);
-
-    /**
-     * Returns the alias for the given field, or <code>defValue</code> if the
+     * Returns the alias for the given field, or <code>field.name</code> if the
      * given field is not aliased.
      *
      * @param f the field who's name to alias
-     * @param defValue the default value to return in case of non-aliased field
-     *
-     * @return the alias or the given default
+     * @return the alias or the field name
      */
-    String aliasFor(Field f, String defValue);
+    String aliasOrNameFor(Field f);
 
     /**
      * Returns <code>true</code> if the given field is excluded, i.e. should be
      * skipped from marshalling, <code>false</code> otherwise.
      *
      * @param f to test if excluded
-     *
      * @return true if excluded, false otherwise
      */
     boolean excluded(Field f);
@@ -123,7 +97,6 @@ public interface MarshalContext {
      * Formats the given date using the date format context configuration.
      *
      * @param d to format
-     *
      * @return the formatted date
      */
     String formatDate(Date d);

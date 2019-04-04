@@ -18,12 +18,13 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.Locale;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.AbstractStrategy;
 import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.util.Locale;
 
 /**
  * LocaleStrategy class that implements the {@linkplain SimpleStrategy}
@@ -31,8 +32,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.3
+ * @since 1.0
  */
 public final class LocaleStrategy extends AbstractStrategy<Locale>
         implements SimpleStrategy<Locale> {
@@ -106,4 +107,4 @@ public final class LocaleStrategy extends AbstractStrategy<Locale>
         }
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "text: invalid number of locale components");
     }
-}//class LocaleStrategy.
+}

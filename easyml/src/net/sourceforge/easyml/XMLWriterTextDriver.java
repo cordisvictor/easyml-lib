@@ -18,22 +18,22 @@
  */
 package net.sourceforge.easyml;
 
+import net.sourceforge.easyml.util.XMLUtil;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-
-import net.sourceforge.easyml.util.XMLUtil;
 
 /**
  * XMLWriterTextDriver class is the XML writer driver implementation for writing
  * XML to output streams.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.1.0
  * @version 1.4.1
+ * @since 1.1.0
  */
-/* default */ final class XMLWriterTextDriver extends XMLWriter.Driver {
+final class XMLWriterTextDriver extends XMLWriter.Driver {
 
     private static final String XML_NEWLINE = System.getProperty("line.separator");
     private static final String XML_FRAGMENT_SLASH_GT = "/>";
@@ -49,7 +49,7 @@ import net.sourceforge.easyml.util.XMLUtil;
      * Creates a new instance.
      *
      * @param target to use and be used by
-     * @param out to write to
+     * @param out    to write to
      */
     public XMLWriterTextDriver(XMLWriter target, Writer out) {
         super(target);

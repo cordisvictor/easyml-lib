@@ -28,8 +28,8 @@ import java.util.Map;
  * ReflectionUtil utility class contains reflection helper methods.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.4.5
+ * @since 1.0
  */
 public final class ReflectionUtil {
 
@@ -38,25 +38,15 @@ public final class ReflectionUtil {
     private static final String PREFIX_SET = "set";
     private static final char SEPARATOR_CLASS_FIELD = '#';
 
-    private static String propertyNameFor(Field f) {
-        final String fieldName = f.getName();
-        final char upperFirst = Character.toUpperCase(fieldName.charAt(0));
-        if (fieldName.length() > 1) {
-            return upperFirst + fieldName.substring(1);
-        }
-        return String.valueOf(upperFirst);
-    }
-
     /**
      * Returns the fully-qualified name of the given field. The return value can
      * then be used as an alias key.
      *
      * @param f to compute the name for
-     *
      * @return the aliasing name
      */
     public static String qualifiedNameFor(Field f) {
-        return f.getDeclaringClass().getName() + SEPARATOR_CLASS_FIELD + f.getName();
+        return qualifiedNameFor(f.getDeclaringClass(), f.getName());
     }
 
     /**
@@ -64,8 +54,7 @@ public final class ReflectionUtil {
      * then be used as an alias key.
      *
      * @param declaring the class declaring the field
-     * @param field the field name, within the declaring class
-     *
+     * @param field     the field name, within the declaring class
      * @return the aliasing name
      */
     public static String qualifiedNameFor(Class declaring, String field) {
@@ -76,7 +65,6 @@ public final class ReflectionUtil {
      * Returns the field name from a fully-qualified name of the given field.
      *
      * @param fieldFQN the FQN of the field
-     *
      * @return the field name
      */
     public static String fieldNameFor(String fieldFQN) {
@@ -89,7 +77,6 @@ public final class ReflectionUtil {
      *
      * @param c class in which to search
      * @param f field which to search
-     *
      * @return true if the field is a property, false otherwise
      * @throws SecurityException
      */
@@ -127,13 +114,21 @@ public final class ReflectionUtil {
         return false;
     }
 
+    private static String propertyNameFor(Field f) {
+        final String fieldName = f.getName();
+        final char upperFirst = Character.toUpperCase(fieldName.charAt(0));
+        if (fieldName.length() > 1) {
+            return upperFirst + fieldName.substring(1);
+        }
+        return String.valueOf(upperFirst);
+    }
+
     /**
      * Returns the given class' default constructor, if any. If found but not
      * accessible, it will be set to be accessible.
      *
      * @param <T> underlying type for the given class c
-     * @param c the class to reflect the default constructor for
-     *
+     * @param c   the class to reflect the default constructor for
      * @return class' default constructor
      */
     public static <T> Constructor<T> defaultConstructor(Class<T> c)
@@ -150,13 +145,11 @@ public final class ReflectionUtil {
      * needs not to be public.
      *
      * @param <T> underlying type for the given class c
-     * @param c the class to instantiate
-     *
+     * @param c   the class to instantiate
      * @return a new class instance
      */
     public static <T> T instantiate(Class<T> c)
-            throws NoSuchMethodException, InstantiationException,
-            IllegalAccessException, InvocationTargetException {
+            throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
         return ReflectionUtil.defaultConstructor(c).newInstance();
     }
 
@@ -165,7 +158,6 @@ public final class ReflectionUtil {
      * outer-reference field containing the reference to the outer object.
      *
      * @param c to test if has outer reference field
-     *
      * @return true if has field, false otherwise
      */
     public static boolean hasOuterRefField(Class c) {
@@ -178,7 +170,6 @@ public final class ReflectionUtil {
      * returned. The field accessibility is set to true.
      *
      * @param cls the class to search for outer ref field
-     *
      * @return the field or null if cls is not an inner class
      */
     public static Field outerRefField(Class cls) {
@@ -198,14 +189,12 @@ public final class ReflectionUtil {
      * Instantiates the given non-static inner class using the default
      * constructor. The modifier needs not to be public.
      *
-     * @param c the class to instantiate
+     * @param c     the class to instantiate
      * @param outer the class outer instance
-     *
      * @return a new inner class instance
      */
     public static <T> T instantiateInner(Class<T> c, Object outer)
-            throws NoSuchMethodException, InstantiationException,
-            IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+            throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         final Constructor nonArg = c.getDeclaredConstructor(c.getEnclosingClass());
         if (!nonArg.isAccessible()) {
             nonArg.setAccessible(true);
@@ -214,16 +203,18 @@ public final class ReflectionUtil {
     }
 
     /**
-     * Instantiates the given class unsafely, bypassing the class-defined
-     * constructors.
+     * Instantiates the given class unsafely, bypassing the class-defined constructors.
      *
      * @param <T> the to-instantiate class type
-     * @param c to instantiate
-     *
+     * @param c   to instantiate
      * @return new instance of c
      */
     public static <T> T instantiateUnsafely(Class<T> c) {
-        return UnsafeInstantiator.instantiator.instantiate(c);
+        final int modifiers = c.getModifiers();
+        if (Modifier.isInterface(modifiers) || Modifier.isAbstract(modifiers)) {
+            throw new IllegalArgumentException("Forbidden to instantiate interface or abstract class: " + c.getName());
+        }
+        return UnsafeInstantiaton.unsafeInstantiator.instantiate(c);
     }
 
     /**
@@ -232,7 +223,6 @@ public final class ReflectionUtil {
      * for the primitive types.
      *
      * @param typeName the type name, for the primitives, or class name
-     *
      * @return the found class
      * @throws ClassNotFoundException
      */
@@ -246,9 +236,14 @@ public final class ReflectionUtil {
      * provides the API for instantiating classes with no default (zero-arg)
      * constructors.
      */
-    private static abstract class UnsafeInstantiator {
+    private interface UnsafeInstantiator {
 
-        private static final UnsafeInstantiator instantiator = create();
+        <T> T instantiate(Class<T> c);
+    }
+
+    private static final class UnsafeInstantiaton {
+
+        private static final UnsafeInstantiator unsafeInstantiator = create();
 
         private static UnsafeInstantiator create() {
             // if available, use sun.misc.Unsafe:
@@ -316,10 +311,8 @@ public final class ReflectionUtil {
             };
         }
 
-        private UnsafeInstantiator() {
+        private UnsafeInstantiaton() {
         }
-
-        public abstract <T> T instantiate(Class<T> c);
     }
 
     /**

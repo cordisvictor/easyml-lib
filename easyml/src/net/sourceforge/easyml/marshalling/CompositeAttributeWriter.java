@@ -23,8 +23,8 @@ package net.sourceforge.easyml.marshalling;
  * instances to write composite datatype XML attributes.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public interface CompositeAttributeWriter {
 
@@ -35,7 +35,7 @@ public interface CompositeAttributeWriter {
      * <b>Note:</b> this writer must be at an element start tag.
      *
      * @param attribute the attribute name
-     * @param value the attribute value
+     * @param value     the attribute value
      */
     void setAttribute(String attribute, String value);
 }

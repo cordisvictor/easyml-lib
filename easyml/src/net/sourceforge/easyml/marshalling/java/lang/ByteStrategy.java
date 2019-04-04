@@ -29,8 +29,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * for the Java {@linkplain Byte}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class ByteStrategy extends AbstractStrategy<Byte>
         implements SimpleStrategy<Byte> {
@@ -98,4 +98,4 @@ public final class ByteStrategy extends AbstractStrategy<Byte>
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), nfx);
         }
     }
-}//class ByteStrategy.
+}

@@ -18,18 +18,19 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.IdentityHashMap;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.util.IdentityHashMap;
 
 /**
  * IdentityHashMapStrategy class that extends the {@linkplain MapStrategy} for
  * the {@linkplain IdentityHashMap}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class IdentityHashMapStrategy extends MapStrategy<IdentityHashMap> {
 
@@ -57,14 +58,6 @@ public final class IdentityHashMapStrategy extends MapStrategy<IdentityHashMap> 
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<IdentityHashMap> c) {
-        return c == IdentityHashMap.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String name() {
         return IdentityHashMapStrategy.NAME;
     }
@@ -73,8 +66,7 @@ public final class IdentityHashMapStrategy extends MapStrategy<IdentityHashMap> 
      * {@inheritDoc }
      */
     @Override
-    public IdentityHashMap unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public IdentityHashMap unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         try {
             return new IdentityHashMap(Integer.parseInt(reader.elementRequiredAttribute(ATTRIBUTE_SIZE)));
         } catch (NumberFormatException nfx) {

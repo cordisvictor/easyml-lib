@@ -18,16 +18,12 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
+import net.sourceforge.easyml.InvalidFormatException;
+import net.sourceforge.easyml.marshalling.*;
+
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Set;
-import net.sourceforge.easyml.InvalidFormatException;
-import net.sourceforge.easyml.marshalling.AbstractStrategy;
-import net.sourceforge.easyml.marshalling.CompositeReader;
-import net.sourceforge.easyml.marshalling.CompositeStrategy;
-import net.sourceforge.easyml.marshalling.CompositeWriter;
-import net.sourceforge.easyml.marshalling.MarshalContext;
-import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
 /**
  * SingletonSetStrategy class that implements {@linkplain CompositeStrategy} for
@@ -35,8 +31,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0.2
  * @version 1.3.3
+ * @since 1.0.2
  */
 public final class SingletonSetStrategy extends AbstractStrategy<Set> implements CompositeStrategy<Set> {
 
@@ -112,7 +108,7 @@ public final class SingletonSetStrategy extends AbstractStrategy<Set> implements
      * {@inheritDoc }
      */
     @Override
-    public Set unmarshalNew(CompositeReader reader, UnmarshalContext ctx) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Set unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         return Collections.singleton(null);
     }
 

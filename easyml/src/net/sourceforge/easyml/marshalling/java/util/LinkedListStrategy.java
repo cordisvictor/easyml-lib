@@ -18,18 +18,19 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.LinkedList;
 import net.sourceforge.easyml.marshalling.CompositeAttributeWriter;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.util.LinkedList;
 
 /**
  * LinkedListStrategy class that extends the {@linkplain CollectionStrategy} for
  * the {@linkplain LinkedList}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0.3
+ * @since 1.0
  */
 public final class LinkedListStrategy extends CollectionStrategy<LinkedList> {
 
@@ -57,14 +58,6 @@ public final class LinkedListStrategy extends CollectionStrategy<LinkedList> {
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<LinkedList> c) {
-        return c == LinkedList.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String name() {
         return LinkedListStrategy.NAME;
     }
@@ -73,15 +66,14 @@ public final class LinkedListStrategy extends CollectionStrategy<LinkedList> {
      * Override to prevent the marshalling of the {@linkplain #ATTRIBUTE_SIZE}.
      */
     @Override
-    public void marshalAttr(LinkedList target, CompositeAttributeWriter writer) {
+    protected void marshalAttr(LinkedList target, CompositeAttributeWriter writer) {
     }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public LinkedList unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public LinkedList unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         return new LinkedList();
     }
 }

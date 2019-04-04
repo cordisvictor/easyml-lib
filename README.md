@@ -60,6 +60,15 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+!Release 1.4.6
+- remove deprecated v1.3.4 object-o and array-o strategies.
+- replaced MarshalContext aliasFor methods with aliasOrNameFor methods.
+- bugfix: EnumStrategy marshalling fix.
+- feature: added TeeSet and ConcurrentHashMap support.
+- feature: added EnumSet and EnumMap support.
+- feature: added serialization serialPersistentFields support.
+
+
 !Release 1.4.5
 - performance: improved n.s.e.EasyML.deserialize() speed by reusing the
 XmlPullParser when available.

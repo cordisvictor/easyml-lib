@@ -30,8 +30,8 @@ import net.sourceforge.easyml.marshalling.SimpleStrategy;
  * for the DTD integer datatype. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class IntStrategy extends AbstractStrategy<Integer> implements SimpleStrategy<Integer> {
 
@@ -94,4 +94,4 @@ public final class IntStrategy extends AbstractStrategy<Integer> implements Simp
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), nfx);
         }
     }
-}//class IntStrategy.
+}

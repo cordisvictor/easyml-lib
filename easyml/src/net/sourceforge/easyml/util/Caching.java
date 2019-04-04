@@ -24,12 +24,11 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Caching utility class used to handle differences between concurrent and non-
  * concurrent map implementations. This class was written in order to not depend
- * on Java 8 features, keeping the EasyML framework minimal requirement to Java
- * 7.
+ * on Java 8 features, keeping the EasyML framework minimal requirement to Java 7.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.4.4
  * @version 1.4.4
+ * @since 1.4.4
  */
 public final class Caching {
 
@@ -44,8 +43,8 @@ public final class Caching {
          * map.
          *
          * @param target out parameter
-         * @param key in parameter
-         * @param value in parameter
+         * @param key    in parameter
+         * @param value  in parameter
          */
         void put(M target, Object key, Object value);
     }

@@ -23,8 +23,8 @@ package net.sourceforge.easyml.marshalling;
  * to read a composite datatype from XML format.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public interface CompositeReader extends CompositeAttributeReader {
 
@@ -154,7 +154,6 @@ public interface CompositeReader extends CompositeAttributeReader {
      * element start.</b>
      *
      * @param componentType the resulting array component type
-     *
      * @return the read array-object
      */
     Object readArray(Class componentType);
@@ -169,4 +168,4 @@ public interface CompositeReader extends CompositeAttributeReader {
      * @return the read string value
      */
     String readValue();
-}//interface CompositeReader.
+}

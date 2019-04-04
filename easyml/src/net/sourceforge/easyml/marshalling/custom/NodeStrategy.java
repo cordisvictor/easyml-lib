@@ -26,8 +26,8 @@ import net.sourceforge.easyml.util.XMLUtil;
  * for custom-tagged strings. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0.4
  * @version 1.0.4
+ * @since 1.0.4
  */
 public final class NodeStrategy extends AbstractStrategy<String> implements SimpleStrategy<String> {
 

@@ -29,8 +29,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * for the Java {@linkplain Class}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.7
+ * @since 1.0
  */
 public final class ClassStrategy extends AbstractStrategy<Class>
         implements SimpleStrategy<Class> {
@@ -84,7 +84,7 @@ public final class ClassStrategy extends AbstractStrategy<Class>
      */
     @Override
     public String marshal(Class target, MarshalContext ctx) {
-        return ctx.aliasFor(target, target.getName());
+        return ctx.aliasOrNameFor(target);
     }
 
     /**
@@ -98,4 +98,4 @@ public final class ClassStrategy extends AbstractStrategy<Class>
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), cnfx);
         }
     }
-}//class ClassStrategy.
+}

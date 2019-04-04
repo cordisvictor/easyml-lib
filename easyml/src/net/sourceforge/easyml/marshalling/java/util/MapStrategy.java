@@ -18,10 +18,11 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.Map;
-import java.util.Set;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * MapStrategy abstract class that implements the {@linkplain CompositeStrategy}
@@ -29,10 +30,9 @@ import net.sourceforge.easyml.marshalling.*;
  * implementation is thread-safe.
  *
  * @param <T> target map class
- *
  * @author Victor Cordis ( cordis.victor at gmail.com)
+ * @version 1.4.6
  * @since 1.0
- * @version 1.3.3
  */
 public abstract class MapStrategy<T extends Map> extends AbstractStrategy<T>
         implements CompositeStrategy<T> {
@@ -51,13 +51,21 @@ public abstract class MapStrategy<T extends Map> extends AbstractStrategy<T>
     }
 
     /**
+     * {@inheritDoc }
+     */
+    @Override
+    public boolean appliesTo(Class<T> c) {
+        return c == target();
+    }
+
+    /**
      * Writes the {@linkplain #ATTRIBUTE_SIZE} for the given target. This method
      * can be overridden to write used-defined attributes for the root element.
      *
      * @param target target to be marshalled
      * @param writer to write attributes with
      */
-    public void marshalAttr(T target, CompositeAttributeWriter writer) {
+    protected void marshalAttr(T target, CompositeAttributeWriter writer) {
         writer.setAttribute(ATTRIBUTE_SIZE, Integer.toString(target.size()));
     }
 
@@ -68,19 +76,23 @@ public abstract class MapStrategy<T extends Map> extends AbstractStrategy<T>
     public void marshal(T target, CompositeWriter writer, MarshalContext ctx) {
         writer.startElement(this.name());
         this.marshalAttr(target, writer);
-        for (Map.Entry e : (Set<Map.Entry>) target.entrySet()) {
+        this.marshalEntrySet(target, writer);
+        writer.endElement();
+    }
+
+    protected void marshalEntrySet(T target, CompositeWriter writer) {
+        Set<Map.Entry> entrySet = target.entrySet();
+        for (Map.Entry e : entrySet) {
             writer.write(e.getKey());
             writer.write(e.getValue());
         }
-        writer.endElement();
     }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public T unmarshalInit(T target, CompositeReader reader, UnmarshalContext ctx)
-            throws IllegalAccessException {
+    public T unmarshalInit(T target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
         // consume root element:
         reader.next();
         // read entries:
@@ -95,4 +107,4 @@ public abstract class MapStrategy<T extends Map> extends AbstractStrategy<T>
             target.put(key, reader.read());
         }
     }
-}//class MapStrategy.
+}

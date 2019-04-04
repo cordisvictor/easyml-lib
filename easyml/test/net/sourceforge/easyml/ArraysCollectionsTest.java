@@ -18,33 +18,72 @@
  */
 package net.sourceforge.easyml;
 
-import static org.junit.Assert.*;
+import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
+import net.sourceforge.easyml.marshalling.java.lang.CharsStrategy;
+import net.sourceforge.easyml.marshalling.java.util.*;
 import org.junit.After;
 import org.junit.Test;
+import org.w3c.dom.Document;
 
-import net.sourceforge.easyml.marshalling.java.lang.CharsStrategy;
-import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.*;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import net.sourceforge.easyml.marshalling.java.util.BitSetStrategy;
-import net.sourceforge.easyml.marshalling.java.util.SingletonListStrategy;
-import net.sourceforge.easyml.marshalling.java.util.SingletonMapStrategy;
-import net.sourceforge.easyml.marshalling.java.util.SingletonSetStrategy;
-import org.w3c.dom.Document;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Victor Cordis ( cordis.victor at gmail.com)
  */
-public class ArrayCollectionsTest {
+public class ArraysCollectionsTest {
 
     private final ByteArrayOutputStream out = new ByteArrayOutputStream(256);
 
     @After
     public void tearDown() {
         this.out.reset();
+    }
+
+    @Test
+    public void testEnumMapStrategy() {
+        final EnumMap expected = new EnumMap(EasyML.Style.class);
+        expected.put(EasyML.Style.PRETTY, 1);
+        expected.put(EasyML.Style.DETAILED, 2);
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.alias(EasyML.Style.class, "emlStype");
+        xos.getCompositeStrategies().add(EnumMapStrategy.INSTANCE);
+        xos.write(expected);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.alias(EasyML.Style.class, "emlStype");
+        xis.getCompositeStrategies().put(EnumMapStrategy.INSTANCE.name(), EnumMapStrategy.INSTANCE);
+        assertEquals(expected, xis.read());
+        xis.close();
+    }
+
+    @Test
+    public void testEnumSetStrategy() {
+        final EnumSet expected = EnumSet.allOf(EasyML.Style.class);
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.alias(EasyML.Style.class, "emlStype");
+        xos.getCompositeStrategies().add(EnumSetStrategy.INSTANCE);
+        xos.write(expected);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.alias(EasyML.Style.class, "emlStype");
+        xis.getCompositeStrategies().put(EnumSetStrategy.INSTANCE.name(), EnumSetStrategy.INSTANCE);
+        assertEquals(expected, xis.read());
+        xis.close();
     }
 
     @Test
@@ -63,7 +102,7 @@ public class ArrayCollectionsTest {
 
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.getCompositeStrategies().put(BitSetStrategy.INSTANCE.name(), BitSetStrategy.INSTANCE);
-        assertEquals(expected, (BitSet) xis.read());
+        assertEquals(expected, xis.read());
         xis.close();
     }
 
@@ -72,12 +111,10 @@ public class ArrayCollectionsTest {
         final String[][] expected = new String[][]{{"unu", "doi"}, {"eee", "nuu"}};
 
         final XMLWriter xos = new XMLWriter(this.out);
-//        ExtendedEasyML.Profile.SPECIFIC.configure(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-//        ExtendedEasyML.Profile.SPECIFIC.configure(xis);
         final String[][] actual = (String[][]) xis.readArray(String[].class);
         xis.close();
 
@@ -95,7 +132,7 @@ public class ArrayCollectionsTest {
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.getCompositeStrategies().put(SingletonSetStrategy.INSTANCE.name(), SingletonSetStrategy.INSTANCE);
-        assertEquals(expected, (Set<String>) xis.read());
+        assertEquals(expected, xis.read());
         xis.close();
     }
 
@@ -109,7 +146,7 @@ public class ArrayCollectionsTest {
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.getCompositeStrategies().put(SingletonListStrategy.INSTANCE.name(), SingletonListStrategy.INSTANCE);
-        assertEquals(expected, (List<String>) xis.read());
+        assertEquals(expected, xis.read());
         xis.close();
     }
 
@@ -123,7 +160,7 @@ public class ArrayCollectionsTest {
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.getCompositeStrategies().put(SingletonMapStrategy.INSTANCE.name(), SingletonMapStrategy.INSTANCE);
-        assertEquals(expected, (Map<Integer, String>) xis.read());
+        assertEquals(expected, xis.read());
         xis.close();
     }
 
@@ -140,7 +177,7 @@ public class ArrayCollectionsTest {
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.getCompositeStrategies().put(SerializableStrategy.INSTANCE.name(), SerializableStrategy.INSTANCE);
-        assertEquals(expected, (Stack<String>) xis.read());
+        assertEquals(expected, xis.read());
         xis.close();
     }
 
@@ -171,13 +208,11 @@ public class ArrayCollectionsTest {
         l1.add("one");
         l1.add("two");
         final List[] lists = new List[]{l0, l1};
-//        final XMLWriter xos = new XMLWriter(this.out);
         final XMLWriter xos = new XMLWriter(dom);
         EasyML.Profile.SPECIFIC.configure(xos);
         xos.write(lists);
         xos.close();
         System.out.println(dom);
-//        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         final XMLReader xis = new XMLReader(dom);
         EasyML.Profile.SPECIFIC.configure(xis);
         assertArrayEquals(lists, (Object[]) xis.read());
@@ -245,8 +280,58 @@ public class ArrayCollectionsTest {
     }
 
     @Test
+    public void testTreeSet() {
+        final Set<Integer> expected = new TreeSet<>(new IntegerComparator());
+        expected.add(1);
+        expected.add(2);
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        EasyML.Profile.SPECIFIC.configure(xos);
+        xos.write(expected);
+        xos.close();
+        System.out.println(this.out);
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        EasyML.Profile.SPECIFIC.configure(xis);
+        assertEquals(expected, xis.read());
+        xis.close();
+    }
+
+    private static final class IntegerComparator implements Comparator<Integer> {
+        @Override
+        public int compare(Integer i1, Integer i2) {
+            return i1 - i2;
+        }
+
+        @Override
+        public int hashCode() {
+            return 1;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return this.getClass() == o.getClass();
+        }
+    }
+
+    @Test
     public void testMap() {
         final Map expected = new HashMap();
+        expected.put(1, "unu");
+        expected.put(2, "doi");
+        final XMLWriter xos = new XMLWriter(this.out);
+        EasyML.Profile.SPECIFIC.configure(xos);
+        xos.write(expected);
+        xos.close();
+        System.out.println(this.out);
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        EasyML.Profile.SPECIFIC.configure(xis);
+        assertEquals(expected, xis.read());
+        xis.close();
+    }
+
+    @Test
+    public void testConcurrentMap() {
+        final Map expected = new ConcurrentHashMap(2);
         expected.put(1, "unu");
         expected.put(2, "doi");
         final XMLWriter xos = new XMLWriter(this.out);

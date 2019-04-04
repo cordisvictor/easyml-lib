@@ -121,12 +121,12 @@ public final class XMLUtil {
     }
 
     /**
-     * Escapes the input character if illegal or returns it's string value if
+     * Escapes the input character if illegal or returns its string value if
      * legal.
      *
      * @param c the char to escape
      *
-     * @return the string value of <code>c</code> or it's corresponding escape
+     * @return the string value of <code>c</code> or its corresponding escape
      */
     public static String escapeXML(char c) {
         if (c == XMLUtil.XML_ILLEGAL_CR) {

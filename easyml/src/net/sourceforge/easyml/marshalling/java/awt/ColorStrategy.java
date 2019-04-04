@@ -18,9 +18,10 @@
  */
 package net.sourceforge.easyml.marshalling.java.awt;
 
-import java.awt.Color;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
+
+import java.awt.*;
 
 /**
  * ColorStrategy class that implements the {@linkplain CompositeStrategy}
@@ -28,8 +29,8 @@ import net.sourceforge.easyml.marshalling.*;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.4
+ * @since 1.0
  */
 public final class ColorStrategy extends AbstractStrategy<Color>
         implements CompositeStrategy<Color> {
@@ -110,7 +111,7 @@ public final class ColorStrategy extends AbstractStrategy<Color>
      * {@inheritDoc }
      */
     @Override
-    public Color unmarshalNew(CompositeReader reader, UnmarshalContext ctx) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Color unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         // read the attributes set at marshalling:
         final String alphaAttr = reader.elementAttribute(ATTRIBUTE_ALPHA);
         try {
@@ -132,8 +133,8 @@ public final class ColorStrategy extends AbstractStrategy<Color>
      * {@inheritDoc }
      */
     @Override
-    public Color unmarshalInit(Color target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
+    public Color unmarshalInit(Color target, CompositeReader reader, UnmarshalContext ctx) {
         reader.next(); // moved the reader from the root element start to end.
         return target;
     }
-}//class ColorStrategy.
+}

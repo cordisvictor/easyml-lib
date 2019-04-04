@@ -18,19 +18,20 @@
  */
 package net.sourceforge.easyml;
 
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import net.sourceforge.easyml.marshalling.CompositeStrategy;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.custom.NodeListStrategy;
 import net.sourceforge.easyml.marshalling.custom.NodeStrategy;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * EasyMLBuilder class is the builder of the {@linkplain EasyML} top-level
- * facade, containing it's customization features.
+ * facade, containing its customization features.
  * <br/>
  * Usage example:
  * <pre>
@@ -58,11 +59,10 @@ import net.sourceforge.easyml.marshalling.custom.NodeStrategy;
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @version 1.4.0
- * @since 1.4.0
- *
  * @see EasyML
  * @see XMLReader
  * @see XMLWriter
+ * @since 1.4.0
  */
 public final class EasyMLBuilder {
 
@@ -142,7 +142,7 @@ public final class EasyMLBuilder {
      * Sets the given custom XML tag name for arrays.
      *
      * @param customArrayTag to be used for arrays
-     * @param arrayType class of the array to use this custom tag
+     * @param arrayType      class of the array to use this custom tag
      */
     public EasyMLBuilder withCustomArrayTag(String customArrayTag, Class arrayType) {
         this.customArrayTag = new NodeListStrategy(customArrayTag, arrayType);
@@ -162,7 +162,7 @@ public final class EasyMLBuilder {
     /**
      * Sets the given alias form the given class.
      *
-     * @param c to alias
+     * @param c     to alias
      * @param alias to use
      */
     public EasyMLBuilder withAlias(Class c, String alias) {
@@ -176,7 +176,7 @@ public final class EasyMLBuilder {
     /**
      * Sets the given alias form the given field.
      *
-     * @param f to alias
+     * @param f     to alias
      * @param alias to use
      */
     public EasyMLBuilder withAlias(Field f, String alias) {
@@ -192,8 +192,8 @@ public final class EasyMLBuilder {
      * class.
      *
      * @param declaring class declaring the field
-     * @param field the name of the field
-     * @param alias to use
+     * @param field     the name of the field
+     * @param alias     to use
      * @throws NoSuchFieldException if field is not found in the declaring class
      */
     public EasyMLBuilder withAlias(Class declaring, String field, String alias) throws NoSuchFieldException {
@@ -217,7 +217,7 @@ public final class EasyMLBuilder {
      * Sets exclusion on the given field, of the <code>declaring</code> class.
      *
      * @param declaring class declaring the field
-     * @param field the name of the field to exclude
+     * @param field     the name of the field to exclude
      * @throws NoSuchFieldException if field is not found in the declaring class
      */
     public EasyMLBuilder withExcluded(Class declaring, String field) throws NoSuchFieldException {
@@ -243,8 +243,8 @@ public final class EasyMLBuilder {
      * avoiding auto-boxing, do not take into account this setting as they are
      * not vulnerable to XML injection.
      *
-     * @param whitelist true if whitelist policy, false if blacklist
-     * @param classes non-null classes to add to the policy
+     * @param whitelist        true if whitelist policy, false if blacklist
+     * @param classes          non-null classes to add to the policy
      * @param classHierarchies non-null class-hierarchies to add to the policy
      */
     public EasyMLBuilder withSecurityPolicy(boolean whitelist, Class[] classes, Class[] classHierarchies) {

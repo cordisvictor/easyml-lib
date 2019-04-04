@@ -18,11 +18,12 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
+import net.sourceforge.easyml.InvalidFormatException;
+import net.sourceforge.easyml.marshalling.*;
+
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Properties;
-import net.sourceforge.easyml.InvalidFormatException;
-import net.sourceforge.easyml.marshalling.*;
 
 /**
  * PropertiesStrategy class that implements the {@linkplain CompositeStrategy}
@@ -31,8 +32,8 @@ import net.sourceforge.easyml.marshalling.*;
  * {@linkplain Map}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.3
+ * @since 1.0
  */
 public final class PropertiesStrategy extends AbstractStrategy<Properties>
         implements CompositeStrategy<Properties> {
@@ -127,8 +128,7 @@ public final class PropertiesStrategy extends AbstractStrategy<Properties>
      * {@inheritDoc }
      */
     @Override
-    public Properties unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Properties unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         return new Properties();// do not consume properties start: let the second step while do it.
     }
 
@@ -156,15 +156,13 @@ public final class PropertiesStrategy extends AbstractStrategy<Properties>
                         // do not consume defaults element end: let the next while do it.
                         break;
                     default:
-                        throw new InvalidFormatException(ctx.readerPositionDescriptor(),
-                                "unexpected element start");
+                        throw new InvalidFormatException(ctx.readerPositionDescriptor(), "unexpected element start");
                 }
             } else if (reader.atElementEnd()
                     && reader.elementName().equals(PropertiesStrategy.NAME)) {
                 return target;
             }
         }
-        throw new InvalidFormatException(ctx.readerPositionDescriptor(),
-                "missing element end");
+        throw new InvalidFormatException(ctx.readerPositionDescriptor(), "missing element end");
     }
-}//class PropertiesStrategy.
+}

@@ -18,10 +18,11 @@
  */
 package net.sourceforge.easyml.marshalling.custom;
 
-import java.lang.reflect.Array;
 import net.sourceforge.easyml.DTD;
 import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.util.XMLUtil;
+
+import java.lang.reflect.Array;
 
 /**
  * NodeListStrategy class that implements the {@linkplain CompositeStrategy}
@@ -29,8 +30,8 @@ import net.sourceforge.easyml.util.XMLUtil;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0.4
  * @version 1.2.4
+ * @since 1.0.4
  */
 public final class NodeListStrategy extends AbstractStrategy implements CompositeStrategy {
 
@@ -40,7 +41,7 @@ public final class NodeListStrategy extends AbstractStrategy implements Composit
     /**
      * Creates a new instance for the given name and target-array class.
      *
-     * @param name the name of the XML element
+     * @param name   the name of the XML element
      * @param target the array class of the target arrays
      */
     public NodeListStrategy(String name, Class target) {
@@ -107,8 +108,7 @@ public final class NodeListStrategy extends AbstractStrategy implements Composit
      * {@inheritDoc }
      */
     @Override
-    public Object unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Object unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         return Array.newInstance(this.target.getComponentType(),
                 Integer.parseInt(reader.elementRequiredAttribute(DTD.ATTRIBUTE_LENGTH)));
     }
@@ -117,8 +117,7 @@ public final class NodeListStrategy extends AbstractStrategy implements Composit
      * {@inheritDoc }
      */
     @Override
-    public Object unmarshalInit(Object target, CompositeReader reader, UnmarshalContext ctx)
-            throws IllegalAccessException {
+    public Object unmarshalInit(Object target, CompositeReader reader, UnmarshalContext ctx) {
         reader.next(); // consumed root element start:
         // read elements:
         final int length = Array.getLength(target);

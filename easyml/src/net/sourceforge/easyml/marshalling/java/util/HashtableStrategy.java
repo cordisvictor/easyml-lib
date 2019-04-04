@@ -18,18 +18,19 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.Hashtable;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.util.Hashtable;
 
 /**
  * HashtableStrategy class that extends the {@linkplain MapStrategy} for the
  * {@linkplain Hashtable}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class HashtableStrategy extends MapStrategy<Hashtable> {
 
@@ -57,14 +58,6 @@ public final class HashtableStrategy extends MapStrategy<Hashtable> {
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<Hashtable> c) {
-        return c == Hashtable.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String name() {
         return HashtableStrategy.NAME;
     }
@@ -73,8 +66,7 @@ public final class HashtableStrategy extends MapStrategy<Hashtable> {
      * {@inheritDoc }
      */
     @Override
-    public Hashtable unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Hashtable unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         try {
             return new Hashtable(Integer.parseInt(reader.elementRequiredAttribute(ATTRIBUTE_SIZE)));
         } catch (NumberFormatException nfx) {

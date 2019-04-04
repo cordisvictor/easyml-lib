@@ -22,11 +22,10 @@ package net.sourceforge.easyml;
  * DTD class contains the DTD constants.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.0
+ * @since 1.0
  */
 public final class DTD {
-
     /**
      * The constant defining the <code>easyml</code> XML element.
      */
@@ -94,4 +93,4 @@ public final class DTD {
 
     private DTD() {
     }
-}//class DTD.
+}

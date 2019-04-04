@@ -30,8 +30,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * {@linkplain StackTraceElement}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class StackTraceElementStrategy extends AbstractStrategy<StackTraceElement>
         implements SimpleStrategy<StackTraceElement> {
@@ -86,7 +86,11 @@ public final class StackTraceElementStrategy extends AbstractStrategy<StackTrace
      */
     @Override
     public String marshal(StackTraceElement target, MarshalContext ctx) {
-        return new StringBuilder(target.getClassName()).append(StackTraceElementStrategy.SEPARATOR).append(target.getMethodName()).append(StackTraceElementStrategy.SEPARATOR).append(target.getFileName()).append(StackTraceElementStrategy.SEPARATOR).append(target.getLineNumber()).toString();
+        return new StringBuilder(target.getClassName()).append(StackTraceElementStrategy.SEPARATOR)
+                .append(target.getMethodName()).append(StackTraceElementStrategy.SEPARATOR)
+                .append(target.getFileName()).append(StackTraceElementStrategy.SEPARATOR)
+                .append(target.getLineNumber())
+                .toString();
     }
 
     /**
@@ -104,4 +108,4 @@ public final class StackTraceElementStrategy extends AbstractStrategy<StackTrace
         }
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "text: requires 4 fields");
     }
-}//class StackTraceElementStrategy.
+}

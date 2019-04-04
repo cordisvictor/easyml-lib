@@ -18,20 +18,21 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.UUID;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.AbstractStrategy;
 import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
+import java.util.UUID;
+
 /**
  * UUIDStrategy class that implements the {@linkplain SimpleStrategy} interface
  * for the Java {@linkplain UUID}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class UUIDStrategy extends AbstractStrategy<UUID>
         implements SimpleStrategy<UUID> {
@@ -99,4 +100,4 @@ public final class UUIDStrategy extends AbstractStrategy<UUID>
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), iax);
         }
     }
-}//class UUIDStrategy.
+}

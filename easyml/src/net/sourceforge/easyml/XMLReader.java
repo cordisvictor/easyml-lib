@@ -18,37 +18,27 @@
  */
 package net.sourceforge.easyml;
 
-import java.io.*;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.CompositeStrategy;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 import net.sourceforge.easyml.marshalling.dtd.*;
-import net.sourceforge.easyml.marshalling.java.lang.ByteStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.CharacterStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.FloatStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.LongStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.ShortStrategy;
-import net.sourceforge.easyml.util.*;
+import net.sourceforge.easyml.marshalling.java.lang.*;
+import net.sourceforge.easyml.util.Caching;
+import net.sourceforge.easyml.util.ReflectionUtil;
+import net.sourceforge.easyml.util.ValueType;
+import net.sourceforge.easyml.util.XMLUtil;
 import org.w3c.dom.Document;
 import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.Closeable;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.reflect.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * XMLReader class is responsible for reading XML written by the
@@ -72,11 +62,10 @@ import org.xmlpull.v1.XmlPullParserException;
  * <b>Note:</b> this implementation is NOT thread-safe, but instances with
  * shared configuration can be created, via constructors.
  *
- * @see XMLWriter
- *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.4.5
+ * @see XMLWriter
+ * @since 1.0
  */
 public class XMLReader implements Closeable {
 
@@ -98,7 +87,7 @@ public class XMLReader implements Closeable {
             this.whitelist = false;
         }
 
-        /*default*/ SecurityPolicy(boolean whitelist, Class[] classes, Class[] classHierarchies) {
+        SecurityPolicy(boolean whitelist, Class[] classes, Class[] classHierarchies) {
             this.strict = new HashSet<>(Arrays.asList(classes));
             this.inheritance = new ArrayList<>(Arrays.asList(classHierarchies));
             this.whitelist = whitelist;
@@ -140,23 +129,12 @@ public class XMLReader implements Closeable {
             this.whitelist = false;
         }
 
-        private boolean containsHierarchically(Class c) {
-            for (Class root : this.inheritance) {
-                if (root.isAssignableFrom(c)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         /**
          * Adds a class to this policy list.
          *
          * @param c to add
-         *
          * @return true
-         * @throws IllegalArgumentException when c is null or represents an
-         * abstract class or interface
+         * @throws IllegalArgumentException when c is null or represents an abstract class or interface
          */
         public boolean add(Class c) {
             if (c == null) {
@@ -175,12 +153,8 @@ public class XMLReader implements Closeable {
          * as hierarchy root.
          *
          * @param root of hierarchy to add
-         *
-         * @return true if added, false if root is part of an already added
-         * hierarchy
-         *
-         * @throws IllegalArgumentException when c is null or represents a final
-         * class
+         * @return true if added, false if root is part of an already added hierarchy
+         * @throws IllegalArgumentException when c is null or represents a final class
          */
         public boolean addHierarchy(Class root) {
             if (root == null) {
@@ -205,12 +179,20 @@ public class XMLReader implements Closeable {
             return false;
         }
 
+        private boolean containsHierarchically(Class c) {
+            for (Class root : this.inheritance) {
+                if (root.isAssignableFrom(c)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /**
          * Returns <code>true</code> if the given class is contained within this
          * policy, <code>false</code> otherwise.
          *
          * @param c to search
-         *
          * @return true if class has been found, false otherwise
          */
         public boolean contains(Class c) {
@@ -221,9 +203,7 @@ public class XMLReader implements Closeable {
          * Checks if the given class is allowed w.r.t this policy.
          *
          * @param c to check
-         *
-         * @throws IllegalClassException when the given class is contained in
-         * this blacklist or not contained in this whitelist
+         * @throws IllegalClassException when the given class is contained in this blacklist or not contained in this whitelist
          */
         public void check(Class c) {
             final boolean found = this.contains(c);
@@ -244,8 +224,7 @@ public class XMLReader implements Closeable {
         /**
          * {@inheritDoc }
          *
-         * @return the string representation of this instance and the contained
-         * classes
+         * @return the string representation of this instance and the contained classes
          */
         @Override
         public String toString() {
@@ -254,7 +233,7 @@ public class XMLReader implements Closeable {
                     .append(", inheritance=").append(this.inheritance)
                     .toString();
         }
-    }//class SecurityPolicy.
+    }
 
     /**
      * Driver class is an abstraction layer, separating the XMLReader decoding
@@ -382,8 +361,7 @@ public class XMLReader implements Closeable {
          * Reads from the current position, recursively.
          *
          * @param componentType array componentType, if the expected result is
-         * an array with no class attribute, null otherwise
-         *
+         *                      an array with no class attribute, null otherwise
          * @return the read object
          */
         @Override
@@ -404,7 +382,7 @@ public class XMLReader implements Closeable {
          */
         @Override
         public abstract void close();
-    }//(+)class Driver.
+    }
 
     private static final class StrategyHashMap<S> extends HashMap<String, S> {
 
@@ -438,7 +416,7 @@ public class XMLReader implements Closeable {
      * Creates a new configuration prototype instance, to be used by
      * {@linkplain EasyML} only.
      */
-    /* default*/ XMLReader(Map<Class, Object> ctorCache, Map<String, Object> aliasFieldCache, Caching.CachePutStrategy cachesPut) {
+    XMLReader(Map<Class, Object> ctorCache, Map<String, Object> aliasFieldCache, Caching.CachePutStrategy cachesPut) {
         this.driver = null;
         this.init(ctorCache, aliasFieldCache, cachesPut);
     }
@@ -447,9 +425,24 @@ public class XMLReader implements Closeable {
      * Creates a new shared-configuration instance, to be used by
      * {@linkplain EasyML} only.
      */
-    /* default*/ XMLReader(XMLReader configured) {
+    XMLReader(XMLReader configured) {
         this.driver = null;
         this.initIdentically(configured);
+    }
+
+    private void initIdentically(XMLReader other) {
+        this.beforeRoot = true;
+        this.rootTag = other.rootTag;
+        this.decoded = new HashMap<>();
+        this.sharedConfiguration = true;
+        this.context = new UnmarshalContextImpl();
+        this.cachedAliasingReflection = other.cachedAliasingReflection;
+        this.cachedDefCtors = other.cachedDefCtors;
+        this.cachesPut = other.cachesPut;
+        this.simpleStrategies = other.simpleStrategies;
+        this.compositeStrategies = other.compositeStrategies;
+        this.dateFormat = new SimpleDateFormat(other.dateFormat.toPattern());
+        this.securityPolicy = other.securityPolicy;
     }
 
     /**
@@ -461,55 +454,6 @@ public class XMLReader implements Closeable {
      */
     public XMLReader(Reader reader) {
         this.driver = new XMLReaderTextDriver(this, reader);
-        this.init();
-    }
-
-    /**
-     * Creates a new instance with the given <code>in</code> stream to read from
-     * and the <code>kXML2</code> parser as default. The parser is set to the
-     * given stream.
-     *
-     * @param in stream from which to read
-     */
-    public XMLReader(InputStream in) {
-        this.driver = new XMLReaderTextDriver(this, new InputStreamReader(in));
-        this.init();
-    }
-
-    /**
-     * Creates a new instance with the given <code>reader</code> to use and the
-     * <code>parser</code> to process XML with. The parser is set (or reset) to
-     * the given reader.
-     *
-     * @param reader to read input with
-     * @param parser to process the in XML with
-     */
-    public XMLReader(Reader reader, XmlPullParser parser) {
-        this.driver = new XMLReaderTextDriver(this, reader, parser);
-        this.init();
-    }
-
-    /**
-     * Creates a new instance with the given <code>in</code> stream to read from
-     * and the <code>parser</code> to process XML with. The parser is set to the
-     * given stream.
-     *
-     * @param in stream from which to read
-     * @param parser to process the in XML with
-     */
-    public XMLReader(InputStream in, XmlPullParser parser) {
-        this.driver = new XMLReaderTextDriver(this, new InputStreamReader(in), parser);
-        this.init();
-    }
-
-    /**
-     * Creates a new instance with the given <code>in</code> DOM document to
-     * read from.
-     *
-     * @param in stream from which to read
-     */
-    public XMLReader(Document in) {
-        this.driver = new XMLReaderDOMDriver(this, in);
         this.init();
     }
 
@@ -545,30 +489,58 @@ public class XMLReader implements Closeable {
         this.simpleStrategies.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
     }
 
-    private void initIdentically(XMLReader other) {
-        this.beforeRoot = true;
-        this.rootTag = other.rootTag;
-        this.decoded = new HashMap<>();
-        this.sharedConfiguration = true;
-        this.context = new UnmarshalContextImpl();
-        this.cachedAliasingReflection = other.cachedAliasingReflection;
-        this.cachedDefCtors = other.cachedDefCtors;
-        this.cachesPut = other.cachesPut;
-        this.simpleStrategies = other.simpleStrategies;
-        this.compositeStrategies = other.compositeStrategies;
-        this.dateFormat = new SimpleDateFormat(other.dateFormat.toPattern());
-        this.securityPolicy = other.securityPolicy;
+    /**
+     * Creates a new instance with the given <code>in</code> stream to read from
+     * and the <code>kXML2</code> parser as default. The parser is set to the
+     * given stream.
+     *
+     * @param in stream from which to read
+     */
+    public XMLReader(InputStream in) {
+        this.driver = new XMLReaderTextDriver(this, new InputStreamReader(in));
+        this.init();
     }
 
-    private void checkNotSharedConfiguration() {
-        if (this.sharedConfiguration) {
-            throw new IllegalStateException("modifying this reader's shared configuration not allowed");
-        }
+    /**
+     * Creates a new instance with the given <code>reader</code> to use and the
+     * <code>parser</code> to process XML with. The parser is set (or reset) to
+     * the given reader.
+     *
+     * @param reader to read input with
+     * @param parser to process the in XML with
+     */
+    public XMLReader(Reader reader, XmlPullParser parser) {
+        this.driver = new XMLReaderTextDriver(this, reader, parser);
+        this.init();
+    }
+
+    /**
+     * Creates a new instance with the given <code>in</code> stream to read from
+     * and the <code>parser</code> to process XML with. The parser is set to the
+     * given stream.
+     *
+     * @param in     stream from which to read
+     * @param parser to process the in XML with
+     */
+    public XMLReader(InputStream in, XmlPullParser parser) {
+        this.driver = new XMLReaderTextDriver(this, new InputStreamReader(in), parser);
+        this.init();
+    }
+
+    /**
+     * Creates a new instance with the given <code>in</code> DOM document to
+     * read from.
+     *
+     * @param in stream from which to read
+     */
+    public XMLReader(Document in) {
+        this.driver = new XMLReaderDOMDriver(this, in);
+        this.init();
     }
 
     /**
      * Gets the {@linkplain #sharedConfiguration} property.<br/>
-     * If <code>true</code> then this instance may not have it's configuration
+     * If <code>true</code> then this instance may not have its configuration
      * altered.
      *
      * @return the property value
@@ -590,7 +562,6 @@ public class XMLReader implements Closeable {
      * Gets the {@linkplain #simpleStrategies} property.
      *
      * @return the simple strategies
-     *
      * @throws IllegalStateException if shared configuration
      */
     public Map<String, SimpleStrategy> getSimpleStrategies() {
@@ -598,11 +569,16 @@ public class XMLReader implements Closeable {
         return this.simpleStrategies;
     }
 
+    private void checkNotSharedConfiguration() {
+        if (this.sharedConfiguration) {
+            throw new IllegalStateException("modifying this reader's shared configuration not allowed");
+        }
+    }
+
     /**
      * Gets the {@linkplain #compositeStrategies} property.
      *
      * @return the composite strategies
-     *
      * @throws IllegalStateException if shared configuration
      */
     public Map<String, CompositeStrategy> getCompositeStrategies() {
@@ -629,7 +605,6 @@ public class XMLReader implements Closeable {
      * not vulnerable to XML injection.
      *
      * @return the security policy
-     *
      * @throws IllegalStateException if shared configuration
      */
     public SecurityPolicy getSecurityPolicy() {
@@ -644,9 +619,8 @@ public class XMLReader implements Closeable {
      * Sets the {@linkplain #rootTag} property.
      *
      * @param rootTag to be used as XML root tag
-     *
      * @throws IllegalArgumentException if tag is null or empty
-     * @throws IllegalStateException if reader isn't in initial state
+     * @throws IllegalStateException    if reader isn't in initial state
      */
     public void setRootTag(String rootTag) {
         if (!XMLUtil.isLegalXMLTag(rootTag)) {
@@ -663,7 +637,6 @@ public class XMLReader implements Closeable {
      * Sets the {@linkplain #dateFormat} property.
      *
      * @param dateFormat to be used by strategies at parsing dates
-     *
      * @throws IllegalStateException if shared configuration
      */
     public void setDateFormat(String dateFormat) {
@@ -679,9 +652,8 @@ public class XMLReader implements Closeable {
      * given alias must not be non-null, not-empty and must not contain illegal
      * characters w.r.t. the XML format.
      *
-     * @param c to alias
+     * @param c     to alias
      * @param alias the alias to set
-     *
      * @throws IllegalStateException if shared configuration
      */
     public void alias(Class c, String alias) {
@@ -695,9 +667,8 @@ public class XMLReader implements Closeable {
      * given alias must not be non-null, not-empty and must not contain illegal
      * characters w.r.t. the XML format.
      *
-     * @param f to alias
+     * @param f     to alias
      * @param alias the alias to set
-     *
      * @throws IllegalStateException if shared configuration
      */
     public void alias(Field f, String alias) {
@@ -725,6 +696,19 @@ public class XMLReader implements Closeable {
      */
     public boolean readBoolean() {
         return Boolean.parseBoolean(this.readValue(DTD.TYPE_BOOLEAN));
+    }
+
+    // reads values for the above api:
+    private String readValue(String element) {
+        this.ensureRootStartPos();
+        if (!this.driver.elementName().equals(element)) {
+            throw new InvalidFormatException(this.driver.positionDescriptor(),
+                    "expected: " + element + ", found: " + this.driver.elementName());
+        }
+        final String ret = this.driver.readValue();
+        this.driver.next(); // consume element end.
+        this.ensureRootEndClear();
+        return ret;
     }
 
     /**
@@ -837,104 +821,41 @@ public class XMLReader implements Closeable {
         return this.readValue(DTD.TYPE_STRING);
     }
 
-    // reads values for the above api:
-    private String readValue(String element) {
+    /**
+     * Reads the object-graph containing values (primitives and wrappers),
+     * objects collections, and arrays and returns the graph node which was the
+     * starting point of the writing.
+     *
+     * @return the read start node reference
+     * @throws InvalidFormatException when XML structure is invalid
+     * @throws IllegalClassException  when XML contains an illegal class w.r.t
+     *                                the security policy
+     */
+    public Object read() {
+        return this.readArray(null);
+    }
+
+    /**
+     * Reads the object-graph containing an array as root node and returns the
+     * reference to the read array.
+     *
+     * @param componentType the class of the array components
+     * @return the decoded array with the specified component type
+     * @throws InvalidFormatException if XML structure is invalid
+     * @throws IllegalClassException  when XML contains an illegal class w.r.t
+     *                                the security policy
+     */
+    public Object readArray(Class componentType) {
         this.ensureRootStartPos();
-        if (!this.driver.elementName().equals(element)) {
-            throw new InvalidFormatException(this.driver.positionDescriptor(),
-                    "expected: " + element + ", found: " + this.driver.elementName());
+        try {
+            final Object ret = this.read0(componentType);
+            return ret;
+        } catch (IllegalClassException ex) {
+            this.driver.consumeFully();
+            throw ex;
+        } finally {
+            this.ensureRootEndClear();
         }
-        final String ret = this.driver.readValue();
-        this.driver.next(); // consume element end.
-        this.ensureRootEndClear();
-        return ret;
-    }
-
-    // read0: array: componentType can be null if not specified
-    private Object readArray0(Class componentType)
-            throws XmlPullParserException, IOException, ClassNotFoundException, InstantiationException,
-            InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-        final Class compType = componentType != null ? componentType : Object.class;
-        // read array attributes to create instance nd mark it as visited:
-        final String idAttrVal = this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_ID);
-        final Object ret = Array.newInstance(compType, Integer.parseInt(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_LENGTH)));
-        // security check:
-        this.ensureSecurityPolicy(ret);
-        this.decoded.put(idAttrVal, ret);
-        this.driver.next(); // consumed array element start.
-        // read array items:
-        final ValueType pvt = ValueType.ofPrimitive(compType);
-        if (pvt != null) { // primitives array:
-            int i = 0;
-            while (true) {
-                if (this.driver.atElementEnd() && this.driver.elementName().equals(DTD.ELEMENT_ARRAY)) {
-                    this.driver.next(); // consumed array element end.
-                    return ret;
-                }
-                pvt.setReadArrayItem(this.driver, ret, i);
-                i++;
-            }
-        } else { // objects array:
-            final Object[] arrayRet = (Object[]) ret;
-            final Class subCompType = compType.getComponentType();
-            int i = 0;
-            while (true) {
-                if (this.driver.atElementEnd() && this.driver.elementName().equals(DTD.ELEMENT_ARRAY)) {
-                    this.driver.next(); // consumed array element end.
-                    return ret; // == arrayRet.
-                }
-                arrayRet[i] = this.read0(subCompType);
-                i++;
-            }
-        }
-    }
-
-    // read0: readObj:
-    private Object readObject()
-            throws XmlPullParserException, IOException, ClassNotFoundException, InstantiationException,
-            InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-        // read object attributes and create instance and mark it as visited:
-        Class cls = this.context.classFor(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS));
-        final Object ret = this.context.defaultConstructorFor(cls).newInstance();
-        // security check:
-        this.ensureSecurityPolicy(ret);
-        this.decoded.put(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_ID), ret);
-        // read object properties:
-        while (this.driver.next()) {
-            if (this.driver.atElementStart()) {
-                final String localPartName = this.driver.elementName();
-                // search the class for the specified property:
-                Field f = null;
-                while (cls != Object.class) {
-                    try {
-                        f = this.context.fieldFor(cls, localPartName);
-                        if (!Modifier.isStatic(f.getModifiers())) {
-                            break; // field found.
-                        }
-                    } catch (NoSuchFieldException searchInSuperclass) {
-                    } catch (SecurityException ex) {
-                        throw new InvalidFormatException(this.driver.positionDescriptor(), ex);
-                    }
-                    cls = cls.getSuperclass();
-                }
-                // check if field is indeed an instance property:
-                if (f == null || Modifier.isStatic(f.getModifiers()) || !ReflectionUtil.hasClassFieldProperty(cls, f)) {
-                    throw new InvalidFormatException(this.driver.positionDescriptor(), "undefined property: " + cls.getName() + '.' + localPartName);
-                }
-                if (!f.isAccessible()) {
-                    f.setAccessible(true);
-                }
-                // move down in the property value and read it:
-                if (!this.driver.next() || !this.driver.atElementStart()) {
-                    throw new InvalidFormatException(this.driver.positionDescriptor(), "expected element start");
-                }
-                f.set(ret, this.read0(f.getType().getComponentType()));
-            } else if (this.driver.atElementEnd() && this.driver.elementName().equals(DTD.ELEMENT_OBJECT)) {
-                this.driver.next(); // consume object element end.
-                return ret;
-            }
-        }// while.
-        throw new InvalidFormatException(this.driver.positionDescriptor(), "missing element end: " + DTD.ELEMENT_OBJECT);
     }
 
     // reads, always starting at the element start and ending after the element end:
@@ -995,8 +916,6 @@ public class XMLReader implements Closeable {
                 return this.readArray0(componentType); // also consumes element end.
             }
             throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid element start: " + localPartName);
-        } catch (XmlPullParserException | IOException ioX) {
-            throw new InvalidFormatException(this.driver.positionDescriptor(), ioX);
         } catch (ClassNotFoundException iB) {
             throw new InvalidFormatException(this.driver.positionDescriptor(), "unknown object class: " + iB.getMessage(), iB);
         } catch (NoSuchMethodException nsmX) {
@@ -1010,43 +929,87 @@ public class XMLReader implements Closeable {
         }
     }
 
-    /**
-     * Reads the object-graph containing values (primitives and wrappers),
-     * objects collections, and arrays and returns the graph node which was the
-     * starting point of the writing.
-     *
-     * @return the read start node reference
-     *
-     * @throws InvalidFormatException when XML structure is invalid
-     * @throws IllegalClassException when XML contains an illegal class w.r.t
-     * the security policy
-     */
-    public Object read() {
-        return this.readArray(null);
+    // read0: readObj:
+    private Object readObject() throws ClassNotFoundException, InstantiationException, InvocationTargetException,
+            IllegalAccessException, NoSuchMethodException {
+        // read object attributes and create instance and mark it as visited:
+        Class cls = this.context.classFor(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS));
+        final Object ret = this.context.defaultConstructorFor(cls).newInstance();
+        // security check:
+        this.ensureSecurityPolicy(ret);
+        this.decoded.put(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_ID), ret);
+        // read object properties:
+        while (this.driver.next()) {
+            if (this.driver.atElementStart()) {
+                final String localPartName = this.driver.elementName();
+                // search the class for the specified property:
+                Field f = null;
+                while (cls != Object.class) {
+                    try {
+                        f = this.context.fieldFor(cls, localPartName);
+                        if (!Modifier.isStatic(f.getModifiers())) {
+                            break; // field found.
+                        }
+                    } catch (NoSuchFieldException searchInSuperclass) {
+                    } catch (SecurityException ex) {
+                        throw new InvalidFormatException(this.driver.positionDescriptor(), ex);
+                    }
+                    cls = cls.getSuperclass();
+                }
+                // check if field is indeed an instance property:
+                if (f == null || Modifier.isStatic(f.getModifiers()) || !ReflectionUtil.hasClassFieldProperty(cls, f)) {
+                    throw new InvalidFormatException(this.driver.positionDescriptor(), "undefined property: " + cls.getName() + '.' + localPartName);
+                }
+                if (!f.isAccessible()) {
+                    f.setAccessible(true);
+                }
+                // move down in the property value and read it:
+                if (!this.driver.next() || !this.driver.atElementStart()) {
+                    throw new InvalidFormatException(this.driver.positionDescriptor(), "expected element start");
+                }
+                f.set(ret, this.read0(f.getType().getComponentType()));
+            } else if (this.driver.atElementEnd() && this.driver.elementName().equals(DTD.ELEMENT_OBJECT)) {
+                this.driver.next(); // consume object element end.
+                return ret;
+            }
+        }// while.
+        throw new InvalidFormatException(this.driver.positionDescriptor(), "missing element end: " + DTD.ELEMENT_OBJECT);
     }
 
-    /**
-     * Reads the object-graph containing an array as root node and returns the
-     * reference to the read array.
-     *
-     * @param componentType the class of the array components
-     *
-     * @return the decoded array with the specified component type
-     *
-     * @throws InvalidFormatException if XML structure is invalid
-     * @throws IllegalClassException when XML contains an illegal class w.r.t
-     * the security policy
-     */
-    public Object readArray(Class componentType) {
-        this.ensureRootStartPos();
-        try {
-            final Object ret = this.read0(componentType);
-            return ret;
-        } catch (IllegalClassException ex) {
-            this.driver.consumeFully();
-            throw ex;
-        } finally {
-            this.ensureRootEndClear();
+    // read0: array: componentType can be null if not specified
+    private Object readArray0(Class componentType) {
+        final Class compType = componentType != null ? componentType : Object.class;
+        // read array attributes to create instance nd mark it as visited:
+        final String idAttrVal = this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_ID);
+        final Object ret = Array.newInstance(compType, Integer.parseInt(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_LENGTH)));
+        // security check:
+        this.ensureSecurityPolicy(ret);
+        this.decoded.put(idAttrVal, ret);
+        this.driver.next(); // consumed array element start.
+        // read array items:
+        final ValueType pvt = ValueType.ofPrimitive(compType);
+        if (pvt != null) { // primitives array:
+            int i = 0;
+            while (true) {
+                if (this.driver.atElementEnd() && this.driver.elementName().equals(DTD.ELEMENT_ARRAY)) {
+                    this.driver.next(); // consumed array element end.
+                    return ret;
+                }
+                pvt.setReadArrayItem(this.driver, ret, i);
+                i++;
+            }
+        } else { // objects array:
+            final Object[] arrayRet = (Object[]) ret;
+            final Class subCompType = compType.getComponentType();
+            int i = 0;
+            while (true) {
+                if (this.driver.atElementEnd() && this.driver.elementName().equals(DTD.ELEMENT_ARRAY)) {
+                    this.driver.next(); // consumed array element end.
+                    return ret; // == arrayRet.
+                }
+                arrayRet[i] = this.read0(subCompType);
+                i++;
+            }
         }
     }
 
@@ -1106,7 +1069,7 @@ public class XMLReader implements Closeable {
     /**
      * Resets this instance, setting it to the new <code>in</code> stream.
      *
-     * @param in to use from now on
+     * @param in     to use from now on
      * @param parser to use, null if default
      */
     public void reset(InputStream in, XmlPullParser parser) {
@@ -1200,31 +1163,6 @@ public class XMLReader implements Closeable {
         }
 
         @Override
-        public Class aliasedClassFor(String alias) {
-            final Object cached = cachedAliasingReflection.get(alias);
-            if (cached != null && cached.getClass() == Class.class) {
-                final Class ret = (Class) cached;
-                if (!ret.getName().equals(alias)) {
-                    return ret;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public Field aliasedFieldFor(Class declaring, String alias) {
-            final Object cached = cachedAliasingReflection.get(
-                    ReflectionUtil.qualifiedNameFor(declaring, alias));
-            if (cached != null && cached.getClass() == Field.class) {
-                final Field ret = (Field) cached;
-                if (!ret.getName().equals(alias)) {
-                    return ret;
-                }
-            }
-            return null;
-        }
-
-        @Override
         public Class classFor(String aliasOrName) throws ClassNotFoundException {
             final Object cached = cachedAliasingReflection.get(aliasOrName);
             if (cached != null && cached.getClass() == Class.class) {
@@ -1263,5 +1201,5 @@ public class XMLReader implements Closeable {
         public String rootTag() {
             return rootTag;
         }
-    }//(+)class UnmarshalContextImpl.
+    }
 }

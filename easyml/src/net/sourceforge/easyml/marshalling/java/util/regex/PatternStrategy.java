@@ -18,10 +18,11 @@
  */
 package net.sourceforge.easyml.marshalling.java.util.regex;
 
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
+
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * PatternStrategy class that implements the {@linkplain CompositeStrategy}
@@ -29,8 +30,8 @@ import net.sourceforge.easyml.marshalling.*;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.4
+ * @since 1.0
  */
 public final class PatternStrategy extends AbstractStrategy<Pattern>
         implements CompositeStrategy<Pattern> {
@@ -99,8 +100,7 @@ public final class PatternStrategy extends AbstractStrategy<Pattern>
      * {@inheritDoc }
      */
     @Override
-    public Pattern unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Pattern unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         // read the attributes set at marshalling:
         final String regex = reader.elementRequiredAttribute(PatternStrategy.ATTRIBUTE_REGEX);
         final String flagsStr = reader.elementAttribute(PatternStrategy.ATTRIBUTE_FLAGS);
@@ -116,9 +116,8 @@ public final class PatternStrategy extends AbstractStrategy<Pattern>
      * {@inheritDoc }
      */
     @Override
-    public Pattern unmarshalInit(Pattern target, CompositeReader reader, UnmarshalContext ctx)
-            throws IllegalAccessException {
+    public Pattern unmarshalInit(Pattern target, CompositeReader reader, UnmarshalContext ctx) {
         reader.next(); // moved the reader on the root element end.
         return target;
     }
-}//class PatternStrategy.
+}

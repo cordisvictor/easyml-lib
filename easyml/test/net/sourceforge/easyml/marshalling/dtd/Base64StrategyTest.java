@@ -35,7 +35,7 @@ public class Base64StrategyTest {
     private final EasyML easyml = new EasyML();
 
     /**
-     * Test of marshal method, of class Base64Strategy.
+     * Test of marshal method, of class Base64Strategy.d
      */
     @Test
     public void testMarshalUnmarshal() throws Exception {

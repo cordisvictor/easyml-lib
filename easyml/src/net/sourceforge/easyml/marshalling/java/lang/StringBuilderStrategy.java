@@ -29,8 +29,8 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public final class StringBuilderStrategy extends AbstractStrategy<StringBuilder>
         implements SimpleStrategy<StringBuilder> {
@@ -94,4 +94,4 @@ public final class StringBuilderStrategy extends AbstractStrategy<StringBuilder>
     public StringBuilder unmarshal(String text, UnmarshalContext ctx) {
         return new StringBuilder(text);
     }
-}//class StringBuilderStrategy.
+}

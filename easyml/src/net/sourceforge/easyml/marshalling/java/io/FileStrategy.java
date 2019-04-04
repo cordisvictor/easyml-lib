@@ -18,19 +18,20 @@
  */
 package net.sourceforge.easyml.marshalling.java.io;
 
-import java.io.File;
 import net.sourceforge.easyml.marshalling.AbstractStrategy;
 import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.io.File;
 
 /**
  * FileStrategy class that implements the {@linkplain SimpleStrategy} interface
  * for the Java {@linkplain File}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public final class FileStrategy extends AbstractStrategy<File>
         implements SimpleStrategy<File> {
@@ -94,4 +95,4 @@ public final class FileStrategy extends AbstractStrategy<File>
     public File unmarshal(String text, UnmarshalContext ctx) {
         return new File(text);
     }
-}//class FileStrategy.
+}

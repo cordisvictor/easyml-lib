@@ -29,8 +29,8 @@ import net.sourceforge.easyml.marshalling.SimpleStrategy;
  * interface for the DTD boolean datatype. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.0
+ * @since 1.0
  */
 public final class BooleanStrategy extends AbstractStrategy<Boolean> implements SimpleStrategy<Boolean> {
 
@@ -89,4 +89,4 @@ public final class BooleanStrategy extends AbstractStrategy<Boolean> implements 
     public Boolean unmarshal(String text, UnmarshalContext ctx) {
         return Boolean.valueOf(text);
     }
-}//class BooleanStrategy.
+}

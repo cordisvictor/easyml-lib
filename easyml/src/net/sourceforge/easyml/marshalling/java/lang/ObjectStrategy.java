@@ -18,33 +18,35 @@
  */
 package net.sourceforge.easyml.marshalling.java.lang;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import net.sourceforge.easyml.DTD;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
-import net.sourceforge.easyml.util.*;
+import net.sourceforge.easyml.util.ReflectionUtil;
+import net.sourceforge.easyml.util.ValueType;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 /**
  * ObjectStrategy class that implements the {@linkplain CompositeStrategy}
  * interface for Java {@linkplain Object}s. This is a reflection-based
  * implementation used as a last resort if no other suitable strategy is found
  * for the target class.
- *
+ * <p>
  * <br/>This implementation acts as an override for the XML writer's
  * <code>writeObject</code> and XML reader's <code>readObject</code>, enabling
  * support for all-field serialization, inner classes, and encodes only the
  * non-default fields (i.e. fields with values different as the ones defined by
  * the default constructor, if any).
- *
+ * <p>
  * <br/> Non-pure Java reflection is used when un-marshalling objects of classes
  * which do not define a default constructor.
- *
+ * <p>
  * <br/>This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.8
+ * @since 1.0
  */
 public class ObjectStrategy extends AbstractStrategy
         implements CompositeStrategy {
@@ -102,7 +104,6 @@ public class ObjectStrategy extends AbstractStrategy
      * will end at the given level.
      *
      * @param level the inheritance level
-     *
      * @return true if continue, false otherwise
      */
     protected boolean continueProcessFor(Class level) {
@@ -115,11 +116,11 @@ public class ObjectStrategy extends AbstractStrategy
      *
      * @param target target to extract attribute values from
      * @param writer to write attributes with
-     * @param ctx the context
+     * @param ctx    the context
      */
     protected void marshalDoAttributes(Object target, CompositeAttributeWriter writer, MarshalContext ctx) {
         final Class c = target.getClass();
-        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasFor(c, c.getName()));
+        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasOrNameFor(c));
     }
 
     /**
@@ -201,7 +202,7 @@ public class ObjectStrategy extends AbstractStrategy
                     }
                 }
                 // write non-default attribute value:
-                writer.startElement(ctx.aliasFor(f, f.getName()));
+                writer.startElement(ctx.aliasOrNameFor(f));
                 if (attributeValue == null) {
                     writer.setAttribute(ATTRIBUTE_NIL, Boolean.toString(true));
                 } else { // non-null:
@@ -304,4 +305,4 @@ public class ObjectStrategy extends AbstractStrategy
         }// while.
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "missing element end: " + this.name());
     }
-}// class ObjectStrategy.
+}

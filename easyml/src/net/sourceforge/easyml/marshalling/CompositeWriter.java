@@ -23,8 +23,8 @@ package net.sourceforge.easyml.marshalling;
  * to write composite datatypes into XML.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.5
+ * @since 1.0
  */
 public interface CompositeWriter extends CompositeAttributeWriter {
 
@@ -136,8 +136,7 @@ public interface CompositeWriter extends CompositeAttributeWriter {
      * delegate the writing to a {@linkplain SimpleStrategy}.
      *
      * @param value the non-null string representation of the simple value type
-     *
      * @throws IllegalArgumentException if value is null
      */
     void writeValue(String value);
-}//interface CompositeWriter.
+}

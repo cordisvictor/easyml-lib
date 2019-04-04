@@ -18,18 +18,19 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import java.util.ArrayList;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
+
+import java.util.ArrayList;
 
 /**
  * ArrayListStrategy class that extends the {@linkplain CollectionStrategy} for
  * the {@linkplain ArrayList}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.2.2
+ * @since 1.0
  */
 public final class ArrayListStrategy extends CollectionStrategy<ArrayList> {
 
@@ -57,14 +58,6 @@ public final class ArrayListStrategy extends CollectionStrategy<ArrayList> {
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<ArrayList> c) {
-        return c == ArrayList.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String name() {
         return ArrayListStrategy.NAME;
     }
@@ -73,8 +66,7 @@ public final class ArrayListStrategy extends CollectionStrategy<ArrayList> {
      * {@inheritDoc }
      */
     @Override
-    public ArrayList unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public ArrayList unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         try {
             return new ArrayList(Integer.parseInt(reader.elementRequiredAttribute(ATTRIBUTE_SIZE)));
         } catch (NumberFormatException nfx) {

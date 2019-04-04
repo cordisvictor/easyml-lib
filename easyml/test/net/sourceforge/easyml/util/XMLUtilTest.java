@@ -18,8 +18,9 @@
  */
 package net.sourceforge.easyml.util;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * @author victor
@@ -83,5 +84,4 @@ public class XMLUtilTest {
             fail("checkAlias: threw validation exception for valid aliasa");
         }
     }
-
 }
