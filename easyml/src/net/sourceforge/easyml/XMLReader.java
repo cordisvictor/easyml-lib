@@ -24,7 +24,6 @@ import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 import net.sourceforge.easyml.marshalling.dtd.*;
 import net.sourceforge.easyml.marshalling.java.lang.*;
-import net.sourceforge.easyml.util.Caching;
 import net.sourceforge.easyml.util.ReflectionUtil;
 import net.sourceforge.easyml.util.ValueType;
 import net.sourceforge.easyml.util.XMLUtil;
@@ -63,7 +62,7 @@ import java.util.*;
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.5.0
  * @see XMLWriter
  * @since 1.0
  */
@@ -398,6 +397,7 @@ public class XMLReader implements Closeable {
         }
     }
 
+    private static final char FIELD_FQN_SEPARATOR = '#';
     private Driver driver;
     private boolean beforeRoot;
     /* default*/ String rootTag;
@@ -405,8 +405,6 @@ public class XMLReader implements Closeable {
     private boolean sharedConfiguration;
     private UnmarshalContextImpl context;
     /* default*/ Map<String, Object> cachedAliasingReflection;
-    /* default*/ Map<Class, Object> cachedDefCtors;
-    private Caching.CachePutStrategy cachesPut;
     private Map<String, SimpleStrategy> simpleStrategies;
     private Map<String, CompositeStrategy> compositeStrategies;
     /* default*/ SimpleDateFormat dateFormat;
@@ -416,9 +414,9 @@ public class XMLReader implements Closeable {
      * Creates a new configuration prototype instance, to be used by
      * {@linkplain EasyML} only.
      */
-    XMLReader(Map<Class, Object> ctorCache, Map<String, Object> aliasFieldCache, Caching.CachePutStrategy cachesPut) {
+    XMLReader(Map<String, Object> aliasFieldCache) {
         this.driver = null;
-        this.init(ctorCache, aliasFieldCache, cachesPut);
+        this.init(aliasFieldCache);
     }
 
     /**
@@ -437,8 +435,6 @@ public class XMLReader implements Closeable {
         this.sharedConfiguration = true;
         this.context = new UnmarshalContextImpl();
         this.cachedAliasingReflection = other.cachedAliasingReflection;
-        this.cachedDefCtors = other.cachedDefCtors;
-        this.cachesPut = other.cachesPut;
         this.simpleStrategies = other.simpleStrategies;
         this.compositeStrategies = other.compositeStrategies;
         this.dateFormat = new SimpleDateFormat(other.dateFormat.toPattern());
@@ -458,18 +454,16 @@ public class XMLReader implements Closeable {
     }
 
     private void init() {
-        this.init(new HashMap<Class, Object>(), new HashMap<String, Object>(), Caching.STRATEGY_PUT);
+        this.init(new HashMap<>());
     }
 
-    private void init(Map<Class, Object> ctorCache, Map<String, Object> aliasFieldCache, Caching.CachePutStrategy cachesPut) {
+    private void init(Map<String, Object> aliasFieldCache) {
         this.beforeRoot = true;
         this.rootTag = DTD.ELEMENT_EASYML;
         this.decoded = new HashMap<>();
         this.sharedConfiguration = false;
         this.context = new UnmarshalContextImpl();
-        this.cachedDefCtors = ctorCache;
         this.cachedAliasingReflection = aliasFieldCache;
-        this.cachesPut = cachesPut;
         this.simpleStrategies = new StrategyHashMap<>();
         this.compositeStrategies = new StrategyHashMap<>();
         this.dateFormat = new SimpleDateFormat(DTD.FORMAT_DATE);
@@ -657,9 +651,15 @@ public class XMLReader implements Closeable {
      * @throws IllegalStateException if shared configuration
      */
     public void alias(Class c, String alias) {
-        XMLUtil.validateAlias(alias);
+        alias0(c, alias);
+    }
+
+    private void alias0(Object toAlias, String alias) {
+        if (alias == null || alias.isEmpty() || !XMLUtil.isLegalXMLText(alias)) {
+            throw new IllegalArgumentException("alias: null, empty, or contains illegal XML chars: " + alias);
+        }
         this.checkNotSharedConfiguration();
-        this.cachedAliasingReflection.put(alias, c);
+        this.cachedAliasingReflection.put(alias, toAlias);
     }
 
     /**
@@ -672,11 +672,11 @@ public class XMLReader implements Closeable {
      * @throws IllegalStateException if shared configuration
      */
     public void alias(Field f, String alias) {
-        XMLUtil.validateAlias(alias);
-        this.checkNotSharedConfiguration();
-        this.cachedAliasingReflection.put(
-                ReflectionUtil.qualifiedNameFor(f.getDeclaringClass(), alias),
-                f);
+        alias0(f, qualifiedFieldKey(f.getDeclaringClass(), alias));
+    }
+
+    private static String qualifiedFieldKey(Class declaring, String field) {
+        return declaring.getName() + FIELD_FQN_SEPARATOR + field;
     }
 
     /**
@@ -918,23 +918,18 @@ public class XMLReader implements Closeable {
             throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid element start: " + localPartName);
         } catch (ClassNotFoundException iB) {
             throw new InvalidFormatException(this.driver.positionDescriptor(), "unknown object class: " + iB.getMessage(), iB);
-        } catch (NoSuchMethodException nsmX) {
-            throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid object constructor", nsmX);
         } catch (InstantiationException iDC) {
             throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid object constructor: " + iDC.getMessage(), iDC);
-        } catch (InvocationTargetException iA) {
-            throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid object accessor: " + iA.getMessage(), iA);
         } catch (IllegalAccessException iDC) {
             throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid object constructor modifier: " + iDC.getMessage(), iDC);
         }
     }
 
     // read0: readObj:
-    private Object readObject() throws ClassNotFoundException, InstantiationException, InvocationTargetException,
-            IllegalAccessException, NoSuchMethodException {
+    private Object readObject() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         // read object attributes and create instance and mark it as visited:
         Class cls = this.context.classFor(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS));
-        final Object ret = this.context.defaultConstructorFor(cls).newInstance();
+        final Object ret = cls.newInstance();
         // security check:
         this.ensureSecurityPolicy(ret);
         this.decoded.put(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_ID), ret);
@@ -955,10 +950,10 @@ public class XMLReader implements Closeable {
                     cls = cls.getSuperclass();
                 }
                 // check if field is indeed an instance property:
-                if (f == null || Modifier.isStatic(f.getModifiers()) || !ReflectionUtil.hasClassFieldProperty(cls, f)) {
+                if (f == null || !ReflectionUtil.isFieldProperty(f)) {
                     throw new InvalidFormatException(this.driver.positionDescriptor(), "undefined property: " + cls.getName() + '.' + localPartName);
                 }
-                f.setAccessible(true);
+                ReflectionUtil.setAccessible(f);
                 // move down in the property value and read it:
                 if (!this.driver.next() || !this.driver.atElementStart()) {
                     throw new InvalidFormatException(this.driver.positionDescriptor(), "expected element start");
@@ -983,18 +978,18 @@ public class XMLReader implements Closeable {
         this.decoded.put(idAttrVal, ret);
         this.driver.next(); // consumed array element start.
         // read array items:
-        final ValueType pvt = ValueType.ofPrimitive(compType);
-        if (pvt != null) { // primitives array:
+        if (compType.isPrimitive()) {
+            final ValueType vt = ValueType.of(compType);
             int i = 0;
             while (true) {
                 if (this.driver.atElementEnd() && this.driver.elementName().equals(DTD.ELEMENT_ARRAY)) {
                     this.driver.next(); // consumed array element end.
                     return ret;
                 }
-                pvt.setReadArrayItem(this.driver, ret, i);
+                vt.setReadArrayItem(this.driver, ret, i);
                 i++;
             }
-        } else { // objects array:
+        } else {
             final Object[] arrayRet = (Object[]) ret;
             final Class subCompType = compType.getComponentType();
             int i = 0;
@@ -1100,15 +1095,13 @@ public class XMLReader implements Closeable {
      */
     public void clearCache() {
         this.checkNotSharedConfiguration();
-        this.cachedDefCtors.clear();
         final Iterator<Map.Entry<String, Object>> iter = this.cachedAliasingReflection.entrySet().iterator();
         while (iter.hasNext()) {
             final Map.Entry<String, Object> crt = iter.next();
             final Object crtVal = crt.getValue();
             if (crtVal.getClass() == Field.class) {
-                if (ReflectionUtil.fieldNameFor(crt.getKey())
-                        .equals(
-                                ((Field) crtVal).getName())) {
+                if (fieldNameFrom(crt.getKey())
+                        .equals(((Field) crtVal).getName())) {
                     iter.remove(); // removed non-alias entry.
                 }
             } else if (crtVal.getClass() == Class.class) {
@@ -1117,6 +1110,10 @@ public class XMLReader implements Closeable {
                 }
             }
         }
+    }
+
+    private static String fieldNameFrom(String fieldFQN) {
+        return fieldFQN.substring(fieldFQN.indexOf(FIELD_FQN_SEPARATOR) + 1);
     }
 
     /**
@@ -1130,33 +1127,12 @@ public class XMLReader implements Closeable {
         this.decoded.clear();
         this.context = null;
         this.cachedAliasingReflection = null;
-        this.cachedDefCtors = null;
         this.compositeStrategies = null;
         this.simpleStrategies = null;
         this.securityPolicy = null;
     }
 
     private final class UnmarshalContextImpl implements UnmarshalContext {
-
-        @Override
-        public <T> Constructor<T> defaultConstructorFor(Class<T> c)
-                throws NoSuchMethodException {
-            final Object cached = cachedDefCtors.get(c);
-            if (cached != null) {
-                if (cached.getClass() != Constructor.class) {
-                    throw (NoSuchMethodException) cached;
-                }
-                return (Constructor<T>) cached;
-            }
-            try {
-                final Constructor<T> ctor = ReflectionUtil.defaultConstructor(c);
-                cachesPut.put(cachedDefCtors, c, ctor);
-                return ctor;
-            } catch (NoSuchMethodException noDefCtorX) {
-                cachesPut.put(cachedDefCtors, c, noDefCtorX);
-                throw noDefCtorX;
-            }
-        }
 
         @Override
         public Class classFor(String aliasOrName) throws ClassNotFoundException {
@@ -1166,20 +1142,20 @@ public class XMLReader implements Closeable {
             }
             // else cache class:
             final Class ret = ReflectionUtil.classForName(aliasOrName);
-            cachesPut.put(cachedAliasingReflection, aliasOrName, ret);
+            cachedAliasingReflection.putIfAbsent(aliasOrName, ret);
             return ret;
         }
 
         @Override
         public Field fieldFor(Class declaring, String aliasOrName) throws NoSuchFieldException {
-            final String fieldFQN = ReflectionUtil.qualifiedNameFor(declaring, aliasOrName);
+            final String fieldFQN = qualifiedFieldKey(declaring, aliasOrName);
             final Object cached = cachedAliasingReflection.get(fieldFQN);
             if (cached != null && cached.getClass() == Field.class) {
                 return (Field) cached;
             }
             // else cache field:
             final Field ret = declaring.getDeclaredField(aliasOrName);
-            cachesPut.put(cachedAliasingReflection, fieldFQN, ret);
+            cachedAliasingReflection.putIfAbsent(fieldFQN, ret);
             return ret;
         }
 

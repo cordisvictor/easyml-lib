@@ -103,18 +103,18 @@ public final class ArrayStrategy extends AbstractStrategy implements CompositeSt
         writer.setAttribute(DTD.ATTRIBUTE_LENGTH, Integer.toString(length));
         // if skipDefaults then compute array default element value:
         final boolean skipDefaults = ctx.skipDefaults();
-        final Class componentType = cls.getComponentType();
-        final ValueType pvt = ValueType.ofPrimitive(componentType);
+        final Class arrayItemCls = cls.getComponentType();
         // write non-default array elements:
-        if (pvt != null) { // primitives array:
+        if (arrayItemCls.isPrimitive()) {
+            final ValueType vt = ValueType.of(arrayItemCls);
             int i = 0;
             while (i < length) {
-                if (pvt.getWriteArrayItem(writer, target, i, skipDefaults)) { // write element:
+                if (vt.getWriteArrayItem(writer, target, i, skipDefaults)) { // write element:
                     i++;
                 } else { // write skip section:
                     int skip = 1; // at least 1 default element value.
                     i++; // move on the next element, if any.
-                    while (i < length && pvt.isDefaultArrayItem(target, i)) {
+                    while (i < length && vt.isDefaultArrayItem(target, i)) {
                         skip++;
                         i++;
                     }
@@ -125,7 +125,7 @@ public final class ArrayStrategy extends AbstractStrategy implements CompositeSt
                     writer.endElement();
                 }
             }
-        } else { // objects array:
+        } else {
             final Object[] arrayTarget = (Object[]) target;
             int i = 0;
             while (i < length) {
@@ -175,9 +175,10 @@ public final class ArrayStrategy extends AbstractStrategy implements CompositeSt
         // consume root element start:
         reader.next();
         // read elements:
-        final ValueType pvt = ValueType.ofPrimitive(target.getClass().getComponentType());
+        final Class arrayItemCls = target.getClass().getComponentType();
         try {
-            if (pvt != null) { // primitives array:
+            if (arrayItemCls.isPrimitive()) {
+                final ValueType vt = ValueType.of(arrayItemCls);
                 final int length = Array.getLength(target);
                 int i = 0;
                 while (i < length) {
@@ -187,11 +188,11 @@ public final class ArrayStrategy extends AbstractStrategy implements CompositeSt
                         reader.next(); // consumed skip end.
                         i += sizeAttr != null ? Integer.parseInt(sizeAttr) : 1;
                     } else { // element to read:
-                        pvt.setReadArrayItem(reader, target, i);
+                        vt.setReadArrayItem(reader, target, i);
                         i++;
                     }
                 }
-            } else { // objects array:
+            } else {
                 final Object[] arrayTarget = (Object[]) target;
                 int i = 0;
                 while (i < arrayTarget.length) {

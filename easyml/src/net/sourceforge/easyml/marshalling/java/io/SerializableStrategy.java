@@ -52,7 +52,7 @@ import java.util.Map;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.4.6
  * @since 1.0
  */
 public class SerializableStrategy extends AbstractStrategy<Serializable>
@@ -136,7 +136,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         // check for writeReplace():
         try {
             final Method writeReplaceM = findHierarchicalDeclaredMethod(theTarget.getClass(), METHOD_WRITEREPLACE);
-            writeReplaceM.setAccessible(true); // method may be private. Hence must be set accessible true.
+            ReflectionUtil.setAccessible(writeReplaceM); // method may be private. Hence must be set accessible true.
             final Object replacement = writeReplaceM.invoke(theTarget);
             if (replacement == null) {
                 writer.write(null); // redirect to null.
@@ -160,8 +160,8 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         this.marshalDoAttributes(theTarget, writer, ctx);
         // begin object encoding: if non-static inner class then write outer instance:
         final Class<Serializable> cls = (Class<Serializable>) theTarget.getClass();
-        Object outer = null;
         final Field outerRef = ReflectionUtil.outerRefField(cls);
+        Object outer = null;
         if (outerRef != null) {
             try {
                 outer = outerRef.get(theTarget);
@@ -175,7 +175,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         // if skipDefaults then init default for comparison usage:
         if (ctx.skipDefaults()) {
             try {
-                theDef = outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : ctx.defaultInstanceFor(cls);
+                theDef = outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : cls.newInstance();
             } catch (ReflectiveOperationException defaultConstructorX) {
                 // cannot use defaults defined.
             }
@@ -186,7 +186,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                 try { // process composition:
                     // check for writeObject():
                     final Method writeObjectM = sos.level.getDeclaredMethod(METHOD_WRITEOBJECT, PARAMS_OOS);
-                    writeObjectM.setAccessible(true); // method should be private. Hence must be set accessible true.
+                    ReflectionUtil.setAccessible(writeObjectM); // method should be private. Hence must be set accessible true.
                     writeObjectM.invoke(theTarget, sos);
                 } catch (NoSuchMethodException nsmX) {
                     this.defaultMarshalObject(theTarget, theDef, writer, ctx, sos.level, outerRef);
@@ -240,7 +240,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                     || ctx.excluded(f)) {
                 continue; // skip static, transient, already encoded outer-refed object, or excluded field.
             }
-            f.setAccessible(true);
+            ReflectionUtil.setAccessible(f);
             // process field value:
             Object attributeValue = null;
             Object defaultValue = null;
@@ -294,7 +294,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         if (Serializable.class.isAssignableFrom(cls)) {
             Object ret;
             try {
-                if (ReflectionUtil.hasOuterRefField(cls)) {
+                if (ReflectionUtil.isInnerClass(cls)) {
                     if (!reader.next() || !reader.atElementStart() || !reader.elementName().equals(SerializableStrategy.ELEMENT_OUTER)) {
                         throw new InvalidFormatException(ctx.readerPositionDescriptor(),
                                 "expected element start: " + SerializableStrategy.ELEMENT_OUTER);
@@ -304,7 +304,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                     // do not consume this.outer end: let the second step while do it.
                     ret = ReflectionUtil.instantiateInner(cls, outer);
                 } else {
-                    ret = ctx.defaultConstructorFor(cls).newInstance();
+                    ret = cls.newInstance();
                 }
             } catch (ReflectiveOperationException defaultConstructorX) {
                 ret = ReflectionUtil.instantiateUnsafely(cls);
@@ -318,7 +318,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
      * {@inheritDoc }
      */
     @Override
-    public Serializable unmarshalInit(Serializable target, CompositeReader reader, UnmarshalContext ctx) {
+    public Object unmarshalInit(Serializable target, CompositeReader reader, UnmarshalContext ctx) {
         // read object attributes: in exactly the same order as they were written:
         if (!reader.next() || !reader.atElementStart()) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(),
@@ -331,7 +331,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                 try {
                     // check for readObject():
                     final Method readObject = sis.level.getDeclaredMethod(METHOD_READOBJECT, PARAMS_OIS);
-                    readObject.setAccessible(true); // method should be private. Hence must be set accessible true.
+                    ReflectionUtil.setAccessible(readObject); // method should be private. Hence must be set accessible true.
                     readObject.invoke(target, sis);
                 } catch (NoSuchMethodException nsmX) {
                     this.defaultUnmarshalObject(target, reader, ctx, sis.level, sis);
@@ -349,7 +349,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
             // check for readResolve():
             try {
                 final Method readResolveM = findHierarchicalDeclaredMethod(cls, METHOD_READRESOLVE);
-                readResolveM.setAccessible(true); // method may be private. Hence must be set accessible true.
+                ReflectionUtil.setAccessible(readResolveM); // method may be private. Hence must be set accessible true.
                 final Object resolved = readResolveM.invoke(target);
                 if (resolved == null) {
                     return null;
@@ -357,7 +357,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                 if (!(resolved instanceof Serializable)) {
                     throw new RuntimeException(new NotSerializableException(resolved.getClass().getName()));
                 }
-                return (Serializable) resolved;
+                return resolved;
             } catch (NoSuchMethodException | IllegalAccessException readResolveNotFound) {
                 // ignore.
             } catch (InvocationTargetException readResolveFailure) {
@@ -388,8 +388,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                         throw new InvalidFormatException(ctx.readerPositionDescriptor(),
                                 "illegal field: " + level.getName() + '.' + localPartName);
                     }
-                    f.setAccessible(true);
-
+                    ReflectionUtil.setAccessible(f);
                     // read and set it to field:
                     final String nilAttr = reader.elementAttribute(ATTRIBUTE_NIL);
                     if (nilAttr != null && Boolean.parseBoolean(nilAttr)) {
@@ -432,7 +431,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
             final Field serialPersistentFields = cls.getDeclaredField(FIELD_PERSISTENTFIELDS);
             if (((serialPersistentFields.getModifiers() & MODIFIERS_PERSISTENTFIELDS) == MODIFIERS_PERSISTENTFIELDS)
                     && (serialPersistentFields.getType().isArray() && serialPersistentFields.getType().getComponentType() == ObjectStreamField.class)) {
-                serialPersistentFields.setAccessible(true);
+                ReflectionUtil.setAccessible(serialPersistentFields);
                 return (ObjectStreamField[]) serialPersistentFields.get(null);
             }
         } catch (IllegalAccessException inaccessibleSerialPersistentFields) {

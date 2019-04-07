@@ -46,7 +46,7 @@ import java.util.Arrays;
  * <br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.4.3
  * @since 1.4.4
  */
 public class ExternalizableStrategy extends AbstractStrategy<Externalizable> implements CompositeStrategy<Externalizable> {
@@ -119,7 +119,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
         // check for writeReplace():
         try {
             final Method writeReplaceM = target.getClass().getDeclaredMethod(METHOD_WRITEREPLACE, ReflectionUtil.METHOD_NO_PARAMS);
-            writeReplaceM.setAccessible(true); // method may be private. Hence must be set accessible true.
+            ReflectionUtil.setAccessible(writeReplaceM); // method may be private. Hence must be set accessible true.
             final Object replacement = writeReplaceM.invoke(target);
             if (replacement == null) {
                 writer.write(null); // redirect to null.
@@ -161,7 +161,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
         final Class cls = ctx.classFor(classAttrVal);
         if (Externalizable.class.isAssignableFrom(cls)) {
             try {
-                return (Externalizable) ctx.defaultConstructorFor(cls).newInstance();
+                return (Externalizable) cls.newInstance();
             } catch (ReflectiveOperationException noDefaultConstructorX) {
                 throw new IllegalArgumentException("Externalizable class with invalid default constructor", noDefaultConstructorX);
             }
@@ -189,7 +189,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
             // check for readResolve():
             try {
                 final Method readResolveM = cls.getDeclaredMethod(METHOD_READRESOLVE, ReflectionUtil.METHOD_NO_PARAMS);
-                readResolveM.setAccessible(true); // method may be private. Hence must be set accessible true.
+                ReflectionUtil.setAccessible(readResolveM); // method may be private. Hence must be set accessible true.
                 final Object resolved = readResolveM.invoke(target);
                 if (resolved == null) {
                     return null;
@@ -197,7 +197,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
                 if (!(resolved instanceof Serializable)) {
                     throw new RuntimeException(new NotSerializableException(resolved.getClass().getName()));
                 }
-                return (Serializable) resolved;
+                return resolved;
             } catch (NoSuchMethodException | IllegalAccessException readResolveNotFound) {
                 // ignore.
             } catch (InvocationTargetException readResolveFailure) {

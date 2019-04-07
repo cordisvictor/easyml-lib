@@ -45,7 +45,7 @@ import java.lang.reflect.Modifier;
  * <br/>This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.3.8
  * @since 1.0
  */
 public class ObjectStrategy extends AbstractStrategy
@@ -133,9 +133,9 @@ public class ObjectStrategy extends AbstractStrategy
         this.marshalDoAttributes(target, writer, ctx);
         // begin object encoding: if non-static inner class then write outer instance:
         Class cls = target.getClass();
+        final Field outerRef = ReflectionUtil.outerRefField(cls);
         Object defTarget = null;
         Object outer = null;
-        final Field outerRef = ReflectionUtil.outerRefField(cls);
         if (outerRef != null) {
             try {
                 outer = outerRef.get(target);
@@ -150,7 +150,7 @@ public class ObjectStrategy extends AbstractStrategy
         final boolean skipDefaults = ctx.skipDefaults();
         if (skipDefaults) {
             try {
-                defTarget = (outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : ctx.defaultInstanceFor(cls));
+                defTarget = (outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : cls.newInstance());
             } catch (ReflectiveOperationException defaultConstructorX) {
                 // cannot use defaults defined.
             }
@@ -171,7 +171,7 @@ public class ObjectStrategy extends AbstractStrategy
                         || ctx.excluded(f)) {
                     continue; // skip static, already encoded outer-refed object, or excluded field.
                 }
-                f.setAccessible(true);
+                ReflectionUtil.setAccessible(f);
                 // process field value:
                 Object attributeValue = null;
                 Object defaultValue = null;
@@ -227,7 +227,7 @@ public class ObjectStrategy extends AbstractStrategy
         final Class cls = ctx.classFor(reader.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS));
         Object ret;
         try {
-            if (ReflectionUtil.hasOuterRefField(cls)) {
+            if (ReflectionUtil.isInnerClass(cls)) {
                 if (!reader.next() || !reader.atElementStart() || !reader.elementName().equals(ObjectStrategy.ELEMENT_OUTER)) {
                     throw new InvalidFormatException(ctx.readerPositionDescriptor(),
                             "expected element start: " + ObjectStrategy.ELEMENT_OUTER);
@@ -237,7 +237,7 @@ public class ObjectStrategy extends AbstractStrategy
                 // do not consume this.outer end: let the second step while do it.
                 ret = ReflectionUtil.instantiateInner(cls, outer);
             } else {
-                ret = ctx.defaultConstructorFor(cls).newInstance();
+                ret = cls.newInstance();
             }
         } catch (ReflectiveOperationException defaultConstructorX) {
             ret = ReflectionUtil.instantiateUnsafely(cls);
@@ -261,7 +261,7 @@ public class ObjectStrategy extends AbstractStrategy
                 } else {
                     // field: search the class for it:
                     final String localPartName = reader.elementName();
-                    Field f;
+                    Field f = null;
                     try {
                         f = ctx.fieldFor(cls, localPartName);
                     } catch (NoSuchFieldException invalidFieldName) {
@@ -272,7 +272,7 @@ public class ObjectStrategy extends AbstractStrategy
                         throw new InvalidFormatException(ctx.readerPositionDescriptor(),
                                 "illegal field: " + cls.getName() + '.' + localPartName);
                     }
-                    f.setAccessible(true);
+                    ReflectionUtil.setAccessible(f);
                     // read and set it to field:
                     final String nilAttr = reader.elementAttribute(ATTRIBUTE_NIL);
                     if (nilAttr != null && Boolean.parseBoolean(nilAttr)) {

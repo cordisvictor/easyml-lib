@@ -18,96 +18,63 @@
  */
 package net.sourceforge.easyml.util;
 
-import java.util.regex.Pattern;
-
 /**
  * XMLUtil utility class used to format the XML element and element attribute
  * values by escaping and un-escaping illegal XML characters.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
+ * @version 1.5.0
  * @since 1.0
- * @version 1.3.5
  */
 public final class XMLUtil {
 
-    /**
-     * Constant holding the <code>&amp;#13;</code> string.
-     */
-    public static final String XML_LEGAL_CR = "&#13;";
-    /**
-     * Constant holding the <code>&amp;lt;</code> string.
-     */
-    public static final String XML_LEGAL_LT = "&lt;";
-    /**
-     * Constant holding the <code>&amp;gt;</code> string.
-     */
-    public static final String XML_LEGAL_GT = "&gt;";
-    /**
-     * Constant holding the <code>&amp;amp;</code> string.
-     */
-    public static final String XML_LEGAL_AMP = "&amp;";
-    /**
-     * Constant holding the <code>&amp;quot;</code> string.
-     */
-    public static final String XML_LEGAL_QUOT = "&quot;";
-    /**
-     * Constant holding the <code>&amp;apos;</code> string.
-     */
-    public static final String XML_LEGAL_APOS = "&apos;";
-    /**
-     * Constant holding the <code>\r</code> character.
-     */
-    public static final char XML_ILLEGAL_CR = '\r';
-    /**
-     * Constant holding the <code>&lt;</code> character.
-     */
-    public static final char XML_ILLEGAL_LT = '<';
-    /**
-     * Constant holding the <code>&gt;</code> character.
-     */
-    public static final char XML_ILLEGAL_GT = '>';
-    /**
-     * Constant holding the <code>&amp;</code> character.
-     */
-    public static final char XML_ILLEGAL_AMP = '&';
-    /**
-     * Constant holding the <code>&quot;</code> character.
-     */
-    public static final char XML_ILLEGAL_QUOT = '"';
-    /**
-     * Constant holding the <code>&apos;</code> character.
-     */
-    public static final char XML_ILLEGAL_APOS = '\'';
-    /**
-     * Pattern used to match text against illegal XML characters.
-     */
-    private static final Pattern illegalXMLText = Pattern.compile("[\r<>&\"']");
+    static final char XML_ILLEGAL_LT = '<';
+    static final char XML_ILLEGAL_GT = '>';
+    static final char XML_ILLEGAL_AMP = '&';
+    static final char XML_ILLEGAL_QUOT = '"';
+    static final char XML_ILLEGAL_APOS = '\'';
+    static final char XML_ILLEGAL_CR = '\r';
+    static final String XML_LEGAL_LT = "&lt;";
+    static final String XML_LEGAL_GT = "&gt;";
+    static final String XML_LEGAL_AMP = "&amp;";
+    static final String XML_LEGAL_QUOT = "&quot;";
+    static final String XML_LEGAL_APOS = "&apos;";
+    static final String XML_LEGAL_CR = "&#13;";
 
     /**
-     * Returns true if the input text contains the one or more illegal XML
-     * characters, false otherwise.
+     * Returns true if the input text is free from illegal XML characters, false otherwise.
      *
      * @param text the text to test
-     *
-     * @return true if text contains at least one illegal XML character, false
-     * otherwise
+     * @return true if text doesn't contain illegal XML characters, false otherwise
      */
-    public static boolean isIllegalXMLText(String text) {
-        return XMLUtil.illegalXMLText.matcher(text).find();
+    public static boolean isLegalXMLText(String text) {
+        return findIllegalXMLCharIn(text) == -1;
+    }
+
+    private static int findIllegalXMLCharIn(String text) {
+        final int len = text.length();
+        for (int i = 0; i < len; i++) {
+            final char crt = text.charAt(i);
+            if (crt == XML_ILLEGAL_LT
+                    || crt == XML_ILLEGAL_GT
+                    || crt == XML_ILLEGAL_AMP
+                    || crt == XML_ILLEGAL_QUOT
+                    || crt == XML_ILLEGAL_APOS
+                    || crt == XML_ILLEGAL_CR) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
      * Returns true if the input text is a legal XML tag.
      *
      * @param tag to test if legal
-     *
      * @return true if tag is a legal XML tag, false otherwise
      */
     public static boolean isLegalXMLTag(String tag) {
-        if (tag == null || tag.isEmpty()) {
-            return false;
-        }
-        if (!Character.isLetter(tag.charAt(0))) {
+        if (tag == null || tag.isEmpty() || !Character.isLetter(tag.charAt(0))) {
             return false;
         }
         final int len = tag.length();
@@ -121,97 +88,45 @@ public final class XMLUtil {
     }
 
     /**
-     * Escapes the input character if illegal or returns its string value if
-     * legal.
-     *
-     * @param c the char to escape
-     *
-     * @return the string value of <code>c</code> or its corresponding escape
-     */
-    public static String escapeXML(char c) {
-        if (c == XMLUtil.XML_ILLEGAL_CR) {
-            return XMLUtil.XML_LEGAL_CR;
-        }
-        if (c == XMLUtil.XML_ILLEGAL_LT) {
-            return XMLUtil.XML_LEGAL_LT;
-        }
-        if (c == XMLUtil.XML_ILLEGAL_GT) {
-            return XMLUtil.XML_LEGAL_GT;
-        }
-        if (c == XMLUtil.XML_ILLEGAL_AMP) {
-            return XMLUtil.XML_LEGAL_AMP;
-        }
-        if (c == XMLUtil.XML_ILLEGAL_QUOT) {
-            return XMLUtil.XML_LEGAL_QUOT;
-        }
-        if (c == XMLUtil.XML_ILLEGAL_APOS) {
-            return XMLUtil.XML_LEGAL_APOS;
-        }
-        return String.valueOf(c);
-    }
-
-    /**
      * Escapes the illegal chars in the input string, if any, and returns the
      * escaped string.
      *
      * @param text the string to escape
-     *
      * @return the escaped string
      */
     public static String escapeXML(String text) {
-        final int initLength = text.length();
-        for (int index = 0; index < initLength; index++) {
-            char crt = text.charAt(index);
-            if (crt == XMLUtil.XML_ILLEGAL_CR
-                    || crt == XMLUtil.XML_ILLEGAL_LT
-                    || crt == XMLUtil.XML_ILLEGAL_GT
-                    || crt == XMLUtil.XML_ILLEGAL_AMP
-                    || crt == XMLUtil.XML_ILLEGAL_QUOT
-                    || crt == XMLUtil.XML_ILLEGAL_APOS) {
-                final StringBuilder sb = new StringBuilder(text);
-                do {
-                    if (crt == XMLUtil.XML_ILLEGAL_CR) {
-                        sb.replace(index, index + 1, XMLUtil.XML_LEGAL_CR);
-                        index += 5;
-                    } else if (crt == XMLUtil.XML_ILLEGAL_LT) {
-                        sb.replace(index, index + 1, XMLUtil.XML_LEGAL_LT);
-                        index += 4;
-                    } else if (crt == XMLUtil.XML_ILLEGAL_GT) {
-                        sb.replace(index, index + 1, XMLUtil.XML_LEGAL_GT);
-                        index += 4;
-                    } else if (crt == XMLUtil.XML_ILLEGAL_AMP) {
-                        sb.replace(index, index + 1, XMLUtil.XML_LEGAL_AMP);
-                        index += 5;
-                    } else if (crt == XMLUtil.XML_ILLEGAL_QUOT) {
-                        sb.replace(index, index + 1, XMLUtil.XML_LEGAL_QUOT);
-                        index += 6;
-                    } else if (crt == XMLUtil.XML_ILLEGAL_APOS) {
-                        sb.replace(index, index + 1, XMLUtil.XML_LEGAL_APOS);
-                        index += 6;
-                    } else {
-                        index++;
-                    }
-                    if (index < sb.length()) {
-                        crt = sb.charAt(index);
-                    } else {
-                        return sb.toString();
-                    }
-                } while (true);
-            }
+        final int illegalStartIdx = findIllegalXMLCharIn(text);
+        if (illegalStartIdx == -1) {
+            return text; // all legal.
         }
-        return text;
+        final int len = text.length();
+        final StringBuilder sb = new StringBuilder(len + 10);
+        // copy initial legal part:
+        for (int i = 0; i < illegalStartIdx; i++) {
+            sb.append(text.charAt(i));
+        }
+        // escape the remaining part:
+        for (int i = illegalStartIdx; i < len; i++) {
+            appendEscaped(sb, text.charAt(i));
+        }
+        return sb.toString();
     }
 
-    /**
-     * Validates the given <code>alias</code>.
-     *
-     * @param alias to validate
-     *
-     * @throws IllegalArgumentException if alias is invalid
-     */
-    public static void validateAlias(String alias) {
-        if (alias == null || alias.isEmpty() || XMLUtil.isIllegalXMLText(alias)) {
-            throw new IllegalArgumentException("alias: null, empty, or contains illegal XML chars: " + alias);
+    private static void appendEscaped(StringBuilder destination, char c) {
+        if (c == XML_ILLEGAL_LT) {
+            destination.append(XML_LEGAL_LT);
+        } else if (c == XML_ILLEGAL_GT) {
+            destination.append(XML_LEGAL_GT);
+        } else if (c == XML_ILLEGAL_AMP) {
+            destination.append(XML_LEGAL_AMP);
+        } else if (c == XML_ILLEGAL_QUOT) {
+            destination.append(XML_LEGAL_QUOT);
+        } else if (c == XML_ILLEGAL_APOS) {
+            destination.append(XML_LEGAL_APOS);
+        } else if (c == XML_ILLEGAL_CR) {
+            destination.append(XML_LEGAL_CR);
+        } else {
+            destination.append(c);
         }
     }
 

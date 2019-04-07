@@ -21,7 +21,6 @@ package net.sourceforge.easyml;
 import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.marshalling.dtd.*;
 import net.sourceforge.easyml.marshalling.java.lang.*;
-import net.sourceforge.easyml.util.Caching;
 import net.sourceforge.easyml.util.ReflectionUtil;
 import net.sourceforge.easyml.util.ValueType;
 import net.sourceforge.easyml.util.XMLUtil;
@@ -56,7 +55,7 @@ import java.util.*;
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.5.0
  * @see XMLReader
  * @since 1.0
  */
@@ -475,15 +474,13 @@ public class XMLWriter implements Flushable, Closeable {
     }
 
     private Driver driver;
-    private Map<Object, Integer> encoded;
+    private Map<Object, String> encoded;
     private boolean sharedConfiguration;
     /* default*/ boolean skipDefaults;
     /* default*/ boolean prettyPrint;
     /* default*/ String rootTag;
     /* default*/ SimpleDateFormat dateFormat;
     private MarshalContextImpl context;
-    /* default*/ Map<Class, Object> cachedDefCtors;
-    private Caching.CachePutStrategy cachePut;
     private Map<Object, String> aliasing;
     private Set<Field> exclusions;
     private StrategyRegistry<SimpleStrategy> simpleStrategies;
@@ -493,21 +490,15 @@ public class XMLWriter implements Flushable, Closeable {
      * Creates a new configuration prototype instance, to be used by
      * {@linkplain EasyML} only.
      */
-    XMLWriter(Map<Class, Object> ctorCache, Caching.CachePutStrategy ctorCachePut) {
+    XMLWriter() {
         this.driver = null;
-        this.init(ctorCache, ctorCachePut);
+        this.init();
     }
 
     private void init() {
-        this.init(new HashMap<Class, Object>(), Caching.STRATEGY_PUT);
-    }
-
-    private void init(Map<Class, Object> ctorCache, Caching.CachePutStrategy ctorCachePut) {
         this.encoded = new IdentityHashMap<>();
         this.sharedConfiguration = false;
         this.context = new MarshalContextImpl();
-        this.cachedDefCtors = ctorCache;
-        this.cachePut = ctorCachePut;
         this.aliasing = new HashMap<>();
         this.exclusions = new HashSet<>();
         this.skipDefaults = true;
@@ -544,8 +535,6 @@ public class XMLWriter implements Flushable, Closeable {
         this.encoded = new IdentityHashMap<>();
         this.sharedConfiguration = true;
         this.context = new MarshalContextImpl();
-        this.cachedDefCtors = other.cachedDefCtors;
-        this.cachePut = other.cachePut;
         this.aliasing = other.aliasing;
         this.exclusions = other.exclusions;
         this.skipDefaults = other.skipDefaults;
@@ -720,9 +709,15 @@ public class XMLWriter implements Flushable, Closeable {
      * @throws IllegalStateException    if shared configuration
      */
     public String alias(Class c, String alias) {
-        XMLUtil.validateAlias(alias);
+        return alias0(c, alias);
+    }
+
+    private String alias0(Object toAlias, String alias) {
+        if (alias == null || alias.isEmpty() || !XMLUtil.isLegalXMLText(alias)) {
+            throw new IllegalArgumentException("alias: null, empty, or contains illegal XML chars: " + alias);
+        }
         this.checkNotSharedConfiguration();
-        return this.aliasing.put(c, alias);
+        return this.aliasing.put(toAlias, alias);
     }
 
     /**
@@ -737,9 +732,7 @@ public class XMLWriter implements Flushable, Closeable {
      * @throws IllegalStateException    if shared configuration
      */
     public String alias(Field f, String alias) {
-        XMLUtil.validateAlias(alias);
-        this.checkNotSharedConfiguration();
-        return this.aliasing.put(f, alias);
+        return alias0(f, alias);
     }
 
     /**
@@ -905,17 +898,17 @@ public class XMLWriter implements Flushable, Closeable {
         }
         // composite strategy:
         // check if data was already visited in the object graph:
-        final Integer idRef = this.encoded.get(data);
+        final String idRef = this.encoded.get(data);
         if (idRef != null) {
             // write object idref for already-visited data:
             this.driver.startElement(DTD.ELEMENT_OBJECT);
-            this.driver.setAttribute(DTD.ATTRIBUTE_IDREF, idRef.toString());
+            this.driver.setAttribute(DTD.ATTRIBUTE_IDREF, idRef);
             this.driver.endElement();
         } else {
             // mark data as visited:
-            final int nextUniqueId = this.encoded.size() + 1;
+            final String nextUniqueId = Integer.toString(this.encoded.size() + 1);
             this.encoded.put(data, nextUniqueId);
-            this.driver.setOneTimeUniqueIdTo(String.valueOf(nextUniqueId));
+            this.driver.setOneTimeUniqueIdTo(nextUniqueId);
             // visit data:
             final CompositeStrategy cs = this.compositeStrategies.lookup(cls);
             if (cs != null) {
@@ -935,12 +928,13 @@ public class XMLWriter implements Flushable, Closeable {
         final int length = Array.getLength(array);
         this.driver.startElement(DTD.ELEMENT_ARRAY);
         this.driver.setAttribute(DTD.ATTRIBUTE_LENGTH, Integer.toString(length));
-        final ValueType pvt = ValueType.ofPrimitive(array.getClass().getComponentType());
-        if (pvt != null) {// primitives array:
+        final Class arrayItemCls = array.getClass().getComponentType();
+        if (arrayItemCls.isPrimitive()) {
+            final ValueType vt = ValueType.of(arrayItemCls);
             for (int i = 0; i < length; i++) {
-                pvt.getWriteArrayItem(this.driver, array, i, false);
+                vt.getWriteArrayItem(this.driver, array, i, false);
             }
-        } else { // objects array:
+        } else {
             final Object[] objArray = (Object[]) array;
             for (int i = 0; i < length; i++) {
                 this.write0(objArray[i]);
@@ -960,11 +954,11 @@ public class XMLWriter implements Flushable, Closeable {
         // encode properties:
         while (cls != Object.class) { // process inheritance:
             for (Field f : cls.getDeclaredFields()) { // process composition:
-                if (Modifier.isStatic(f.getModifiers()) || !ReflectionUtil.hasClassFieldProperty(cls, f) || this.context.excluded(f)) {
+                if (!ReflectionUtil.isFieldProperty(f) || this.context.excluded(f)) {
                     continue; // skip static or non-property or excluded field.
                 }
                 // get property field:
-                f.setAccessible(true);
+                ReflectionUtil.setAccessible(f);
                 // write property value:
                 final String aliasedFieldName = this.context.aliasOrNameFor(f);
                 this.driver.startElement(aliasedFieldName);
@@ -978,8 +972,7 @@ public class XMLWriter implements Flushable, Closeable {
     }
 
     /**
-     * Flushes the written objects to the output and writes the easyml root end
-     * tag.
+     * Flushes the written objects to the output and writes the easyml root end tag.
      */
     @Override
     public final void flush() {
@@ -1037,7 +1030,6 @@ public class XMLWriter implements Flushable, Closeable {
      */
     public void clearCache() {
         this.checkNotSharedConfiguration();
-        this.cachedDefCtors.clear();
     }
 
     /**
@@ -1051,7 +1043,6 @@ public class XMLWriter implements Flushable, Closeable {
         }
         this.encoded = null;
         this.context = null;
-        this.cachedDefCtors = null;
         this.aliasing = null;
         this.exclusions = null;
         this.compositeStrategies = null;
@@ -1059,39 +1050,6 @@ public class XMLWriter implements Flushable, Closeable {
     }
 
     private final class MarshalContextImpl implements MarshalContext {
-
-        @Override
-        public <T> T defaultInstanceFor(Class<T> c) throws NoSuchMethodException,
-                InstantiationException, IllegalAccessException, InvocationTargetException {
-            final Object cached = cachedDefCtors.get(c);
-            if (cached != null) {
-                if (cached.getClass() == Constructor.class) {
-                    return ((Constructor<T>) cached).newInstance();
-                }
-                if (cached.getClass() == NoSuchMethodException.class) {
-                    throw (NoSuchMethodException) cached;
-                }
-                if (cached.getClass() == InstantiationException.class) {
-                    throw (InstantiationException) cached;
-                }
-                if (cached.getClass() == InvocationTargetException.class) {
-                    throw (InvocationTargetException) cached;
-                }
-                if (cached.getClass() == IllegalAccessException.class) {
-                    throw (IllegalAccessException) cached;
-                }
-            }
-            try {
-                final Constructor<T> ctor = ReflectionUtil.defaultConstructor(c);
-                T ret = ctor.newInstance();
-                cachePut.put(cachedDefCtors, c, ctor);
-                return ret;
-            } catch (NoSuchMethodException | InstantiationException |
-                    InvocationTargetException | IllegalAccessException noDefCtorX) {
-                cachePut.put(cachedDefCtors, c, noDefCtorX);
-                throw noDefCtorX;
-            }
-        }
 
         @Override
         public String aliasOrNameFor(Class c) {

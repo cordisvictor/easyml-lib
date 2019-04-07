@@ -20,6 +20,7 @@ package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
+import net.sourceforge.easyml.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -31,7 +32,7 @@ import java.util.Set;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.3
+ * @version 1.4.7
  * @since 1.0.2
  */
 public final class SingletonSetStrategy extends AbstractStrategy<Set> implements CompositeStrategy<Set> {
@@ -52,7 +53,7 @@ public final class SingletonSetStrategy extends AbstractStrategy<Set> implements
         Field singletonListElement;
         try {
             singletonListElement = TARGET.getDeclaredField("element");
-            singletonListElement.setAccessible(true);
+            ReflectionUtil.setAccessible(singletonListElement);
         } catch (NoSuchFieldException | SecurityException ignored) {
             singletonListElement = null;
         }

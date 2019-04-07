@@ -107,10 +107,9 @@ public final class EnumStrategy extends AbstractStrategy<Enum>
         if (index < 0 || index == text.length() - 1) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), "text: missing separator");
         }
-        final String aliasOrName = text.substring(0, index);
         try {
             // find enum class and value:
-            return Enum.valueOf(ctx.classFor(aliasOrName), text.substring(index + 1));
+            return Enum.valueOf(ctx.classFor(text.substring(0, index)), text.substring(index + 1));
         } catch (ClassNotFoundException cnfx) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), cnfx);
         }

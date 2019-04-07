@@ -19,17 +19,19 @@
 package net.sourceforge.easyml.util;
 
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * ReflectionUtil utility class contains reflection helper methods.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.5.0
  * @since 1.0
  */
 public final class ReflectionUtil {
@@ -41,57 +43,26 @@ public final class ReflectionUtil {
     private static final String PREFIX_IS = "is";
     private static final String PREFIX_GET = "get";
     private static final String PREFIX_SET = "set";
-    private static final char SEPARATOR_CLASS_FIELD = '#';
-
-    /**
-     * Returns the fully-qualified name of the given field. The return value can
-     * then be used as an alias key.
-     *
-     * @param f to compute the name for
-     * @return the aliasing name
-     */
-    public static String qualifiedNameFor(Field f) {
-        return qualifiedNameFor(f.getDeclaringClass(), f.getName());
-    }
-
-    /**
-     * Returns the fully-qualified name of the given field. The return value can
-     * then be used as an alias key.
-     *
-     * @param declaring the class declaring the field
-     * @param field     the field name, within the declaring class
-     * @return the aliasing name
-     */
-    public static String qualifiedNameFor(Class declaring, String field) {
-        return declaring.getName() + SEPARATOR_CLASS_FIELD + field;
-    }
-
-    /**
-     * Returns the field name from a fully-qualified name of the given field.
-     *
-     * @param fieldFQN the FQN of the field
-     * @return the field name
-     */
-    public static String fieldNameFor(String fieldFQN) {
-        return fieldFQN.substring(fieldFQN.indexOf(SEPARATOR_CLASS_FIELD) + 1);
-    }
 
     /**
      * Returns true if the input field is a property, i.e. has a corresponding
-     * getter, setter, indexed getter or indexed setter within the given class.
+     * getter, setter, indexed getter or indexed setter.
      *
-     * @param c class in which to search
-     * @param f field which to search
+     * @param f field to test if is property
      * @return true if the field is a property, false otherwise
      */
-    public static boolean hasClassFieldProperty(Class c, Field f) {
+    public static boolean isFieldProperty(Field f) {
+        if (Modifier.isStatic(f.getModifiers())) {
+            return false;
+        }
+        final Class fDeclaring = f.getDeclaringClass();
         final Class fType = f.getType();
-        final String propertyName = ReflectionUtil.propertyNameFor(f);
+        final String propertyName = propertyNameFor(f);
         // search for getter or setter:
-        final Method[] methods = c.getDeclaredMethods();
+        final Method[] methods = fDeclaring.getDeclaredMethods();
         for (int i = 0; i < methods.length; i++) {
-            final int iModifs = methods[i].getModifiers();
-            if ((iModifs & Modifier.PUBLIC) == 0 || (iModifs & Modifier.STATIC) != 0) {
+            final int iMod = methods[i].getModifiers();
+            if ((iMod & Modifier.PUBLIC) == 0 || (iMod & Modifier.STATIC) != 0) {
                 continue; // skip non-public or static.
             }
             final Class iRet = methods[i].getReturnType();
@@ -121,100 +92,10 @@ public final class ReflectionUtil {
     private static String propertyNameFor(Field f) {
         final String fieldName = f.getName();
         final char upperFirst = Character.toUpperCase(fieldName.charAt(0));
-        if (fieldName.length() > 1) {
-            return upperFirst + fieldName.substring(1);
+        if (fieldName.length() == 1) {
+            return String.valueOf(upperFirst);
         }
-        return String.valueOf(upperFirst);
-    }
-
-    /**
-     * Returns the given class' default constructor, if any. If found but not
-     * accessible, it will be set to be accessible.
-     *
-     * @param <T> underlying type for the given class c
-     * @param c   the class to reflect the default constructor for
-     * @return class' default constructor
-     */
-    public static <T> Constructor<T> defaultConstructor(Class<T> c)
-            throws NoSuchMethodException {
-        final Constructor nonArg = c.getDeclaredConstructor();
-        nonArg.setAccessible(true);
-        return nonArg;
-    }
-
-    /**
-     * Instantiates the given class using the default constructor. The modifier
-     * needs not to be public.
-     *
-     * @param <T> underlying type for the given class c
-     * @param c   the class to instantiate
-     * @return a new class instance
-     */
-    public static <T> T instantiate(Class<T> c)
-            throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        return ReflectionUtil.defaultConstructor(c).newInstance();
-    }
-
-    /**
-     * Returns true if the given class is an inner class and so has a synthetic
-     * outer-reference field containing the reference to the outer object.
-     *
-     * @param c to test if has outer reference field
-     * @return true if has field, false otherwise
-     */
-    public static boolean hasOuterRefField(Class c) {
-        return ReflectionUtil.outerRefField(c) != null;
-    }
-
-    /**
-     * If <code>cls</code> is a non-static inner class then the field reflecting
-     * the outer class reference is returned, else <code>null</code> is
-     * returned. The field accessibility is set to true.
-     *
-     * @param cls the class to search for outer ref field
-     * @return the field or null if cls is not an inner class
-     */
-    public static Field outerRefField(Class cls) {
-        if (cls.isAnonymousClass() || (cls.isMemberClass() && !Modifier.isStatic(cls.getModifiers())) || cls.isLocalClass()) {
-            final Field[] declared = cls.getDeclaredFields();
-            for (int i = 0; i < declared.length; i++) {
-                if (declared[i].isSynthetic() && declared[i].getName().startsWith("this$")) {
-                    declared[i].setAccessible(true);
-                    return declared[i];
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Instantiates the given non-static inner class using the default
-     * constructor. The modifier needs not to be public.
-     *
-     * @param c     the class to instantiate
-     * @param outer the class outer instance
-     * @return a new inner class instance
-     */
-    public static <T> T instantiateInner(Class<T> c, Object outer)
-            throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        final Constructor nonArg = c.getDeclaredConstructor(c.getEnclosingClass());
-        nonArg.setAccessible(true);
-        return (T) nonArg.newInstance(outer);
-    }
-
-    /**
-     * Instantiates the given class unsafely, bypassing the class-defined constructors.
-     *
-     * @param <T> the to-instantiate class type
-     * @param c   to instantiate
-     * @return new instance of c
-     */
-    public static <T> T instantiateUnsafely(Class<T> c) {
-        final int modifiers = c.getModifiers();
-        if (Modifier.isInterface(modifiers) || Modifier.isAbstract(modifiers)) {
-            throw new IllegalArgumentException("Forbidden to instantiate interface or abstract class: " + c.getName());
-        }
-        return UnsafeInstantiaton.unsafeInstantiator.instantiate(c);
+        return upperFirst + fieldName.substring(1);
     }
 
     /**
@@ -232,20 +113,79 @@ public final class ReflectionUtil {
     }
 
     /**
-     * UnsafeInstantiator lazy inits the JVM-dependent unsafe instantiator and
-     * provides the API for instantiating classes with no default (zero-arg)
-     * constructors.
+     * Returns true if the given class is an inner class and so has a synthetic
+     * outer-reference field containing the reference to the outer object.
+     *
+     * @param c to test if has outer reference field
+     * @return true if has field, false otherwise
      */
-    private interface UnsafeInstantiator {
-
-        <T> T instantiate(Class<T> c);
+    public static boolean isInnerClass(Class c) {
+        return c.isAnonymousClass() || (c.isMemberClass() && !Modifier.isStatic(c.getModifiers())) || c.isLocalClass();
     }
 
-    private static final class UnsafeInstantiaton {
+    /**
+     * Returns the field reflecting the reference to the outer class of <code>c</code>.
+     *
+     * @param c the inner class to search for outer ref field
+     * @return the outer class reference field or null if c isn't an inner class
+     */
+    public static Field outerRefField(Class c) {
+        if (isInnerClass(c)) {
+            final Field[] declared = c.getDeclaredFields();
+            for (int i = 0; i < declared.length; i++) {
+                final Field f = declared[i];
+                if (f.isSynthetic() && f.getName().startsWith("this$")) {
+                    setAccessible(f);
+                    return f;
+                }
+            }
+        }
+        return null;
+    }
 
-        private static final UnsafeInstantiator unsafeInstantiator = create();
+    /**
+     * Instantiates the given non-static inner class using the default
+     * constructor. The modifier needs not to be public.
+     *
+     * @param c     the class to instantiate
+     * @param outer the class outer instance
+     * @return a new inner class instance
+     */
+    public static <T> T instantiateInner(Class<T> c, Object outer)
+            throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        final Constructor nonArg = c.getDeclaredConstructor(c.getEnclosingClass());
+        setAccessible(nonArg);
+        return (T) nonArg.newInstance(outer);
+    }
 
-        private static UnsafeInstantiator create() {
+    /**
+     * Instantiates the given class unsafely, bypassing the class-defined constructors.
+     *
+     * @param c to instantiate
+     * @return new instance of c
+     */
+    public static Object instantiateUnsafely(Class c) {
+        final int modifiers = c.getModifiers();
+        if (Modifier.isInterface(modifiers) || Modifier.isAbstract(modifiers)) {
+            throw new IllegalArgumentException("Forbidden to instantiate interface or abstract class: " + c.getName());
+        }
+        return UnsafeInstantiatorHolder.instantiator.apply(c);
+    }
+
+    /**
+     * Sets accessible objects as accessible if not already.
+     *
+     * @param ao to check and set accessible
+     */
+    public static void setAccessible(AccessibleObject ao) {
+        UnsafeAccessibilityHolder.accessibilitySetter.accept(ao);
+    }
+
+    private static final class UnsafeInstantiatorHolder {
+
+        private static final Function<Class, Object> instantiator = create();
+
+        private static Function<Class, Object> create() {
             // if available, use sun.misc.Unsafe:
             try {
                 final Class unsafeC = Class.forName("sun.misc.Unsafe");
@@ -253,71 +193,100 @@ public final class ReflectionUtil {
                 theUnsafeF.setAccessible(true);
                 final Object theUnsafe = theUnsafeF.get(null);
                 final Method allocateInstanceM = unsafeC.getMethod("allocateInstance", Class.class);
-                return new UnsafeInstantiator() {
-                    @Override
-                    public Object instantiate(Class c) {
-                        try {
-                            return allocateInstanceM.invoke(theUnsafe, c);
-                        } catch (IllegalAccessException | InvocationTargetException neverThrown) {
-                            return null;
-                        }
+                return c -> {
+                    try {
+                        return allocateInstanceM.invoke(theUnsafe, c);
+                    } catch (IllegalAccessException | InvocationTargetException neverThrown) {
+                        return null;
                     }
                 };
             } catch (ClassNotFoundException | NoSuchFieldException | SecurityException |
-                    IllegalAccessException | NoSuchMethodException unsafeNotAvailableOrNotAllowed) {
+                    IllegalArgumentException | IllegalAccessException | NoSuchMethodException sunUnsafeNotAvailable) {
             }
             // if available, use java.io.ObjectInputStream:
             try {
                 final Method newInstanceM = ObjectInputStream.class.getDeclaredMethod("newInstance", Class.class, Class.class);
                 newInstanceM.setAccessible(true);
-                return new UnsafeInstantiator() {
-                    @Override
-                    public Object instantiate(Class c) {
-                        try {
-                            return newInstanceM.invoke(null, c, Object.class);
-                        } catch (IllegalAccessException | InvocationTargetException neverThrown) {
-                            return null;
-                        }
+                return c -> {
+                    try {
+                        return newInstanceM.invoke(null, c, Object.class);
+                    } catch (IllegalAccessException | InvocationTargetException neverThrown) {
+                        return null;
                     }
                 };
-            } catch (NoSuchMethodException | SecurityException notAvailableOrNotAllowed) {
+            } catch (NoSuchMethodException | SecurityException notAvailable) {
             }
             // if available, use java.io.ObjectStreamClass:
             try {
                 final Method getConstructorIdM = ObjectStreamClass.class.getDeclaredMethod("getConstructorId", Class.class);
-                getConstructorIdM.setAccessible(true);
+                setAccessible(getConstructorIdM);
                 final int constructorId = (Integer) getConstructorIdM.invoke(null, Object.class);
                 final Method newInstanceM = ObjectStreamClass.class.getDeclaredMethod("newInstance", Class.class, int.class);
                 newInstanceM.setAccessible(true);
-                return new UnsafeInstantiator() {
-                    @Override
-                    public Object instantiate(Class c) {
-                        try {
-                            return newInstanceM.invoke(null, c, constructorId);
-                        } catch (IllegalAccessException | InvocationTargetException neverThrown) {
-                            return null;
-                        }
+                return c -> {
+                    try {
+                        return newInstanceM.invoke(null, c, constructorId);
+                    } catch (IllegalAccessException | InvocationTargetException neverThrown) {
+                        return null;
                     }
                 };
             } catch (NoSuchMethodException | SecurityException | IllegalAccessException |
-                    InvocationTargetException notAvailableOrNotAllowed) {
+                    IllegalArgumentException | InvocationTargetException notAvailable) {
             }
             // else unsafe allocation will not work, if used:
-            return new UnsafeInstantiator() {
-                @Override
-                public <T> T instantiate(Class<T> c) {
-                    throw new UnsupportedOperationException("unsafe instantiation not supported on this JVM");
-                }
+            return c -> {
+                throw new UnsupportedOperationException("unsafe instantiation not supported on this JVM");
             };
-        }
-
-        private UnsafeInstantiaton() {
         }
     }
 
-    /**
-     * Primitives class lazy inits the type-name to primitive-class mapping.
-     */
+    private static final class UnsafeAccessibilityHolder {
+
+        private static final Consumer<AccessibleObject> accessibilitySetter = create();
+
+        private static Consumer<AccessibleObject> create() {
+            return JVMUtil.getJavaMajorVersion() < 9 ? java8AccessibilitySetter() : java9PlusAccessibilitySetter();
+        }
+
+        private static Consumer<AccessibleObject> java8AccessibilitySetter() {
+            return ao -> {
+                ao.setAccessible(true);
+            };
+        }
+
+        private static Consumer<AccessibleObject> java9PlusAccessibilitySetter() {
+            try {
+                final Class unsafeC = Class.forName("sun.misc.Unsafe");
+                final Field theUnsafeF = unsafeC.getDeclaredField("theUnsafe");
+                theUnsafeF.setAccessible(true);
+                final Method objectFieldOffsetM = unsafeC.getMethod("objectFieldOffset", Field.class);
+                final Method putBooleanM = unsafeC.getMethod("putBoolean", Object.class, long.class, boolean.class);
+                final Object theUnsafe = theUnsafeF.get(null);
+
+                final Field overrideField = AccessibleObject.class.getDeclaredField("override");
+                final long overrideOffset = (Long) objectFieldOffsetM.invoke(theUnsafe, overrideField);
+
+                return ao -> {
+                    try {
+                        putBooleanM.invoke(theUnsafe, ao, overrideOffset, true);
+                    } catch (ReflectiveOperationException e) {
+                        java9PlusSetAccessible(ao);
+                    }
+                };
+            } catch (Exception unsafeMissing) {
+                return ao -> java9PlusSetAccessible(ao);
+            }
+        }
+
+        private static void java9PlusSetAccessible(AccessibleObject ao) {
+            try {
+                ao.setAccessible(true);
+            } catch (SecurityException sX) {
+                throw new UnsupportedOperationException("setAccessibleTrue on " + ao, sX);
+            }
+        }
+    }
+
     private static final class Primitives {
 
         private static final Map<String, Class> map = new HashMap<>(9);
@@ -332,9 +301,6 @@ public final class ReflectionUtil {
             map.put(Long.TYPE.getName(), Long.TYPE);
             map.put(Float.TYPE.getName(), Float.TYPE);
             map.put(Double.TYPE.getName(), Double.TYPE);
-        }
-
-        private Primitives() {
         }
     }
 

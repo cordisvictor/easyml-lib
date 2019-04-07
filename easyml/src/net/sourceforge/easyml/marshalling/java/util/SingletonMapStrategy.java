@@ -20,6 +20,7 @@ package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
+import net.sourceforge.easyml.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -31,7 +32,7 @@ import java.util.Map;
  * } map implementation. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.3
+ * @version 1.4.7
  * @since 1.0.2
  */
 public final class SingletonMapStrategy extends AbstractStrategy<Map> implements CompositeStrategy<Map> {
@@ -53,9 +54,9 @@ public final class SingletonMapStrategy extends AbstractStrategy<Map> implements
         Field singleK, singleV;
         try {
             singleK = TARGET.getDeclaredField("k");
-            singleK.setAccessible(true);
+            ReflectionUtil.setAccessible(singleK);
             singleV = TARGET.getDeclaredField("v");
-            singleV.setAccessible(true);
+            ReflectionUtil.setAccessible(singleV);
         } catch (NoSuchFieldException | SecurityException ignored) {
             singleK = null;
             singleV = null;

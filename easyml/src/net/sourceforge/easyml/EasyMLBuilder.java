@@ -22,12 +22,14 @@ import net.sourceforge.easyml.marshalling.CompositeStrategy;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.custom.NodeListStrategy;
 import net.sourceforge.easyml.marshalling.custom.NodeStrategy;
+import org.xmlpull.v1.XmlPullParser;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * EasyMLBuilder class is the builder of the {@linkplain EasyML} top-level
@@ -58,7 +60,7 @@ import java.util.Set;
  * <b>Note:</b> this builder implementation is <b>not</b> thread-safe
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.0
+ * @version 1.5.0
  * @see EasyML
  * @see XMLReader
  * @see XMLWriter
@@ -68,7 +70,7 @@ public final class EasyMLBuilder {
 
     private EasyML.Profile profile;
     private EasyML.Style style;
-    private EasyML.XmlPullParserProvider xmlPullParserProvider;
+    private Supplier<XmlPullParser> xmlPullParserProvider;
     private String dateFormat;
     private String customRootTag;
     private NodeListStrategy customArrayTag;
@@ -111,7 +113,7 @@ public final class EasyMLBuilder {
      *
      * @param xmlPullParserProvider implementation to be used by the reader
      */
-    public EasyMLBuilder withXmlPullParserProvider(EasyML.XmlPullParserProvider xmlPullParserProvider) {
+    public EasyMLBuilder withXmlPullParserProvider(Supplier<XmlPullParser> xmlPullParserProvider) {
         this.xmlPullParserProvider = xmlPullParserProvider;
         return this;
     }

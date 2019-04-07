@@ -20,6 +20,7 @@ package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
+import net.sourceforge.easyml.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -56,7 +57,7 @@ public final class PropertiesStrategy extends AbstractStrategy<Properties>
         Field propertiesDefs;
         try {
             propertiesDefs = Properties.class.getDeclaredField("defaults");
-            propertiesDefs.setAccessible(true);
+            ReflectionUtil.setAccessible(propertiesDefs);
         } catch (NoSuchFieldException | SecurityException ignored) {
             propertiesDefs = null;
         }

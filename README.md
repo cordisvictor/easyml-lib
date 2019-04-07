@@ -60,10 +60,17 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+!Release 1.5.0
+- requires Java 8 or later.
+- NON-BACKWARD COMPATIBLE refactor of ReflectionUtil.
+- feature: support for Java 9 security model.
+
+
 !Release 1.4.7
 - last Java 7 compatible release
 - bugfix: performance regression in Serialization strategy
 - remove AccessibleObject.isAccessible calls
+
 
 !Release 1.4.6
 - remove deprecated v1.3.4 object-o and array-o strategies.

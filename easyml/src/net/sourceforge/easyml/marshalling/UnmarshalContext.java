@@ -18,7 +18,6 @@
  */
 package net.sourceforge.easyml.marshalling;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.Date;
@@ -28,21 +27,10 @@ import java.util.Date;
  * {@linkplain Strategy} instances at un-marshalling stage.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.6
+ * @version 1.5.0
  * @since 1.0
  */
 public interface UnmarshalContext {
-
-    /**
-     * Returns the given class' default constructor, if any. If found but not
-     * accessible, it will be set to be accessible.
-     *
-     * @param <T> underlying type for the given class c
-     * @param c   the class to reflect the default constructor for
-     * @return class' default constructor
-     * @throws NoSuchMethodException if no default constructor defined for class
-     */
-    <T> Constructor<T> defaultConstructorFor(Class<T> c) throws NoSuchMethodException;
 
     /**
      * Returns the class for the given <code>aliasOrName</code>, or throws

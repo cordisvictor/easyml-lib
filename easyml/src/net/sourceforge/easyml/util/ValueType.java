@@ -347,6 +347,7 @@ public enum ValueType {
             return value;
         }
     };
+
     private static final Map<Class, ValueType> types = new IdentityHashMap<>();
 
     static {
@@ -393,24 +394,24 @@ public enum ValueType {
     }
 
     /**
-     * Returns the value type constant corresponding to the given primitive type
-     * class. If the given class does not represent a primitive value-type then
-     * <code>null</code> is returned.
-     *
-     * @param type primitive type to get constant for
-     * @return the constant, if any, or null
-     */
-    public static ValueType ofPrimitive(Class type) {
-        return type.isPrimitive() ? types.get(type) : null;
-    }
-
-    /**
      * Parses the given string representation and returns the value.
      *
      * @param value to parse
      * @return the value
      */
     public abstract Object parseValue(String value);
+
+    /**
+     * Reflection method used to check if the item at itemIdx of the given array
+     * has a default value.
+     *
+     * @param array   container
+     * @param itemIdx index of item
+     * @return true if default, false otherwise
+     */
+    public boolean isDefaultArrayItem(Object array, int itemIdx) {
+        return Array.get(array, itemIdx) == null;
+    }
 
     /**
      * Reflection method used to get and write an array value, if not
@@ -429,18 +430,6 @@ public enum ValueType {
         }
         writer.write(item);
         return true;
-    }
-
-    /**
-     * Reflection method used to check if the item at itemIdx of the given array
-     * has a default value.
-     *
-     * @param array   container
-     * @param itemIdx index of item
-     * @return true if default, false otherwise
-     */
-    public boolean isDefaultArrayItem(Object array, int itemIdx) {
-        return Array.get(array, itemIdx) == null;
     }
 
     /**

@@ -18,7 +18,6 @@
  */
 package net.sourceforge.easyml.util;
 
-import net.sourceforge.easyml.testmodel.PersonDTO;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -28,29 +27,6 @@ import static org.junit.Assert.*;
  */
 public class ReflectionUtilTest {
 
-    /**
-     * Test of qualifiedNameFor method.
-     */
-    @Test
-    public void testQualifiedNameFor_Field() throws Exception {
-        final String qn1 = ReflectionUtil.qualifiedNameFor(TestC1.class.getDeclaredField("id"));
-        final String qn2 = ReflectionUtil.qualifiedNameFor(TestC2.class.getDeclaredField("id"));
-        assertFalse(qn1.equals(qn2));
-    }
-
-    /**
-     * Test of qualifiedNameFor method.
-     */
-    @Test
-    public void testQualifiedNameFor_Class_String() throws Exception {
-        final String qn1 = ReflectionUtil.qualifiedNameFor(TestC1.class, "id");
-        final String qn2 = ReflectionUtil.qualifiedNameFor(TestC2.class, "id");
-        assertFalse(qn1.equals(qn2));
-    }
-
-    /**
-     * Test of forName method.
-     */
     @Test
     public void testForName() throws Exception {
         assertEquals(Void.TYPE, ReflectionUtil.classForName(Void.TYPE.getName()));
@@ -58,19 +34,6 @@ public class ReflectionUtilTest {
         assertEquals(String.class, ReflectionUtil.classForName(String.class.getName()));
     }
 
-    /**
-     * Test of instantiate method.
-     */
-    @Test
-    public void testInstantiate() throws Exception {
-        final Object instantiated = ReflectionUtil.instantiate(PersonDTO.class);
-        assertEquals(PersonDTO.class, instantiated.getClass());
-        assertEquals(new PersonDTO(), instantiated);
-    }
-
-    /**
-     * Test of instantiate method.
-     */
     @Test
     public void testInstantiateUnsafely() throws Exception {
         final Object instantiated = ReflectionUtil.instantiateUnsafely(NoDefCtorObject.class);
@@ -78,14 +41,11 @@ public class ReflectionUtilTest {
         assertEquals(NoDefCtorObject.class, instantiated.getClass());
     }
 
-    /**
-     * Test of hasClassFieldProperty method.
-     */
     @Test
-    public void testHasClassFieldProperty() throws Exception {
-        assertTrue(ReflectionUtil.hasClassFieldProperty(TestBean.class, TestBean.class.getDeclaredField("i")));
-        assertTrue(ReflectionUtil.hasClassFieldProperty(TestBean.class, TestBean.class.getDeclaredField("data")));
-        assertFalse(ReflectionUtil.hasClassFieldProperty(TestBean.class, TestBean.class.getDeclaredField("nonProp")));
+    public void testIsFieldProperty() throws Exception {
+        assertTrue(ReflectionUtil.isFieldProperty(TestBean.class.getDeclaredField("i")));
+        assertTrue(ReflectionUtil.isFieldProperty(TestBean.class.getDeclaredField("data")));
+        assertFalse(ReflectionUtil.isFieldProperty(TestBean.class.getDeclaredField("nonProp")));
     }
 
     private static class TestC1 {
@@ -98,7 +58,7 @@ public class ReflectionUtilTest {
         private int id;
     }
 
-    private static class TestBean {
+    public static class TestBean {
 
         private int i;
         private Object[] data;

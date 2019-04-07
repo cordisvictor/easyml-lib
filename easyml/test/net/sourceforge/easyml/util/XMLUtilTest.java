@@ -27,61 +27,40 @@ import static org.junit.Assert.*;
  */
 public class XMLUtilTest {
 
-    /**
-     * Test of isIllegalXMLText method.
-     */
     @Test
-    public void testIsIllegalXMLText() {
-        assertFalse(XMLUtil.isIllegalXMLText("legal xml text"));
-        assertTrue(XMLUtil.isIllegalXMLText("illegal 3 < 4"));
-        assertTrue(XMLUtil.isIllegalXMLText("illegal u&m"));
-        assertTrue(XMLUtil.isIllegalXMLText("illegal 'text'"));
+    public void testIsLegalXMLText() {
+        assertTrue(XMLUtil.isLegalXMLText("legal xml text"));
+        assertFalse(XMLUtil.isLegalXMLText("illegal 3 < 4"));
+        assertFalse(XMLUtil.isLegalXMLText("illegal u&m"));
+        assertFalse(XMLUtil.isLegalXMLText("illegal 'text'"));
     }
 
-    /**
-     * Test of escapeXML method.
-     */
     @Test
-    public void testEscapeXML_char() {
-        assertEquals("c", XMLUtil.escapeXML('c'));
-        assertEquals(XMLUtil.XML_LEGAL_LT, XMLUtil.escapeXML('<'));
-        assertEquals(XMLUtil.XML_LEGAL_AMP, XMLUtil.escapeXML('&'));
+    public void testIsLegalXMLTag() {
+        assertTrue(XMLUtil.isLegalXMLTag("easyml"));
+        assertTrue(XMLUtil.isLegalXMLTag("easyml-3"));
+        assertFalse(XMLUtil.isLegalXMLTag("3easyml"));
+        assertFalse(XMLUtil.isLegalXMLTag("_easyml"));
     }
 
-    /**
-     * Test of escapeXML method.
-     */
     @Test
-    public void testEscapeXML_String() {
+    public void testEscapeXML_String_legal() {
         final String expected = "legal text";
         assertSame(expected, XMLUtil.escapeXML(expected));
+    }
+
+    @Test
+    public void testEscapeXML_String_LT() {
         assertEquals("3 &lt; 4", XMLUtil.escapeXML("3 < 4"));
     }
 
-    /**
-     * Test of checkAlias method.
-     */
     @Test
-    public void testCheckAlias() {
-        try {
-            XMLUtil.validateAlias(null);
-            fail("checkAlias: did not throw validation exception");
-        } catch (IllegalArgumentException illegalAlias) {
-        }
-        try {
-            XMLUtil.validateAlias("");
-            fail("checkAlias: did not throw validation exception");
-        } catch (IllegalArgumentException illegalAlias) {
-        }
-        try {
-            XMLUtil.validateAlias("d&c");
-            fail("checkAlias: did not throw validation exception");
-        } catch (IllegalArgumentException illegalAlias) {
-        }
-        try {
-            XMLUtil.validateAlias("my.alias");
-        } catch (IllegalArgumentException legalAlias) {
-            fail("checkAlias: threw validation exception for valid aliasa");
-        }
+    public void testEscapeXML_String_multiple1() {
+        assertEquals("3 &lt; 4 &gt; 2", XMLUtil.escapeXML("3 < 4 > 2"));
+    }
+
+    @Test
+    public void testEscapeXML_String_multiple2() {
+        assertEquals("3 &lt; 4 &amp;&amp; true", XMLUtil.escapeXML("3 < 4 && true"));
     }
 }

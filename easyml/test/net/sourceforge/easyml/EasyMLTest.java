@@ -21,14 +21,16 @@ package net.sourceforge.easyml;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import net.sourceforge.easyml.marshalling.dtd.StringStrategy;
 import net.sourceforge.easyml.testmodel.AbstractDTO;
 import net.sourceforge.easyml.testmodel.PersonDTO;
+
 import static org.junit.Assert.*;
+
 import org.junit.Test;
 
 /**
- *
  * @author victor
  */
 public class EasyMLTest {
@@ -58,16 +60,11 @@ public class EasyMLTest {
         final Object actual = easyml.deserialize(easyml.serialize(expected));
 
         assertEquals(4, easyml.readerPrototype.cachedAliasingReflection.size());
-        assertEquals(1, easyml.readerPrototype.cachedDefCtors.size());
-        assertEquals(1, easyml.writerPrototype.cachedDefCtors.size());
-        assertSame(easyml.readerPrototype.cachedDefCtors, easyml.writerPrototype.cachedDefCtors);
 
         easyml.clearCache();
 
         assertEquals(expected, actual);
         assertEquals(4 - 2/* 2 aliases */, easyml.readerPrototype.cachedAliasingReflection.size());
-        assertTrue(easyml.readerPrototype.cachedDefCtors.isEmpty());
-        assertTrue(easyml.writerPrototype.cachedDefCtors.isEmpty());
     }
 
     @Test

@@ -27,20 +27,10 @@ import java.util.Date;
  * {@linkplain Strategy} instances at marshalling stage.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.6
+ * @version 1.5.0
  * @since 1.0
  */
 public interface MarshalContext {
-
-    /**
-     * Returns a default instance for the given class, if any.
-     *
-     * @param <T> underlying type for the given class c
-     * @param c   the class to instantiate
-     * @return a default instance
-     */
-    <T> T defaultInstanceFor(Class<T> c)
-            throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException;
 
     /**
      * Returns the alias for the given class, or <code>class.name</code> if the

@@ -103,12 +103,12 @@ public class ExternalizableSerializableTest {
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.getCompositeStrategies().put(ExternalizableStrategy.NAME, ExternalizableStrategy.INSTANCE);
         xis.getCompositeStrategies().put(SerializableStrategy.NAME, SerializableStrategy.INSTANCE);
-        assertEquals(expected, (Duration) xis.read());
+        assertEquals(expected, xis.read());
         xis.close();
     }
 
     // mock Java 8 java.time api:
-    private static final class Duration implements Serializable {
+    public static final class Duration implements Serializable {
 
         private final long seconds;
         private final int nanos;
@@ -171,7 +171,7 @@ public class ExternalizableSerializableTest {
         }
     }
 
-    private static final class Ser implements Externalizable {
+    public static final class Ser implements Externalizable {
 
         public static final byte DURATION_TYPE = 1;
         private byte type;

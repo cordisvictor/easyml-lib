@@ -18,14 +18,16 @@
  */
 package net.sourceforge.easyml.marshalling.dtd;
 
+import net.sourceforge.easyml.EasyML;
+import org.junit.Test;
+
+import javax.swing.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import javax.swing.JLabel;
-import net.sourceforge.easyml.EasyML;
-import static org.junit.Assert.*;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author victor
@@ -34,9 +36,6 @@ public class Base64StrategyTest {
 
     private final EasyML easyml = new EasyML();
 
-    /**
-     * Test of marshal method, of class Base64Strategy.d
-     */
     @Test
     public void testMarshalUnmarshal() throws Exception {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();

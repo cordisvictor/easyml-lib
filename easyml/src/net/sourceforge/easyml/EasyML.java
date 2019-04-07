@@ -34,7 +34,6 @@ import net.sourceforge.easyml.marshalling.java.net.URLStrategy;
 import net.sourceforge.easyml.marshalling.java.util.*;
 import net.sourceforge.easyml.marshalling.java.util.concurrent.ConcurrentHashMapStrategy;
 import net.sourceforge.easyml.marshalling.java.util.regex.PatternStrategy;
-import net.sourceforge.easyml.util.Caching;
 import org.w3c.dom.Document;
 import org.xmlpull.v1.XmlPullParser;
 
@@ -43,6 +42,7 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * EasyML class is the top-level facade, containing general functionality such
@@ -81,7 +81,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.6
+ * @version 1.5.0
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -384,32 +384,6 @@ public final class EasyML {
     }
 
     /**
-     * XmlPullParserProvider interface can be implemented to provide a custom
-     * {@linkplain XmlPullParser} to be used at deserializing XML, in text form.
-     * <br/>
-     * Since EasyML is thread-safe, it cannot reuse the user-specified
-     * pull-parser instance, like {@linkplain XMLReader} does. This interface
-     * implementation will be used by EasyML at each text XML
-     * <code>deserialize()</code> invocation.<br/>
-     * <br/>
-     * <b>Note:</b> implementations of this interface MUST be thread-safe.
-     *
-     * @author Victor Cordis ( cordis.victor at gmail.com)
-     * @version 1.3.0
-     * @since 1.3.0
-     */
-    public interface XmlPullParserProvider {
-
-        /**
-         * Creates and configures a new user-specified
-         * <code>XmlPullParser</code> parser, to be used at text XML parsing.
-         *
-         * @return new xml pull-parser instance
-         */
-        XmlPullParser newXmlPullParser();
-    }
-
-    /**
      * Constant defining the default EasyML profile setting.
      */
     public static final Profile DEFAULT_PROFILE = Profile.SPECIFIC;
@@ -435,7 +409,7 @@ public final class EasyML {
     /**
      * The preferred parser configuration. Is optional.
      */
-    protected XmlPullParserProvider xmlPullParserProvider = null;
+    protected Supplier<XmlPullParser> xmlPullParserProvider = null;
 
     /**
      * Creates a new instance with the default settings and default reader and
@@ -446,28 +420,15 @@ public final class EasyML {
     }
 
     private EasyML(Profile profile) {
-        final ConcurrentHashMap<Class, Object> commonCtorCache = new ConcurrentHashMap<>();
-        final ConcurrentHashMap<String, Object> readerFieldCache = new ConcurrentHashMap<>();
-
-        this.writerPrototype = new XMLWriter(commonCtorCache, Caching.STRATEGY_PUT_IF_ABSENT);
-        this.readerPrototype = new XMLReader(commonCtorCache, readerFieldCache, Caching.STRATEGY_PUT_IF_ABSENT);
+        this.writerPrototype = new XMLWriter();
+        this.readerPrototype = new XMLReader(new ConcurrentHashMap<>());
         profile.configure(this.writerPrototype);
         profile.configure(this.readerPrototype);
-        this.perThreadWriter = new ThreadLocal<XMLWriter>() {
-            @Override
-            protected XMLWriter initialValue() {
-                return new XMLWriter(writerPrototype);
-            }
-        };
-        this.perThreadReader = new ThreadLocal<XMLReader>() {
-            @Override
-            protected XMLReader initialValue() {
-                return new XMLReader(readerPrototype);
-            }
-        };
+        this.perThreadWriter = ThreadLocal.withInitial(() -> new XMLWriter(writerPrototype));
+        this.perThreadReader = ThreadLocal.withInitial(() -> new XMLReader(readerPrototype));
     }
 
-    EasyML(Profile profile, Style style, XmlPullParserProvider xmlPullParserProvider,
+    EasyML(Profile profile, Style style, Supplier<XmlPullParser> xmlPullParserProvider,
            String dateFormat, String customRootTag, NodeListStrategy customArrayTag, NodeStrategy customStringTag,
            Map<Class, String> classToAlias, Map<Field, String> fieldToAlias, Set<Field> excludedFields,
            XMLReader.SecurityPolicy deserializationSecurityPolicy,
@@ -747,7 +708,7 @@ public final class EasyML {
      * @return the serialized object string
      */
     public String serialize(Object o) {
-        final StringWriter sw = new StringWriter(32);
+        final StringWriter sw = new StringWriter();
         this.serialize(o, sw);
         return sw.toString();
     }
@@ -784,9 +745,7 @@ public final class EasyML {
     }
 
     private XmlPullParser maybeProvidedXmlPullParser() {
-        return this.xmlPullParserProvider != null
-                ? this.xmlPullParserProvider.newXmlPullParser()
-                : null;
+        return this.xmlPullParserProvider != null ? this.xmlPullParserProvider.get() : null;
     }
 
     /**

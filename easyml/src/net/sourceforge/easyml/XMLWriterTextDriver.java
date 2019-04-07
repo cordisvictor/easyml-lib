@@ -54,7 +54,7 @@ final class XMLWriterTextDriver extends XMLWriter.Driver {
     public XMLWriterTextDriver(XMLWriter target, Writer out) {
         super(target);
         this.writer = out;
-        this.elementStack = new ArrayList<>(XML_INDENTATION_BUF.length);
+        this.elementStack = new ArrayList<>();
     }
 
     private void writeIndent() throws IOException {

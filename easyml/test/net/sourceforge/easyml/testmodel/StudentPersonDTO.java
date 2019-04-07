@@ -39,20 +39,10 @@ public final class StudentPersonDTO extends PersonDTO {
         this.faculty = faculty;
     }
 
-    /**
-     * Get the value of faculty
-     *
-     * @return the value of faculty
-     */
     public FacultyDTO getFaculty() {
         return faculty;
     }
 
-    /**
-     * Get the value of active
-     *
-     * @return the value of active
-     */
     public boolean isActive() {
         return active;
     }

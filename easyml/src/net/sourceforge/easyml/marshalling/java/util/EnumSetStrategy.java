@@ -20,6 +20,7 @@ package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
+import net.sourceforge.easyml.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.util.EnumSet;
@@ -29,7 +30,7 @@ import java.util.EnumSet;
  * the {@linkplain EnumSet}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.6
+ * @version 1.4.7
  * @since 1.4.6
  */
 public final class EnumSetStrategy extends AbstractStrategy<EnumSet> implements CompositeStrategy<EnumSet> {
@@ -49,7 +50,7 @@ public final class EnumSetStrategy extends AbstractStrategy<EnumSet> implements 
         Field elemType;
         try {
             elemType = EnumSet.class.getDeclaredField("elementType");
-            elemType.setAccessible(true);
+            ReflectionUtil.setAccessible(elemType);
         } catch (NoSuchFieldException | SecurityException ignored) {
             elemType = null;
         }
