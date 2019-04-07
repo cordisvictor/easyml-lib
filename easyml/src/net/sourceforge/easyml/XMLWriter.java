@@ -56,7 +56,7 @@ import java.util.*;
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.4
+ * @version 1.4.7
  * @see XMLReader
  * @since 1.0
  */
@@ -886,7 +886,7 @@ public class XMLWriter implements Flushable, Closeable {
 
     private void write0(Object data)
             throws NoSuchMethodException, InvocationTargetException,
-            InstantiationException, IllegalAccessException, SecurityException {
+            InstantiationException, IllegalAccessException {
         // simple strategy:
         // nil:
         if (data == null) {
@@ -931,7 +931,7 @@ public class XMLWriter implements Flushable, Closeable {
     // array: the array of unknown class to write as XML
     private void writeArray(Object array)
             throws NoSuchMethodException, InvocationTargetException,
-            InstantiationException, IllegalAccessException, SecurityException {
+            InstantiationException, IllegalAccessException {
         final int length = Array.getLength(array);
         this.driver.startElement(DTD.ELEMENT_ARRAY);
         this.driver.setAttribute(DTD.ATTRIBUTE_LENGTH, Integer.toString(length));
@@ -952,7 +952,7 @@ public class XMLWriter implements Flushable, Closeable {
     // obj: "object with properties" to write
     private void writeObject(Object obj)
             throws NoSuchMethodException, InstantiationException,
-            InvocationTargetException, IllegalAccessException, SecurityException {
+            InvocationTargetException, IllegalAccessException {
         // begin bean encoding:
         this.driver.startElement(DTD.ELEMENT_OBJECT);
         Class cls = obj.getClass();
@@ -964,9 +964,7 @@ public class XMLWriter implements Flushable, Closeable {
                     continue; // skip static or non-property or excluded field.
                 }
                 // get property field:
-                if (!f.isAccessible()) {
-                    f.setAccessible(true);
-                }
+                f.setAccessible(true);
                 // write property value:
                 final String aliasedFieldName = this.context.aliasOrNameFor(f);
                 this.driver.startElement(aliasedFieldName);

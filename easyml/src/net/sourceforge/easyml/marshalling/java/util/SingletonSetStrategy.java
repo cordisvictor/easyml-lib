@@ -53,7 +53,7 @@ public final class SingletonSetStrategy extends AbstractStrategy<Set> implements
         try {
             singletonListElement = TARGET.getDeclaredField("element");
             singletonListElement.setAccessible(true);
-        } catch (NoSuchFieldException | SecurityException neverThrown) {
+        } catch (NoSuchFieldException | SecurityException ignored) {
             singletonListElement = null;
         }
         TARGET_ELEMENT = singletonListElement;

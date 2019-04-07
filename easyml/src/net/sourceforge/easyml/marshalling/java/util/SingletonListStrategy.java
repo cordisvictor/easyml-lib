@@ -53,7 +53,7 @@ public final class SingletonListStrategy extends AbstractStrategy<List> implemen
         try {
             singletonListElement = TARGET.getDeclaredField("element");
             singletonListElement.setAccessible(true);
-        } catch (NoSuchFieldException | SecurityException neverThrown) {
+        } catch (NoSuchFieldException | SecurityException ignored) {
             singletonListElement = null;
         }
         TARGET_ELEMENT = singletonListElement;

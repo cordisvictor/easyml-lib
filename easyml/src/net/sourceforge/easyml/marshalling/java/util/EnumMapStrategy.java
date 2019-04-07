@@ -45,17 +45,17 @@ public final class EnumMapStrategy extends AbstractStrategy<EnumMap> implements 
      */
     public static final EnumMapStrategy INSTANCE = new EnumMapStrategy();
     private static final String ATTRIBUTE_KEYTYPE = "keyType";
-    private static Field keyType;
+    private static final Field keyType;
 
     static {
+        Field keyT;
         try {
-            keyType = EnumMap.class.getDeclaredField("keyType");
-            keyType.setAccessible(true);
-        } catch (NoSuchFieldException ex) {
-            // will never happen.
-        } catch (SecurityException sX) {
-            throw new ExceptionInInitializerError(sX);
+            keyT = EnumMap.class.getDeclaredField("keyType");
+            keyT.setAccessible(true);
+        } catch (NoSuchFieldException | SecurityException ignored) {
+            keyT = null;
         }
+        keyType = keyT;
     }
 
     private EnumMapStrategy() {

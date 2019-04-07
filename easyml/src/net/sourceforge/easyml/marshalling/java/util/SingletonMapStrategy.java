@@ -56,7 +56,7 @@ public final class SingletonMapStrategy extends AbstractStrategy<Map> implements
             singleK.setAccessible(true);
             singleV = TARGET.getDeclaredField("v");
             singleV.setAccessible(true);
-        } catch (NoSuchFieldException | SecurityException neverThrown) {
+        } catch (NoSuchFieldException | SecurityException ignored) {
             singleK = null;
             singleV = null;
         }

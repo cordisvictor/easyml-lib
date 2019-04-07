@@ -32,7 +32,7 @@ import java.util.Properties;
  * {@linkplain Map}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.3
+ * @version 1.4.7
  * @since 1.0
  */
 public final class PropertiesStrategy extends AbstractStrategy<Properties>
@@ -50,17 +50,17 @@ public final class PropertiesStrategy extends AbstractStrategy<Properties>
     private static final String ELEMENT_ENTRY = "entry";
     private static final String ATTRIBUTE_KEY = "key";
     private static final String ATTRIBUTE_VALUE = "value";
-    private static Field propertiesDefaults;
+    private static final Field propertiesDefaults;
 
     static {
+        Field propertiesDefs;
         try {
-            PropertiesStrategy.propertiesDefaults = Properties.class.getDeclaredField("defaults");
-            PropertiesStrategy.propertiesDefaults.setAccessible(true);
-        } catch (NoSuchFieldException ex) {
-            // will never happen.
-        } catch (SecurityException sX) {
-            throw new ExceptionInInitializerError(sX);
+            propertiesDefs = Properties.class.getDeclaredField("defaults");
+            propertiesDefs.setAccessible(true);
+        } catch (NoSuchFieldException | SecurityException ignored) {
+            propertiesDefs = null;
         }
+        propertiesDefaults = propertiesDefs;
     }
 
     private PropertiesStrategy() {

@@ -52,7 +52,7 @@ import java.util.Map;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.6
+ * @version 1.4.7
  * @since 1.0
  */
 public class SerializableStrategy extends AbstractStrategy<Serializable>
@@ -204,15 +204,15 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         writer.endElement();
     }
 
-    private static Method findHierarchicalDeclaredMethod(Class classHierarchy, String methodName, Class... paramTypes) throws NoSuchMethodException {
+    private static Method findHierarchicalDeclaredMethod(Class classHierarchy, String methodName) throws NoSuchMethodException {
         Class crt = classHierarchy;
         do {
             try {
-                return crt.getDeclaredMethod(methodName, paramTypes);
+                return crt.getDeclaredMethod(methodName, ReflectionUtil.METHOD_NO_PARAMS);
             } catch (NoSuchMethodException e) {
                 crt = crt.getSuperclass();
             }
-        } while (crt instanceof Serializable);
+        } while (Serializable.class.isAssignableFrom(crt));
         throw NO_SUCH_METHOD_EXCEPTION;
     }
 
@@ -240,9 +240,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                     || ctx.excluded(f)) {
                 continue; // skip static, transient, already encoded outer-refed object, or excluded field.
             }
-            if (!f.isAccessible()) {
-                f.setAccessible(true);
-            }
+            f.setAccessible(true);
             // process field value:
             Object attributeValue = null;
             Object defaultValue = null;
@@ -390,9 +388,7 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                         throw new InvalidFormatException(ctx.readerPositionDescriptor(),
                                 "illegal field: " + level.getName() + '.' + localPartName);
                     }
-                    if (!f.isAccessible()) {
-                        f.setAccessible(true);
-                    }
+                    f.setAccessible(true);
 
                     // read and set it to field:
                     final String nilAttr = reader.elementAttribute(ATTRIBUTE_NIL);
@@ -421,8 +417,6 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                 } catch (NoSuchFieldException nsfX) {
                     throw new InvalidFormatException(ctx.readerPositionDescriptor(),
                             "undefined field: " + level.getName() + '.' + localPartName);
-                } catch (SecurityException sX) {
-                    throw new InvalidFormatException(ctx.readerPositionDescriptor(), sX);
                 }
             } else if (reader.atElementEnd() && reader.elementName().equals(SerializableStrategy.ELEMENT_FIELDS)) {
                 reader.next();

@@ -19,6 +19,7 @@
 package net.sourceforge.easyml.util;
 
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.*;
 import java.util.HashMap;
@@ -28,11 +29,15 @@ import java.util.Map;
  * ReflectionUtil utility class contains reflection helper methods.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.5
+ * @version 1.4.7
  * @since 1.0
  */
 public final class ReflectionUtil {
 
+    /**
+     * Constant used to cache the zero-arg signature for reflecting methods.
+     */
+    public static final Class[] METHOD_NO_PARAMS = new Class[]{};
     private static final String PREFIX_IS = "is";
     private static final String PREFIX_GET = "get";
     private static final String PREFIX_SET = "set";
@@ -78,7 +83,6 @@ public final class ReflectionUtil {
      * @param c class in which to search
      * @param f field which to search
      * @return true if the field is a property, false otherwise
-     * @throws SecurityException
      */
     public static boolean hasClassFieldProperty(Class c, Field f) {
         final Class fType = f.getType();
@@ -134,9 +138,7 @@ public final class ReflectionUtil {
     public static <T> Constructor<T> defaultConstructor(Class<T> c)
             throws NoSuchMethodException {
         final Constructor nonArg = c.getDeclaredConstructor();
-        if (!nonArg.isAccessible()) {
-            nonArg.setAccessible(true);
-        }
+        nonArg.setAccessible(true);
         return nonArg;
     }
 
@@ -196,9 +198,7 @@ public final class ReflectionUtil {
     public static <T> T instantiateInner(Class<T> c, Object outer)
             throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         final Constructor nonArg = c.getDeclaredConstructor(c.getEnclosingClass());
-        if (!nonArg.isAccessible()) {
-            nonArg.setAccessible(true);
-        }
+        nonArg.setAccessible(true);
         return (T) nonArg.newInstance(outer);
     }
 
@@ -264,7 +264,7 @@ public final class ReflectionUtil {
                     }
                 };
             } catch (ClassNotFoundException | NoSuchFieldException | SecurityException |
-                    IllegalArgumentException | IllegalAccessException | NoSuchMethodException sunUnsafeNotAvailable) {
+                    IllegalAccessException | NoSuchMethodException unsafeNotAvailableOrNotAllowed) {
             }
             // if available, use java.io.ObjectInputStream:
             try {
@@ -280,7 +280,7 @@ public final class ReflectionUtil {
                         }
                     }
                 };
-            } catch (NoSuchMethodException | SecurityException notAvailable) {
+            } catch (NoSuchMethodException | SecurityException notAvailableOrNotAllowed) {
             }
             // if available, use java.io.ObjectStreamClass:
             try {
@@ -300,7 +300,7 @@ public final class ReflectionUtil {
                     }
                 };
             } catch (NoSuchMethodException | SecurityException | IllegalAccessException |
-                    IllegalArgumentException | InvocationTargetException notAvailable) {
+                    InvocationTargetException notAvailableOrNotAllowed) {
             }
             // else unsafe allocation will not work, if used:
             return new UnsafeInstantiator() {

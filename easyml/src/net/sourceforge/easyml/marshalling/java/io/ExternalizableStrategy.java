@@ -21,6 +21,7 @@ package net.sourceforge.easyml.marshalling.java.io;
 import net.sourceforge.easyml.DTD;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
+import net.sourceforge.easyml.util.ReflectionUtil;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -45,7 +46,7 @@ import java.util.Arrays;
  * <br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.3
+ * @version 1.4.7
  * @since 1.4.4
  */
 public class ExternalizableStrategy extends AbstractStrategy<Externalizable> implements CompositeStrategy<Externalizable> {
@@ -117,7 +118,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
         Externalizable theTarget = target;
         // check for writeReplace():
         try {
-            final Method writeReplaceM = target.getClass().getDeclaredMethod(METHOD_WRITEREPLACE);
+            final Method writeReplaceM = target.getClass().getDeclaredMethod(METHOD_WRITEREPLACE, ReflectionUtil.METHOD_NO_PARAMS);
             writeReplaceM.setAccessible(true); // method may be private. Hence must be set accessible true.
             final Object replacement = writeReplaceM.invoke(target);
             if (replacement == null) {
@@ -187,7 +188,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
         if (reader.atElementEnd() && reader.elementName().equals(this.name())) {
             // check for readResolve():
             try {
-                final Method readResolveM = cls.getDeclaredMethod(METHOD_READRESOLVE);
+                final Method readResolveM = cls.getDeclaredMethod(METHOD_READRESOLVE, ReflectionUtil.METHOD_NO_PARAMS);
                 readResolveM.setAccessible(true); // method may be private. Hence must be set accessible true.
                 final Object resolved = readResolveM.invoke(target);
                 if (resolved == null) {

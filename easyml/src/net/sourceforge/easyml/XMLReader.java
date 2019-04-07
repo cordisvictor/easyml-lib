@@ -63,7 +63,7 @@ import java.util.*;
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.5
+ * @version 1.4.7
  * @see XMLWriter
  * @since 1.0
  */
@@ -951,8 +951,6 @@ public class XMLReader implements Closeable {
                             break; // field found.
                         }
                     } catch (NoSuchFieldException searchInSuperclass) {
-                    } catch (SecurityException ex) {
-                        throw new InvalidFormatException(this.driver.positionDescriptor(), ex);
                     }
                     cls = cls.getSuperclass();
                 }
@@ -960,9 +958,7 @@ public class XMLReader implements Closeable {
                 if (f == null || Modifier.isStatic(f.getModifiers()) || !ReflectionUtil.hasClassFieldProperty(cls, f)) {
                     throw new InvalidFormatException(this.driver.positionDescriptor(), "undefined property: " + cls.getName() + '.' + localPartName);
                 }
-                if (!f.isAccessible()) {
-                    f.setAccessible(true);
-                }
+                f.setAccessible(true);
                 // move down in the property value and read it:
                 if (!this.driver.next() || !this.driver.atElementStart()) {
                     throw new InvalidFormatException(this.driver.positionDescriptor(), "expected element start");

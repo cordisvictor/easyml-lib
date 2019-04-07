@@ -45,7 +45,7 @@ import java.lang.reflect.Modifier;
  * <br/>This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.8
+ * @version 1.4.7
  * @since 1.0
  */
 public class ObjectStrategy extends AbstractStrategy
@@ -171,9 +171,7 @@ public class ObjectStrategy extends AbstractStrategy
                         || ctx.excluded(f)) {
                     continue; // skip static, already encoded outer-refed object, or excluded field.
                 }
-                if (!f.isAccessible()) {
-                    f.setAccessible(true);
-                }
+                f.setAccessible(true);
                 // process field value:
                 Object attributeValue = null;
                 Object defaultValue = null;
@@ -263,10 +261,10 @@ public class ObjectStrategy extends AbstractStrategy
                 } else {
                     // field: search the class for it:
                     final String localPartName = reader.elementName();
-                    Field f = null;
+                    Field f;
                     try {
                         f = ctx.fieldFor(cls, localPartName);
-                    } catch (NoSuchFieldException | SecurityException invalidFieldName) {
+                    } catch (NoSuchFieldException invalidFieldName) {
                         throw new InvalidFormatException(ctx.readerPositionDescriptor(), invalidFieldName);
                     }
                     // check if field is indeed valid:
@@ -274,9 +272,7 @@ public class ObjectStrategy extends AbstractStrategy
                         throw new InvalidFormatException(ctx.readerPositionDescriptor(),
                                 "illegal field: " + cls.getName() + '.' + localPartName);
                     }
-                    if (!f.isAccessible()) {
-                        f.setAccessible(true);
-                    }
+                    f.setAccessible(true);
                     // read and set it to field:
                     final String nilAttr = reader.elementAttribute(ATTRIBUTE_NIL);
                     if (nilAttr != null && Boolean.parseBoolean(nilAttr)) {

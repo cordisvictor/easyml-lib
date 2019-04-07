@@ -43,17 +43,17 @@ public final class EnumSetStrategy extends AbstractStrategy<EnumSet> implements 
      */
     public static final EnumSetStrategy INSTANCE = new EnumSetStrategy();
     private static final String ATTRIBUTE_ELEMENTTYPE = "elementType";
-    private static Field elementType;
+    private static final Field elementType;
 
     static {
+        Field elemType;
         try {
-            elementType = EnumSet.class.getDeclaredField("elementType");
-            elementType.setAccessible(true);
-        } catch (NoSuchFieldException ex) {
-            // will never happen.
-        } catch (SecurityException sX) {
-            throw new ExceptionInInitializerError(sX);
+            elemType = EnumSet.class.getDeclaredField("elementType");
+            elemType.setAccessible(true);
+        } catch (NoSuchFieldException | SecurityException ignored) {
+            elemType = null;
         }
+        elementType = elemType;
     }
 
     private EnumSetStrategy() {
