@@ -31,8 +31,7 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * @version 1.3.7
  * @since 1.0
  */
-public final class CharsStrategy extends AbstractStrategy<char[]>
-        implements SimpleStrategy<char[]> {
+public final class CharsStrategy extends AbstractStrategy implements SimpleStrategy<char[]> {
 
     /**
      * Constant defining the value used for the strategy name.

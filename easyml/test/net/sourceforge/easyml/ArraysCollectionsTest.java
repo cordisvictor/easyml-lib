@@ -171,12 +171,12 @@ public class ArraysCollectionsTest {
         expected.push("call2");
         expected.push("call3");
         final XMLWriter xos = new XMLWriter(this.out);
-        xos.getCompositeStrategies().add(SerializableStrategy.INSTANCE);
+        xos.getCompositeStrategies().add(new SerializableStrategy());
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        xis.getCompositeStrategies().put(SerializableStrategy.INSTANCE.name(), SerializableStrategy.INSTANCE);
+        xis.getCompositeStrategies().put(SerializableStrategy.NAME, new SerializableStrategy());
         assertEquals(expected, xis.read());
         xis.close();
     }
@@ -209,12 +209,12 @@ public class ArraysCollectionsTest {
         l1.add("two");
         final List[] lists = new List[]{l0, l1};
         final XMLWriter xos = new XMLWriter(dom);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(lists);
         xos.close();
         System.out.println(dom);
         final XMLReader xis = new XMLReader(dom);
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         assertArrayEquals(lists, (Object[]) xis.read());
         xis.close();
     }
@@ -230,12 +230,12 @@ public class ArraysCollectionsTest {
         expected.add(l2);
 
         final XMLWriter xos = new XMLWriter(this.out);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         assertEquals(expected, xis.read());
         xis.close();
     }
@@ -251,12 +251,12 @@ public class ArraysCollectionsTest {
         expected.add(l2);
 
         final XMLWriter xos = new XMLWriter(this.out);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         xis.getSecurityPolicy().add(Integer.class);
         xis.read();
     }
@@ -269,12 +269,12 @@ public class ArraysCollectionsTest {
         l.add("two");
         expected.add(l);
         final XMLWriter xos = new XMLWriter(this.out);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         assertEquals(expected, xis.read());
         xis.close();
     }
@@ -286,12 +286,12 @@ public class ArraysCollectionsTest {
         expected.add(2);
 
         final XMLWriter xos = new XMLWriter(this.out);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         assertEquals(expected, xis.read());
         xis.close();
     }
@@ -319,12 +319,12 @@ public class ArraysCollectionsTest {
         expected.put(1, "unu");
         expected.put(2, "doi");
         final XMLWriter xos = new XMLWriter(this.out);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         assertEquals(expected, xis.read());
         xis.close();
     }
@@ -335,12 +335,12 @@ public class ArraysCollectionsTest {
         expected.put(1, "unu");
         expected.put(2, "doi");
         final XMLWriter xos = new XMLWriter(this.out);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         assertEquals(expected, xis.read());
         xis.close();
     }
@@ -353,12 +353,12 @@ public class ArraysCollectionsTest {
         m.put(2, "doi");
         expected.put(m, m);
         final XMLWriter xos = new XMLWriter(this.out);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         assertEquals(expected.values().iterator().next(), ((Map) xis.read()).values().iterator().next());
         xis.close();
     }
@@ -367,12 +367,12 @@ public class ArraysCollectionsTest {
     public void testCollectionsEmptyMap() {
         final Map expected = Collections.EMPTY_MAP;
         final XMLWriter xos = new XMLWriter(this.out);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         assertTrue(expected == xis.read());
         xis.close();
     }
@@ -381,12 +381,12 @@ public class ArraysCollectionsTest {
     public void testCollectionsSingletonMap() {
         final Map expected = Collections.singletonMap(3, "trei");
         final XMLWriter xos = new XMLWriter(this.out);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         assertEquals(expected.toString(), xis.read().toString());
         xis.close();
     }
@@ -395,12 +395,12 @@ public class ArraysCollectionsTest {
     public void testCollectionsSingletonMapInjection1() {
         final Map expected = Collections.singletonMap(3, "trei");
         final XMLWriter xos = new XMLWriter(this.out);
-        EasyML.Profile.SPECIFIC.configure(xos);
+        EasyML.defaultConfiguration(xos);
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(xis);
+        EasyML.defaultConfiguration(xis);
         xis.getSecurityPolicy().addHierarchy(Map.class);
         xis.read();
     }

@@ -54,7 +54,7 @@ public class ExternalizableSerializableTest {
         xos.getSimpleStrategies().add(EnumStrategy.INSTANCE);
         xos.getSimpleStrategies().add(ClassStrategy.INSTANCE);
         xos.getCompositeStrategies().add(ArrayStrategy.INSTANCE);
-        xos.getCompositeStrategies().add(SerializableStrategy.INSTANCE);
+        xos.getCompositeStrategies().add(new SerializableStrategy());
         xos.write(expected);
         xos.close();
 
@@ -62,10 +62,10 @@ public class ExternalizableSerializableTest {
 
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.alias(EasyML.Style.class, "emlStype");
-        xis.getSimpleStrategies().put(EnumStrategy.INSTANCE.name(), EnumStrategy.INSTANCE);
-        xis.getSimpleStrategies().put(ClassStrategy.INSTANCE.name(), ClassStrategy.INSTANCE);
-        xis.getCompositeStrategies().put(ArrayStrategy.INSTANCE.name(), ArrayStrategy.INSTANCE);
-        xis.getCompositeStrategies().put(SerializableStrategy.INSTANCE.name(), SerializableStrategy.INSTANCE);
+        xis.getSimpleStrategies().put(EnumStrategy.NAME, EnumStrategy.INSTANCE);
+        xis.getSimpleStrategies().put(ClassStrategy.NAME, ClassStrategy.INSTANCE);
+        xis.getCompositeStrategies().put(ArrayStrategy.NAME, ArrayStrategy.INSTANCE);
+        xis.getCompositeStrategies().put(SerializableStrategy.NAME, new SerializableStrategy());
         assertEquals(expected, xis.read());
         xis.close();
     }
@@ -77,13 +77,13 @@ public class ExternalizableSerializableTest {
         expected.put(2, "doi");
         final XMLWriter xos = new XMLWriter(this.out);
         xos.getCompositeStrategies().add(ArrayStrategy.INSTANCE);
-        xos.getCompositeStrategies().add(SerializableStrategy.INSTANCE);
+        xos.getCompositeStrategies().add(new SerializableStrategy());
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.getCompositeStrategies().put(ArrayStrategy.NAME, ArrayStrategy.INSTANCE);
-        xis.getCompositeStrategies().put(SerializableStrategy.NAME, SerializableStrategy.INSTANCE);
+        xis.getCompositeStrategies().put(SerializableStrategy.NAME, new SerializableStrategy());
         assertEquals(expected, xis.read());
         xis.close();
     }
@@ -94,7 +94,7 @@ public class ExternalizableSerializableTest {
 
         final XMLWriter xos = new XMLWriter(this.out);
         xos.getCompositeStrategies().add(ExternalizableStrategy.INSTANCE);
-        xos.getCompositeStrategies().add(SerializableStrategy.INSTANCE);
+        xos.getCompositeStrategies().add(new SerializableStrategy());
         xos.write(expected);
         xos.close();
 
@@ -102,7 +102,7 @@ public class ExternalizableSerializableTest {
 
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.getCompositeStrategies().put(ExternalizableStrategy.NAME, ExternalizableStrategy.INSTANCE);
-        xis.getCompositeStrategies().put(SerializableStrategy.NAME, SerializableStrategy.INSTANCE);
+        xis.getCompositeStrategies().put(SerializableStrategy.NAME, new SerializableStrategy());
         assertEquals(expected, xis.read());
         xis.close();
     }

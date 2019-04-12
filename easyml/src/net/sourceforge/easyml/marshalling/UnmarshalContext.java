@@ -57,15 +57,6 @@ public interface UnmarshalContext {
     Field fieldFor(Class declaring, String aliasOrName) throws NoSuchFieldException;
 
     /**
-     * Calculates a descriptor detailing the current reader position inside the
-     * XML. This information should be used as exception message for detailing
-     * read exceptions.
-     *
-     * @return the reader position descriptor
-     */
-    String readerPositionDescriptor();
-
-    /**
      * Parses the given date using the date format context configuration.
      *
      * @param date to parse
@@ -80,4 +71,13 @@ public interface UnmarshalContext {
      * @return XML root tag
      */
     String rootTag();
+
+    /**
+     * Calculates a descriptor detailing the current reader position inside the
+     * XML. This information should be used as exception message for detailing
+     * read exceptions.
+     *
+     * @return the reader position descriptor
+     */
+    String readerPositionDescriptor();
 }

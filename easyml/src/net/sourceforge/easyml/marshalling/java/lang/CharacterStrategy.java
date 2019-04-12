@@ -30,11 +30,10 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @since 1.0
  * @version 1.3.3
+ * @since 1.0
  */
-public final class CharacterStrategy extends AbstractStrategy<Character>
-        implements SimpleStrategy<Character> {
+public final class CharacterStrategy extends AbstractStrategy implements SimpleStrategy<Character> {
 
     /**
      * Constant defining the value used for the strategy name.

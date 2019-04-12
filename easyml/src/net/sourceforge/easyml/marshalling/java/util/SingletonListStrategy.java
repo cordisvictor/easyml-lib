@@ -35,7 +35,7 @@ import java.util.List;
  * @version 1.4.7
  * @since 1.0.2
  */
-public final class SingletonListStrategy extends AbstractStrategy<List> implements CompositeStrategy<List> {
+public final class SingletonListStrategy extends AbstractStrategy implements CompositeStrategy<List> {
 
     /**
      * Constant defining the value used for the strategy name.

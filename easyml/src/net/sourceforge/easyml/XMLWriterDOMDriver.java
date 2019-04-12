@@ -60,17 +60,15 @@ final class XMLWriterDOMDriver extends XMLWriter.Driver {
         } else if (this.state != XMLWriter.Driver.STATE_VALUE) {
             throw new IllegalStateException("cannot write element start");
         }
-        final Element started = this.root.createElement(name);
-        if (this.hasOneTimeUniqueId()) {
-            started.setAttribute(DTD.ATTRIBUTE_ID, this.oneTimeUniqueId());
-        }
         // update state:
+        final Element started = this.root.createElement(name);
         if (this.crt == null) {
             this.root.appendChild(started);
         } else {
             this.crt.appendChild(started);
         }
         this.crt = started;
+        this.writeOneTimeUniqueId(id -> crt.setAttribute(DTD.ATTRIBUTE_ID, id));
         this.state = XMLWriter.Driver.STATE_START;
     }
 

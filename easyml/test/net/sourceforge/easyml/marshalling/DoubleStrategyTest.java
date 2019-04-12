@@ -16,7 +16,7 @@
  * Please contact the author ( cordis.victor@gmail.com ) if you need additional
  * information or have any questions.
  */
-package net.sourceforge.easyml.marshalling.dtd;
+package net.sourceforge.easyml.marshalling;
 
 import net.sourceforge.easyml.EasyML;
 import org.junit.Test;

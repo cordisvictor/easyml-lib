@@ -16,10 +16,12 @@
  * Please contact the author ( cordis.victor@gmail.com ) if you need additional
  * information or have any questions.
  */
-package net.sourceforge.easyml.marshalling.dtd;
+package net.sourceforge.easyml.marshalling;
 
 import net.sourceforge.easyml.EasyML;
 import org.junit.Test;
+
+import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 
@@ -27,40 +29,13 @@ import static org.junit.Assert.assertEquals;
  *
  * @author victor
  */
-public class StringStrategyTest {
+public class DateStrategyTest {
 
     private final EasyML easyml = new EasyML();
 
     @Test
-    public void testMarshalUnmarshal0() {
-        final String expected = null;
-
-        final String xml = easyml.serialize(expected);
-
-        assertEquals(expected, easyml.deserialize(xml));
-    }
-
-    @Test
-    public void testMarshalUnmarshal1() {
-        final String expected = "";
-
-        final String xml = easyml.serialize(expected);
-
-        assertEquals(expected, easyml.deserialize(xml));
-    }
-
-    @Test
-    public void testMarshalUnmarshal2() {
-        final String expected = "Hello world!";
-
-        final String xml = easyml.serialize(expected);
-
-        assertEquals(expected, easyml.deserialize(xml));
-    }
-
-    @Test
-    public void testMarshalUnmarshal3() {
-        final String expected = "3 < 4 & 2 == 2";
+    public void testMarshalUnmarshal() {
+        final Date expected = new Date();
 
         final String xml = easyml.serialize(expected);
 

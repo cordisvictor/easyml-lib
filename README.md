@@ -60,6 +60,14 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+!Release 1.5.1
+- feature: add functional API.
+- feature: add CalendarStrategy and OptionalStrategy.
+- feature: added java.time strategies.
+- performance: added caching to SerializableStrategy.
+- refactor: remove Profile feature.
+
+
 !Release 1.5.0
 - requires Java 8 or later.
 - NON-BACKWARD COMPATIBLE refactor of ReflectionUtil.
@@ -67,9 +75,9 @@ for a higher control compared to the EasyML Facade.
 
 
 !Release 1.4.7
-- last Java 7 compatible release
-- bugfix: performance regression in Serialization strategy
-- remove AccessibleObject.isAccessible calls
+- last Java 7 compatible release.
+- bugfix: performance regression in Serialization strategy.
+- remove AccessibleObject.isAccessible calls.
 
 
 !Release 1.4.6

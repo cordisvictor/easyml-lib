@@ -29,9 +29,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * SerializableStrategy class that implements the {@linkplain CompositeStrategy}
@@ -52,34 +51,127 @@ import java.util.Map;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.6
+ * @version 1.5.1
  * @since 1.0
  */
-public class SerializableStrategy extends AbstractStrategy<Serializable>
-        implements CompositeStrategy<Serializable> {
-
+public final class SerializableStrategy extends AbstractStrategy implements CompositeStrategy<Serializable> {
     /**
      * Constant defining the value used for the strategy name.
      */
     public static final String NAME = "serial";
     /**
-     * Constant defining the singleton instance.
+     * Constant defining the value used for the strategy target.
      */
-    public static final SerializableStrategy INSTANCE = new SerializableStrategy();
+    public static final Class TARGET = Serializable.class;
     private static final String ELEMENT_OUTER = "this.out";
     private static final String ELEMENT_FIELDS = "this.fields";
     private static final String ATTRIBUTE_NIL = "nil";
     private static final String FIELD_PERSISTENTFIELDS = "serialPersistentFields";
     private static final int MODIFIERS_PERSISTENTFIELDS = Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL;
-    private static final String METHOD_WRITEOBJECT = "writeObject";
-    private static final String METHOD_READOBJECT = "readObject";
     private static final String METHOD_WRITEREPLACE = "writeReplace";
+    private static final String METHOD_WRITEOBJECT = "writeObject";
     private static final String METHOD_READRESOLVE = "readResolve";
-    private static final NoSuchMethodException NO_SUCH_METHOD_EXCEPTION = new NoSuchMethodException();
+    private static final String METHOD_READOBJECT = "readObject";
     private static final Class[] PARAMS_OOS = new Class[]{ObjectOutputStream.class};
     private static final Class[] PARAMS_OIS = new Class[]{ObjectInputStream.class};
+    private static final NoSuchMethodException EXCEPTION_FLOW_NOSUCHMETHOD = new NoSuchMethodException();
+    private static final Method NO_METHOD = emptyMethod();
 
-    protected SerializableStrategy() {
+    private static Method emptyMethod() {
+        try {
+            return Object.class.getMethod("toString");
+        } catch (NoSuchMethodException somethingIsVeryWrong) {
+            throw new ExceptionInInitializerError(somethingIsVeryWrong);
+        }
+    }
+
+    private final ConcurrentHashMap<Class, Method> writeReplaceCache;
+    private final ConcurrentHashMap<Class, Method> writeObjectCache;
+    private final ConcurrentHashMap<Class, Method> readResolveCache;
+    private final ConcurrentHashMap<Class, Method> readObjectCache;
+
+    public SerializableStrategy() {
+        writeReplaceCache = new ConcurrentHashMap<>();
+        writeObjectCache = new ConcurrentHashMap<>();
+        readResolveCache = new ConcurrentHashMap<>();
+        readObjectCache = new ConcurrentHashMap<>();
+    }
+
+    public void clearCache() {
+        writeReplaceCache.clear();
+        writeObjectCache.clear();
+        readResolveCache.clear();
+        readObjectCache.clear();
+    }
+
+    private Method cachedWriteReplace(Class source) throws NoSuchMethodException {
+        return methodOrThrow(writeReplaceCache.computeIfAbsent(source, SerializableStrategy::reflectWriteReplace));
+    }
+
+    private static Method reflectWriteReplace(Class source) {
+        return reflectMethod(source, c -> accessHierarchicalMethod(c, METHOD_WRITEREPLACE, ReflectionUtil.METHOD_NO_PARAMS));
+    }
+
+    private static Method accessHierarchicalMethod(Class classHierarchy, String methodName, Class[] methodParams) throws NoSuchMethodException {
+        Class crt = classHierarchy;
+        do {
+            try {
+                return accessDeclaredMethod(crt, methodName, methodParams);
+            } catch (NoSuchMethodException e) {
+                crt = crt.getSuperclass();
+            }
+        } while (Serializable.class.isAssignableFrom(crt));
+        throw EXCEPTION_FLOW_NOSUCHMETHOD;
+    }
+
+    private static Method accessDeclaredMethod(Class cls, String methodName, Class[] methodParams) throws NoSuchMethodException {
+        final Method m = cls.getDeclaredMethod(methodName, methodParams);
+        ReflectionUtil.setAccessible(m);
+        return m;
+    }
+
+    private static Method reflectMethod(Class source, MethodReflector reflector) {
+        try {
+            return reflector.reflect(source);
+        } catch (NoSuchMethodException methodNotFound) {
+            return NO_METHOD;
+        }
+    }
+
+    private static Method methodOrThrow(Method m) throws NoSuchMethodException {
+        if (m == NO_METHOD) {
+            throw EXCEPTION_FLOW_NOSUCHMETHOD;
+        }
+        return m;
+    }
+
+    private Method cachedWriteObject(Class source) throws NoSuchMethodException {
+        return methodOrThrow(writeObjectCache.computeIfAbsent(source, SerializableStrategy::reflectWriteObject));
+    }
+
+    private static Method reflectWriteObject(Class source) {
+        return reflectMethod(source, c -> accessDeclaredMethod(c, METHOD_WRITEOBJECT, PARAMS_OOS));
+    }
+
+    private Method cachedReadResolve(Class source) throws NoSuchMethodException {
+        return methodOrThrow(readResolveCache.computeIfAbsent(source, SerializableStrategy::reflectReadResolve));
+    }
+
+    private static Method reflectReadResolve(Class source) {
+        return reflectMethod(source, c -> accessHierarchicalMethod(c, METHOD_READRESOLVE, ReflectionUtil.METHOD_NO_PARAMS));
+    }
+
+    private Method cachedReadObject(Class source) throws NoSuchMethodException {
+        return methodOrThrow(readObjectCache.computeIfAbsent(source, SerializableStrategy::reflectReadObject));
+    }
+
+    private static Method reflectReadObject(Class source) {
+        return reflectMethod(source, c -> accessDeclaredMethod(c, METHOD_READOBJECT, PARAMS_OIS));
+    }
+
+    @FunctionalInterface
+    private interface MethodReflector {
+        Method reflect(Class source) throws NoSuchMethodException;
     }
 
     /**
@@ -115,56 +207,39 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
     }
 
     /**
-     * Returns true if the given inheritance <code>level</code> will be included
-     * in the processing (marshalling or unmarshalling), false if processing
-     * will end at the given level.
-     *
-     * @param level of inheritance to check if process should continue for
-     * @return true if continue, false otherwise
-     */
-    protected boolean continueProcessFor(Class level) {
-        return Serializable.class.isAssignableFrom(level);
-    }
-
-    /**
      * {@inheritDoc }
      */
     @Override
     public void marshal(Serializable target, CompositeWriter writer, MarshalContext ctx) {
-        Serializable theTarget = target;
-        Serializable theDef = null;
+        Object theTarget = target;
+        Object theDef = null;
         // check for writeReplace():
         try {
-            final Method writeReplaceM = findHierarchicalDeclaredMethod(theTarget.getClass(), METHOD_WRITEREPLACE);
-            ReflectionUtil.setAccessible(writeReplaceM); // method may be private. Hence must be set accessible true.
-            final Object replacement = writeReplaceM.invoke(theTarget);
-            if (replacement == null) {
-                writer.write(null); // redirect to null.
-                return;
-            }
-            if (replacement instanceof Externalizable) {
-                writer.write(replacement); // redirect to Externalizable.
+            final Object replacement = cachedWriteReplace(theTarget.getClass())
+                    .invoke(theTarget);
+            if (replacement == null || replacement instanceof Externalizable) {
+                writer.write(replacement); // redirect to null or Externalizable.
                 return;
             }
             if (!(replacement instanceof Serializable)) {
                 throw new RuntimeException(new NotSerializableException(replacement.getClass().getName()));
             }
-            theTarget = (Serializable) replacement;
+            theTarget = replacement; // continue here but with replacement as target.
         } catch (NoSuchMethodException | IllegalAccessException writeReplaceNotFound) {
-            // ignore.
+            // writeReplace not found.
         } catch (InvocationTargetException writeReplaceFailure) {
             throw new RuntimeException(writeReplaceFailure);
         }
         // begin object encoding:
+        final Class cls = theTarget.getClass();
         writer.startElement(this.name());
-        this.marshalDoAttributes(theTarget, writer, ctx);
-        // begin object encoding: if non-static inner class then write outer instance:
-        final Class<Serializable> cls = (Class<Serializable>) theTarget.getClass();
-        final Field outerRef = ReflectionUtil.outerRefField(cls);
+        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasOrNameFor(cls));
+        // if inner class then write outer instance:
+        final Field clsOuter = ReflectionUtil.outerRefField(cls);
         Object outer = null;
-        if (outerRef != null) {
+        if (clsOuter != null) {
             try {
-                outer = outerRef.get(theTarget);
+                outer = clsOuter.get(theTarget);
             } catch (IllegalAccessException neverThrown) {
                 // ignored.
             }
@@ -175,61 +250,31 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         // if skipDefaults then init default for comparison usage:
         if (ctx.skipDefaults()) {
             try {
-                theDef = outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : cls.newInstance();
+                theDef = clsOuter != null ? ReflectionUtil.instantiateInner(cls, outer) : cls.newInstance();
             } catch (ReflectiveOperationException defaultConstructorX) {
                 // cannot use defaults defined.
             }
         }
-        try {
-            final SOutputStream sos = new SOutputStream(theTarget, theDef, writer, ctx, cls, outerRef);
-            do {// process inheritance:
-                try { // process composition:
-                    // check for writeObject():
-                    final Method writeObjectM = sos.level.getDeclaredMethod(METHOD_WRITEOBJECT, PARAMS_OOS);
-                    ReflectionUtil.setAccessible(writeObjectM); // method should be private. Hence must be set accessible true.
-                    writeObjectM.invoke(theTarget, sos);
-                } catch (NoSuchMethodException nsmX) {
-                    this.defaultMarshalObject(theTarget, theDef, writer, ctx, sos.level, outerRef);
-                } catch (InvocationTargetException itX) {
-                    throw new IllegalArgumentException(itX);
-                } catch (IllegalAccessException neverThrown) {
-                    // ignored.
-                }
-                sos.level = sos.level.getSuperclass();
-            } while (this.continueProcessFor(sos.level));
-        } catch (IOException neverThrown) {
-            // ignored.
-        }
+        final SerOutputStream outStream = SerOutputStream.tryCreate(theTarget, theDef, writer, ctx, cls, clsOuter);
+        do {// process inheritance:
+            try { // process composition:
+                // check for writeObject():
+                cachedWriteObject(outStream.level)
+                        .invoke(theTarget, outStream);
+            } catch (NoSuchMethodException writeObjectNotFound) {
+                defaultMarshalObject(theTarget, theDef, writer, ctx, outStream.level, clsOuter);
+            } catch (InvocationTargetException writeObjectFailure) {
+                throw new RuntimeException(writeObjectFailure);
+            } catch (IllegalAccessException neverThrown) {
+                // ignored.
+            }
+            outStream.level = outStream.level.getSuperclass();
+        } while (Serializable.class.isAssignableFrom(outStream.level));
         // end object encoding:
         writer.endElement();
     }
 
-    private static Method findHierarchicalDeclaredMethod(Class classHierarchy, String methodName) throws NoSuchMethodException {
-        Class crt = classHierarchy;
-        do {
-            try {
-                return crt.getDeclaredMethod(methodName, ReflectionUtil.METHOD_NO_PARAMS);
-            } catch (NoSuchMethodException e) {
-                crt = crt.getSuperclass();
-            }
-        } while (Serializable.class.isAssignableFrom(crt));
-        throw NO_SUCH_METHOD_EXCEPTION;
-    }
-
-    /**
-     * Marshalling writing root attributes stage. Writes the <code>class</code>
-     * attribute.
-     *
-     * @param target target to extract attribute values from
-     * @param writer to write attributes with
-     * @param ctx    the context
-     */
-    protected void marshalDoAttributes(Serializable target, CompositeAttributeWriter writer, MarshalContext ctx) {
-        final Class c = target.getClass();
-        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasOrNameFor(c));
-    }
-
-    private static void defaultMarshalObject(Serializable target, Serializable defTarget, CompositeWriter writer, MarshalContext ctx, Class level, Field outerRef) {
+    private static void defaultMarshalObject(Object target, Object defTarget, CompositeWriter writer, MarshalContext ctx, Class level, Field outerRef) {
         writer.startElement(ELEMENT_FIELDS);
         for (Field f : level.getDeclaredFields()) { // process composition:
             // process field:
@@ -238,45 +283,39 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                     || Modifier.isTransient(fMod)
                     || (outerRef != null && f.getName().equals(outerRef.getName()))
                     || ctx.excluded(f)) {
-                continue; // skip static, transient, already encoded outer-refed object, or excluded field.
+                continue; // skip static, transient, already encoded outer-ref object, or EasyML excluded field.
             }
             ReflectionUtil.setAccessible(f);
             // process field value:
-            Object attributeValue = null;
-            Object defaultValue = null;
-            if (ctx.skipDefaults() && defTarget != null) { // default target defined:
+            Object fieldValue = null;
+            Object fieldDefaultValue = null;
+            if (ctx.skipDefaults() && defTarget != null) {
                 try {
-                    attributeValue = f.get(target);
-                    defaultValue = f.get(defTarget);
+                    fieldValue = f.get(target);
+                    fieldDefaultValue = f.get(defTarget);
                 } catch (IllegalAccessException neverThrown) {
                     // ignored.
                 }
                 // null-safe equality test:
-                if (attributeValue == null) {
-                    if (defaultValue == null) {
-                        continue; // skip default value.
-                    }
-                } else {
-                    if (attributeValue.equals(defaultValue)) {
-                        continue; // skip default value.
-                    }
+                if (Objects.equals(fieldValue, fieldDefaultValue)) {
+                    continue; // skip default value.
                 }
             } else { // comparison default value undefined:
                 try {
-                    attributeValue = f.get(target);
+                    fieldValue = f.get(target);
                 } catch (IllegalAccessException neverThrown) {
                     // ignored.
                 }
             }
-            // encode non-default attribute value:
+            // encode non-default field value:
             writer.startElement(ctx.aliasOrNameFor(f));
-            if (attributeValue == null) {
+            if (fieldValue == null) {
                 writer.setAttribute(ATTRIBUTE_NIL, Boolean.toString(true));
             } else { // non-null:
                 if (ValueType.is(f.getType())) {
-                    writer.writeValue(attributeValue.toString());
+                    writer.writeValue(fieldValue.toString());
                 } else {
-                    writer.write(attributeValue);
+                    writer.write(fieldValue);
                 }
             }
             writer.endElement();
@@ -289,29 +328,29 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
      */
     @Override
     public Serializable unmarshalNew(CompositeReader reader, UnmarshalContext ctx) throws ClassNotFoundException {
-        final String classAttrVal = reader.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS);
-        final Class cls = ctx.classFor(classAttrVal);
-        if (Serializable.class.isAssignableFrom(cls)) {
-            Object ret;
-            try {
-                if (ReflectionUtil.isInnerClass(cls)) {
-                    if (!reader.next() || !reader.atElementStart() || !reader.elementName().equals(SerializableStrategy.ELEMENT_OUTER)) {
-                        throw new InvalidFormatException(ctx.readerPositionDescriptor(),
-                                "expected element start: " + SerializableStrategy.ELEMENT_OUTER);
-                    }
-                    reader.next(); // consumed start this.outer.
-                    final Object outer = reader.read();
-                    // do not consume this.outer end: let the second step while do it.
-                    ret = ReflectionUtil.instantiateInner(cls, outer);
-                } else {
-                    ret = cls.newInstance();
-                }
-            } catch (ReflectiveOperationException defaultConstructorX) {
-                ret = ReflectionUtil.instantiateUnsafely(cls);
-            }
-            return (Serializable) ret;
+        final String classAttr = reader.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS);
+        final Class cls = ctx.classFor(classAttr);
+        if (!Serializable.class.isAssignableFrom(cls)) {
+            throw new InvalidFormatException(ctx.readerPositionDescriptor(), "class not serializable: " + classAttr);
         }
-        throw new IllegalArgumentException("class not serializable: " + classAttrVal);
+        Object ret;
+        try {
+            if (ReflectionUtil.isInnerClass(cls)) {
+                if (!reader.next() || !reader.atElementStart() || !reader.elementName().equals(SerializableStrategy.ELEMENT_OUTER)) {
+                    throw new InvalidFormatException(ctx.readerPositionDescriptor(),
+                            "expected element start: " + SerializableStrategy.ELEMENT_OUTER);
+                }
+                reader.next(); // consumed start this.outer.
+                final Object outer = reader.read();
+                // do not consume this.outer end: let the second step while do it.
+                ret = ReflectionUtil.instantiateInner(cls, outer);
+            } else {
+                ret = cls.newInstance();
+            }
+        } catch (ReflectiveOperationException noDefaultConstructor) {
+            ret = ReflectionUtil.instantiateUnsafely(cls);
+        }
+        return (Serializable) ret;
     }
 
     /**
@@ -319,38 +358,32 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
      */
     @Override
     public Object unmarshalInit(Serializable target, CompositeReader reader, UnmarshalContext ctx) {
-        // read object attributes: in exactly the same order as they were written:
+        // read object fields: in exactly the same order as they were written:
         if (!reader.next() || !reader.atElementStart()) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(),
                     "expected: start element, found: " + reader.elementName());
         }
         final Class cls = target.getClass();
-        try {
-            final SInputStream sis = new SInputStream(target, reader, ctx, cls);
-            do {
-                try {
-                    // check for readObject():
-                    final Method readObject = sis.level.getDeclaredMethod(METHOD_READOBJECT, PARAMS_OIS);
-                    ReflectionUtil.setAccessible(readObject); // method should be private. Hence must be set accessible true.
-                    readObject.invoke(target, sis);
-                } catch (NoSuchMethodException nsmX) {
-                    this.defaultUnmarshalObject(target, reader, ctx, sis.level, sis);
-                } catch (InvocationTargetException itX) {
-                    throw new IllegalArgumentException(itX);
-                } catch (IllegalAccessException neverThrown) {
-                    // ignored.
-                }
-                sis.level = sis.level.getSuperclass();
-            } while (this.continueProcessFor(sis.level));
-        } catch (IOException neverThrown) {
-            // ignored.
-        }
+        final SerInputStream inStream = SerInputStream.tryCreate(target, reader, ctx, cls);
+        do {
+            try {
+                // check for readObject():
+                cachedReadObject(inStream.level)
+                        .invoke(target, inStream);
+            } catch (NoSuchMethodException readObjectNotFound) {
+                defaultUnmarshalObject(target, reader, ctx, inStream.level, inStream);
+            } catch (InvocationTargetException readObjectFailure) {
+                throw new RuntimeException(readObjectFailure);
+            } catch (IllegalAccessException neverThrown) {
+                // ignored.
+            }
+            inStream.level = inStream.level.getSuperclass();
+        } while (Serializable.class.isAssignableFrom(inStream.level));
         if (reader.atElementEnd() && reader.elementName().equals(this.name())) {
             // check for readResolve():
             try {
-                final Method readResolveM = findHierarchicalDeclaredMethod(cls, METHOD_READRESOLVE);
-                ReflectionUtil.setAccessible(readResolveM); // method may be private. Hence must be set accessible true.
-                final Object resolved = readResolveM.invoke(target);
+                final Object resolved = cachedReadResolve(cls)
+                        .invoke(target);
                 if (resolved == null) {
                     return null;
                 }
@@ -368,8 +401,8 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "missing element end: " + this.name());
     }
 
-    private static void defaultUnmarshalObject(Object instance, CompositeReader reader, UnmarshalContext ctx, Class level, SInputStream inputStream) {
-        if (serializablePersistentFieldsFor(level, ctx) != null) {
+    private static void defaultUnmarshalObject(Object instance, CompositeReader reader, UnmarshalContext ctx, Class level, SerInputStream inputStream) {
+        if (hasSerializablePersistentFields(level)) {
             inputStream.readFields();
             return;
         }
@@ -426,19 +459,14 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
                 "missing element end: " + SerializableStrategy.ELEMENT_FIELDS);
     }
 
-    private static ObjectStreamField[] serializablePersistentFieldsFor(Class cls, UnmarshalContext ctx) {
+    private static boolean hasSerializablePersistentFields(Class cls) {
         try {
             final Field serialPersistentFields = cls.getDeclaredField(FIELD_PERSISTENTFIELDS);
-            if (((serialPersistentFields.getModifiers() & MODIFIERS_PERSISTENTFIELDS) == MODIFIERS_PERSISTENTFIELDS)
-                    && (serialPersistentFields.getType().isArray() && serialPersistentFields.getType().getComponentType() == ObjectStreamField.class)) {
-                ReflectionUtil.setAccessible(serialPersistentFields);
-                return (ObjectStreamField[]) serialPersistentFields.get(null);
-            }
-        } catch (IllegalAccessException inaccessibleSerialPersistentFields) {
-            throw new InvalidFormatException(ctx.readerPositionDescriptor(), inaccessibleSerialPersistentFields);
+            return (serialPersistentFields.getModifiers() & MODIFIERS_PERSISTENTFIELDS) == MODIFIERS_PERSISTENTFIELDS
+                    && serialPersistentFields.getType() == ObjectStreamField[].class;
         } catch (NoSuchFieldException noSerialPersistentFields) {
+            return false;
         }
-        return null;
     }
 
     private static ValueType valueTypeFor(Class declaring, String field) {
@@ -453,18 +481,25 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         return Modifier.isStatic(f.getModifiers()) ? null : ValueType.of(f.getType());
     }
 
-    private final class SOutputStream extends ObjectOutputStream {
+    private static final class SerOutputStream extends ObjectOutputStream {
 
-        private final Serializable target;
-        private final Serializable defs;
+        private final Object target;
+        private final Object defs;
         private final CompositeWriter writer;
         private final MarshalContext context;
         private Class level;
         private final Field outerRef;
         private PutFieldImpl lazyPutFieldImpl;
 
-        public SOutputStream(Serializable target, Serializable defs, CompositeWriter writer, MarshalContext ctx, Class level, Field outerRef)
-                throws IOException {
+        public static SerOutputStream tryCreate(Object target, Object defs, CompositeWriter writer, MarshalContext ctx, Class level, Field outerRef) {
+            try {
+                return new SerOutputStream(target, defs, writer, ctx, level, outerRef);
+            } catch (IOException ioX) {
+                throw new RuntimeException(ioX);
+            }
+        }
+
+        private SerOutputStream(Object target, Object defs, CompositeWriter writer, MarshalContext ctx, Class level, Field outerRef) throws IOException {
             this.target = target;
             this.defs = defs;
             this.writer = writer;
@@ -669,14 +704,22 @@ public class SerializableStrategy extends AbstractStrategy<Serializable>
         }
     }
 
-    private final class SInputStream extends ObjectInputStream {
+    private static final class SerInputStream extends ObjectInputStream {
 
         private Object instance;
         private CompositeReader reader;
         private final UnmarshalContext context;
         private Class level;
 
-        public SInputStream(Object instance, CompositeReader reader, UnmarshalContext ctx, Class level) throws IOException {
+        public static SerInputStream tryCreate(Object instance, CompositeReader reader, UnmarshalContext ctx, Class level) {
+            try {
+                return new SerInputStream(instance, reader, ctx, level);
+            } catch (IOException ioX) {
+                throw new RuntimeException(ioX);
+            }
+        }
+
+        private SerInputStream(Object instance, CompositeReader reader, UnmarshalContext ctx, Class level) throws IOException {
             this.instance = instance;
             this.reader = reader;
             this.context = ctx;

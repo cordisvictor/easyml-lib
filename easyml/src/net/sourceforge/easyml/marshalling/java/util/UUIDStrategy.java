@@ -34,8 +34,7 @@ import java.util.UUID;
  * @version 1.2.2
  * @since 1.0
  */
-public final class UUIDStrategy extends AbstractStrategy<UUID>
-        implements SimpleStrategy<UUID> {
+public final class UUIDStrategy extends AbstractStrategy implements SimpleStrategy<UUID> {
 
     /**
      * Constant defining the value used for the strategy name.

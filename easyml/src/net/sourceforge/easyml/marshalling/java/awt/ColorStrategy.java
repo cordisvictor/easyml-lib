@@ -32,8 +32,7 @@ import java.awt.*;
  * @version 1.2.4
  * @since 1.0
  */
-public final class ColorStrategy extends AbstractStrategy<Color>
-        implements CompositeStrategy<Color> {
+public final class ColorStrategy extends AbstractStrategy implements CompositeStrategy<Color> {
 
     /**
      * Constant defining the value used for the strategy name.

@@ -158,28 +158,6 @@ final class XMLReaderTextDriver extends XMLReader.Driver {
      * {@inheritDoc }
      */
     @Override
-    public String elementRequiredAttribute(String name) {
-        try {
-            if (parser.getEventType() == XmlPullParser.START_TAG) {
-
-                final String value = this.parser.getAttributeValue(null, name);
-                if (value == null) {
-                    throw new InvalidFormatException(this.positionDescriptor(),
-                            "element missing attribute: " + name);
-                }
-                return value;
-            }
-            throw new IllegalStateException("not at element start  at: "
-                    + parser.getLineNumber() + "," + parser.getColumnNumber());
-        } catch (XmlPullParserException xppX) {
-            throw new InvalidFormatException(this.positionDescriptor(), xppX);
-        }
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String readValue() {
         try {
             return parser.nextText();

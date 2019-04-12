@@ -34,8 +34,7 @@ import java.util.Set;
  * @version 1.4.6
  * @since 1.0
  */
-public abstract class MapStrategy<T extends Map> extends AbstractStrategy<T>
-        implements CompositeStrategy<T> {
+public abstract class MapStrategy<T extends Map> extends AbstractStrategy implements CompositeStrategy<T> {
 
     /**
      * Constant defining collection size attribute name.
@@ -65,7 +64,7 @@ public abstract class MapStrategy<T extends Map> extends AbstractStrategy<T>
      * @param target target to be marshalled
      * @param writer to write attributes with
      */
-    protected void marshalAttr(T target, CompositeAttributeWriter writer) {
+    protected void marshalAttr(T target, CompositeWriter writer) {
         writer.setAttribute(ATTRIBUTE_SIZE, Integer.toString(target.size()));
     }
 
@@ -96,8 +95,9 @@ public abstract class MapStrategy<T extends Map> extends AbstractStrategy<T>
         // consume root element:
         reader.next();
         // read entries:
+        final String endElementName = this.name();
         while (true) {
-            if (reader.atElementEnd() && reader.elementName().equals(this.name())) {
+            if (reader.atElementEnd() && reader.elementName().equals(endElementName)) {
                 return target;
             }
             final Object key = reader.read();

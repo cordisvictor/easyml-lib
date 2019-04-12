@@ -20,8 +20,6 @@ package net.sourceforge.easyml;
 
 import net.sourceforge.easyml.marshalling.CompositeStrategy;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
-import net.sourceforge.easyml.marshalling.custom.NodeListStrategy;
-import net.sourceforge.easyml.marshalling.custom.NodeStrategy;
 import org.xmlpull.v1.XmlPullParser;
 
 import java.lang.reflect.Field;
@@ -42,39 +40,28 @@ import java.util.function.Supplier;
  *             .withCustomRootTag("Persons")
  *             .withAlias(Person.class, "Person")
  *             .withAlias(Person.class, "name", "Name")
+ *             .withStrategy(PersonStrategy.INSTANCE)
+ *             .withoutStrategy(CharsStrategy.INSTANCE)
  *             .build();
  * </pre> Not all possible customizations are accessible through this builder.
  * Hence, in some cases, one must use the {@linkplain XMLReader}s and
- * {@linkplain XMLWriter}s directly, for example:
- * <br/>
- * <pre>
- * final XMLWriter w= easyml.newWriter(new FileWriter(FILE_NAME));
- * w.writeInt(1);
- * w.writeInt(2);
- * w.write(obj1);
- * //..
- * w.write(objN);
- * w.close();
- * </pre>
- * <br/>
+ * {@linkplain XMLWriter}s directly.
+ *
  * <b>Note:</b> this builder implementation is <b>not</b> thread-safe
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.0
+ * @version 1.5.1
  * @see EasyML
  * @see XMLReader
  * @see XMLWriter
  * @since 1.4.0
  */
-public final class EasyMLBuilder {
+public final class EasyMLBuilder implements Supplier<EasyML> {
 
-    private EasyML.Profile profile;
     private EasyML.Style style;
     private Supplier<XmlPullParser> xmlPullParserProvider;
     private String dateFormat;
     private String customRootTag;
-    private NodeListStrategy customArrayTag;
-    private NodeStrategy customStringTag;
     private Map<Class, String> classToAlias;
     private Map<Field, String> fieldToAlias;
     private Set<Field> excludedFields;
@@ -83,16 +70,6 @@ public final class EasyMLBuilder {
     private Set<CompositeStrategy> registeredComposite;
     private Set<SimpleStrategy> unregisteredSimple;
     private Set<CompositeStrategy> unregisteredComposite;
-
-    /**
-     * Sets the EasyML profile.
-     *
-     * @param profile to use
-     */
-    public EasyMLBuilder withProfile(EasyML.Profile profile) {
-        this.profile = profile;
-        return this;
-    }
 
     /**
      * Sets the XML outputting style.
@@ -137,27 +114,6 @@ public final class EasyMLBuilder {
      */
     public EasyMLBuilder withCustomRootTag(String customRootTag) {
         this.customRootTag = customRootTag;
-        return this;
-    }
-
-    /**
-     * Sets the given custom XML tag name for arrays.
-     *
-     * @param customArrayTag to be used for arrays
-     * @param arrayType      class of the array to use this custom tag
-     */
-    public EasyMLBuilder withCustomArrayTag(String customArrayTag, Class arrayType) {
-        this.customArrayTag = new NodeListStrategy(customArrayTag, arrayType);
-        return this;
-    }
-
-    /**
-     * Sets the given custom XML tag name for strings.
-     *
-     * @param customStringTag to be used for strings
-     */
-    public EasyMLBuilder withCustomStringTag(String customStringTag) {
-        this.customStringTag = new NodeStrategy(customStringTag);
         return this;
     }
 
@@ -321,13 +277,10 @@ public final class EasyMLBuilder {
         }
         // build:
         return new EasyML(
-                profile,
                 style,
                 xmlPullParserProvider,
                 dateFormat,
                 customRootTag,
-                customArrayTag,
-                customStringTag,
                 classToAlias,
                 fieldToAlias,
                 excludedFields,
@@ -337,5 +290,13 @@ public final class EasyMLBuilder {
                 unregisteredSimple,
                 unregisteredComposite
         );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EasyML get() {
+        return this.build();
     }
 }

@@ -19,15 +19,14 @@
 package net.sourceforge.easyml.marshalling;
 
 /**
- * AbstractStrategy class that implements the {@linkplain Strategy} interface
+ * AbstractStrategy class that implements the {@linkplain Named} interface
  * leaving it abstract, only to implement other behavior characteristics.
  *
- * @param <T> target class
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.0
+ * @version 1.5.1
  * @since 1.0
  */
-public abstract class AbstractStrategy<T> implements Strategy<T> {
+public abstract class AbstractStrategy implements Named {
 
     /**
      * {@inheritDoc }

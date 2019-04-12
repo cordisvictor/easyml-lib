@@ -35,7 +35,7 @@ import java.util.Map;
  * @version 1.4.7
  * @since 1.0.2
  */
-public final class SingletonMapStrategy extends AbstractStrategy<Map> implements CompositeStrategy<Map> {
+public final class SingletonMapStrategy extends AbstractStrategy implements CompositeStrategy<Map> {
 
     /**
      * Constant defining the value used for the strategy name.

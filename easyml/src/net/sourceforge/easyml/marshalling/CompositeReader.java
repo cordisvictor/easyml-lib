@@ -18,15 +18,20 @@
  */
 package net.sourceforge.easyml.marshalling;
 
+import net.sourceforge.easyml.InvalidFormatException;
+
+import java.util.Iterator;
+import java.util.function.*;
+
 /**
  * CompositeReader interface is used by {@linkplain CompositeStrategy} instances
  * to read a composite datatype from XML format.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.2.2
+ * @version 1.5.1
  * @since 1.0
  */
-public interface CompositeReader extends CompositeAttributeReader {
+public interface CompositeReader extends Iterable, Supplier, BooleanSupplier, IntSupplier, LongSupplier, DoubleSupplier {
 
     /**
      * Moves this instance to the next element tag returning true if any, false
@@ -58,6 +63,44 @@ public interface CompositeReader extends CompositeAttributeReader {
      * @return the element name
      */
     String elementName();
+
+    /**
+     * Returns the value of the attribute with the given name of the element
+     * start this instance is at. If the attribute is not found then
+     * <code>null</code> is returned.
+     * <br/>
+     * <b>Note:</b> this reader must be at an element start tag.
+     *
+     * @param name the attribute name
+     * @return the attribute value or null
+     */
+    String elementAttribute(String name);
+
+    /**
+     * Returns the value of the required attribute with the given name of the
+     * element start this instance is at. If the attribute is not found then an
+     * exception is thrown.
+     * <br/>
+     * <b>Note:</b> this reader must be at an element start tag.
+     *
+     * @param name the attribute name
+     * @return the non-null attribute value
+     */
+    default String elementRequiredAttribute(String name) {
+        String attr = elementAttribute(name);
+        if (attr == null) {
+            throw new InvalidFormatException(this.positionDescriptor(), "element missing attribute: " + name);
+        }
+        return attr;
+    }
+
+    /**
+     * Calculates a descriptor detailing the current position inside the XML.
+     * This information should be used as exception message for detailing read exceptions.
+     *
+     * @return the position descriptor
+     */
+    String positionDescriptor();
 
     /**
      * Reads a boolean from XML.
@@ -168,4 +211,73 @@ public interface CompositeReader extends CompositeAttributeReader {
      * @return the read string value
      */
     String readValue();
+
+    /**
+     * Returns an iterator over this reader.
+     */
+    @Override
+    default Iterator iterator() {
+        return new Iterator() {
+
+            @Override
+            public boolean hasNext() {
+                return CompositeReader.this.next();
+            }
+
+            @Override
+            public Object next() {
+                return CompositeReader.this.read();
+            }
+        };
+    }
+
+    /**
+     * Gets an object by reading it.
+     *
+     * @return the read object
+     */
+    @Override
+    default Object get() {
+        return this.read();
+    }
+
+    /**
+     * Gets a boolean by reading it.
+     *
+     * @return the read boolean
+     */
+    @Override
+    default boolean getAsBoolean() {
+        return this.readBoolean();
+    }
+
+    /**
+     * Gets an int by reading it.
+     *
+     * @return the read int
+     */
+    @Override
+    default int getAsInt() {
+        return this.readInt();
+    }
+
+    /**
+     * Gets a long by reading it.
+     *
+     * @return the read long
+     */
+    @Override
+    default long getAsLong() {
+        return this.readLong();
+    }
+
+    /**
+     * Gets a double by reading it.
+     *
+     * @return the read double
+     */
+    @Override
+    default double getAsDouble() {
+        return this.readDouble();
+    }
 }

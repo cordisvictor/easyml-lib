@@ -35,7 +35,7 @@ import java.util.Set;
  * @version 1.4.7
  * @since 1.0.2
  */
-public final class SingletonSetStrategy extends AbstractStrategy<Set> implements CompositeStrategy<Set> {
+public final class SingletonSetStrategy extends AbstractStrategy implements CompositeStrategy<Set> {
 
     /**
      * Constant defining the value used for the strategy name.

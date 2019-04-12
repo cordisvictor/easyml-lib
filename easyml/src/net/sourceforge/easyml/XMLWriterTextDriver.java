@@ -57,40 +57,6 @@ final class XMLWriterTextDriver extends XMLWriter.Driver {
         this.elementStack = new ArrayList<>();
     }
 
-    private void writeIndent() throws IOException {
-        this.writer.write(XML_NEWLINE);
-        int size = XML_INDENTATION_INIT + this.elementStack.size();
-        while (size >= XML_INDENTATION_BUF.length) {
-            this.writer.write(XML_INDENTATION_BUF);
-            size -= XML_INDENTATION_BUF.length;
-        }
-        if (size > 0) {
-            this.writer.write(XML_INDENTATION_BUF, 0, size);
-        }
-    }
-
-    private void writeIndentedLt() throws IOException {
-        if (this.isPrettyPrint()) {
-            this.writeIndent();
-        }
-        this.writer.write('<');
-    }
-
-    private void writeIndentedLtSlash() throws IOException {
-        if (this.isPrettyPrint()) {
-            this.writeIndent();
-        }
-        this.writer.write(XMLWriterTextDriver.XML_FRAGMENT_LT_SLASH);
-    }
-
-    private void writeAttrEqValue(String attr, String value) throws IOException {
-        this.writer.write(' ');
-        this.writer.write(attr);
-        this.writer.write("=\"");
-        this.writer.write(value);
-        this.writer.write('\"');
-    }
-
     /**
      * {@inheritDoc }
      */
@@ -108,15 +74,48 @@ final class XMLWriterTextDriver extends XMLWriter.Driver {
                 writeIndentedLt();
             }
             this.writer.write(name);
-            if (this.hasOneTimeUniqueId()) {
-                writeAttrEqValue(DTD.ATTRIBUTE_ID, this.oneTimeUniqueId());
-            }
+            this.writeOneTimeUniqueId(id -> tryWriteAttrEqValue(DTD.ATTRIBUTE_ID, id));
             // update state:
             this.elementStack.add(name);
             this.state = XMLWriter.Driver.STATE_START;
         } catch (IOException ioX) {
             throw new RuntimeException(ioX);
         }
+    }
+
+    private void writeIndentedLt() throws IOException {
+        if (this.isPrettyPrint()) {
+            this.writeIndent();
+        }
+        this.writer.write('<');
+    }
+
+    private void writeIndent() throws IOException {
+        this.writer.write(XML_NEWLINE);
+        int size = XML_INDENTATION_INIT + this.elementStack.size();
+        while (size >= XML_INDENTATION_BUF.length) {
+            this.writer.write(XML_INDENTATION_BUF);
+            size -= XML_INDENTATION_BUF.length;
+        }
+        if (size > 0) {
+            this.writer.write(XML_INDENTATION_BUF, 0, size);
+        }
+    }
+
+    private void tryWriteAttrEqValue(String attr, String value) {
+        try {
+            writeAttrEqValue(attr, value);
+        } catch (IOException ioX) {
+            throw new RuntimeException(ioX);
+        }
+    }
+
+    private void writeAttrEqValue(String attr, String value) throws IOException {
+        this.writer.write(' ');
+        this.writer.write(attr);
+        this.writer.write("=\"");
+        this.writer.write(value);
+        this.writer.write('\"');
     }
 
     /**
@@ -161,6 +160,13 @@ final class XMLWriterTextDriver extends XMLWriter.Driver {
         } catch (IOException ioX) {
             throw new RuntimeException(ioX);
         }
+    }
+
+    private void writeIndentedLtSlash() throws IOException {
+        if (this.isPrettyPrint()) {
+            this.writeIndent();
+        }
+        this.writer.write(XMLWriterTextDriver.XML_FRAGMENT_LT_SLASH);
     }
 
     /**

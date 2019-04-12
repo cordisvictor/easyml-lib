@@ -18,8 +18,8 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import net.sourceforge.easyml.marshalling.CompositeAttributeWriter;
 import net.sourceforge.easyml.marshalling.CompositeReader;
+import net.sourceforge.easyml.marshalling.CompositeWriter;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
 import java.util.LinkedList;
@@ -66,7 +66,7 @@ public final class LinkedListStrategy extends CollectionStrategy<LinkedList> {
      * Override to prevent the marshalling of the {@linkplain #ATTRIBUTE_SIZE}.
      */
     @Override
-    protected void marshalAttr(LinkedList target, CompositeAttributeWriter writer) {
+    protected void marshalAttr(LinkedList target, CompositeWriter writer) {
     }
 
     /**

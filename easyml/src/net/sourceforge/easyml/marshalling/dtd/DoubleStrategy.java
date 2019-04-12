@@ -33,7 +33,7 @@ import net.sourceforge.easyml.marshalling.SimpleStrategy;
  * @version 1.2.2
  * @since 1.0
  */
-public final class DoubleStrategy extends AbstractStrategy<Double> implements SimpleStrategy<Double> {
+public final class DoubleStrategy extends AbstractStrategy implements SimpleStrategy<Double> {
 
     /**
      * Constant defining the singleton instance.

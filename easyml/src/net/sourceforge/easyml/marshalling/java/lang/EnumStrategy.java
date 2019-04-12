@@ -33,8 +33,7 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * @version 1.3.7
  * @since 1.0
  */
-public final class EnumStrategy extends AbstractStrategy<Enum>
-        implements SimpleStrategy<Enum> {
+public final class EnumStrategy extends AbstractStrategy implements SimpleStrategy<Enum> {
 
     /**
      * Constant defining the value used for the strategy name.

@@ -35,7 +35,7 @@ import java.util.Set;
  * @version 1.4.7
  * @since 1.4.6
  */
-public final class EnumMapStrategy extends AbstractStrategy<EnumMap> implements CompositeStrategy<EnumMap> {
+public final class EnumMapStrategy extends AbstractStrategy implements CompositeStrategy<EnumMap> {
 
     /**
      * Constant defining the value used for the strategy name.

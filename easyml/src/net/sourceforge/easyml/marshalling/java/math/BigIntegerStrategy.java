@@ -35,8 +35,7 @@ import java.math.BigInteger;
  * @version 1.2.2
  * @since 1.0
  */
-public final class BigIntegerStrategy extends AbstractStrategy<BigInteger>
-        implements SimpleStrategy<BigInteger> {
+public final class BigIntegerStrategy extends AbstractStrategy implements SimpleStrategy<BigInteger> {
 
     /**
      * Constant defining the value used for the strategy name.

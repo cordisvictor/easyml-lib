@@ -33,8 +33,7 @@ import java.io.File;
  * @version 1.0
  * @since 1.0
  */
-public final class FileStrategy extends AbstractStrategy<File>
-        implements SimpleStrategy<File> {
+public final class FileStrategy extends AbstractStrategy implements SimpleStrategy<File> {
 
     /**
      * Constant defining the value used for the strategy name.

@@ -32,8 +32,7 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * @version 1.0
  * @since 1.0
  */
-public final class StringBuilderStrategy extends AbstractStrategy<StringBuilder>
-        implements SimpleStrategy<StringBuilder> {
+public final class StringBuilderStrategy extends AbstractStrategy implements SimpleStrategy<StringBuilder> {
 
     /**
      * Constant defining the value used for the strategy name.

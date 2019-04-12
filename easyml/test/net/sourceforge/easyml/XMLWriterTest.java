@@ -147,14 +147,14 @@ public class XMLWriterTest {
         dco.getDefObject().setName("Changed");
 
         final XMLWriter xw = new XMLWriter(this.out);
-        xw.getCompositeStrategies().add(SerializableStrategy.INSTANCE);
+        xw.getCompositeStrategies().add(new SerializableStrategy());
         xw.write(dco);
         xw.flush();
 
         System.out.println(this.out);
 
         final XMLReader xr = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        xr.getCompositeStrategies().put(SerializableStrategy.NAME, SerializableStrategy.INSTANCE);
+        xr.getCompositeStrategies().put(SerializableStrategy.NAME, new SerializableStrategy());
         assertEquals(dco, xr.read());
     }
 

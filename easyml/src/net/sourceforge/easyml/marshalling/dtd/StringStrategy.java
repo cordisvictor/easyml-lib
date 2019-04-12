@@ -32,7 +32,7 @@ import net.sourceforge.easyml.marshalling.SimpleStrategy;
  * @version 1.0
  * @since 1.0
  */
-public final class StringStrategy extends AbstractStrategy<String> implements SimpleStrategy<String> {
+public final class StringStrategy extends AbstractStrategy implements SimpleStrategy<String> {
 
     /**
      * Constant defining the singleton instance.

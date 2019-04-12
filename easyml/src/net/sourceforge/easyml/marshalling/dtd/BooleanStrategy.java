@@ -32,7 +32,7 @@ import net.sourceforge.easyml.marshalling.SimpleStrategy;
  * @version 1.0
  * @since 1.0
  */
-public final class BooleanStrategy extends AbstractStrategy<Boolean> implements SimpleStrategy<Boolean> {
+public final class BooleanStrategy extends AbstractStrategy implements SimpleStrategy<Boolean> {
 
     /**
      * Constant defining the singleton instance.

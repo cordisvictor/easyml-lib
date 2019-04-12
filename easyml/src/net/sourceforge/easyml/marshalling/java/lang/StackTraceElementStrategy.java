@@ -33,8 +33,7 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * @version 1.2.2
  * @since 1.0
  */
-public final class StackTraceElementStrategy extends AbstractStrategy<StackTraceElement>
-        implements SimpleStrategy<StackTraceElement> {
+public final class StackTraceElementStrategy extends AbstractStrategy implements SimpleStrategy<StackTraceElement> {
 
     /**
      * Constant defining the value used for the strategy name.

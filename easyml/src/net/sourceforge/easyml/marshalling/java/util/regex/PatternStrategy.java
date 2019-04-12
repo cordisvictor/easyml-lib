@@ -33,8 +33,7 @@ import java.util.regex.PatternSyntaxException;
  * @version 1.2.4
  * @since 1.0
  */
-public final class PatternStrategy extends AbstractStrategy<Pattern>
-        implements CompositeStrategy<Pattern> {
+public final class PatternStrategy extends AbstractStrategy implements CompositeStrategy<Pattern> {
 
     /**
      * Constant defining the value used for the strategy name.

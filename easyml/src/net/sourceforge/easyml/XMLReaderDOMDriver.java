@@ -174,20 +174,6 @@ final class XMLReaderDOMDriver extends XMLReader.Driver {
      * {@inheritDoc }
      */
     @Override
-    public String elementRequiredAttribute(String name) {
-        if (this.crt == null || this.crtAtEnd) {
-            throw new IllegalStateException("not at element start: " + this.positionDescriptor());
-        }
-        if (this.crt.hasAttribute(name)) {
-            return this.crt.getAttribute(name);
-        }
-        throw new InvalidFormatException(this.positionDescriptor(), "element missing attribute: " + name);
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String readValue() {
         if (this.crt != null && !this.crtAtEnd) {
             final Node fcn = this.crt.getLastChild();

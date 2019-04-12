@@ -32,8 +32,7 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * @version 1.3.7
  * @since 1.0
  */
-public final class ClassStrategy extends AbstractStrategy<Class>
-        implements SimpleStrategy<Class> {
+public final class ClassStrategy extends AbstractStrategy implements SimpleStrategy<Class> {
 
     /**
      * Constant defining the value used for the strategy name.

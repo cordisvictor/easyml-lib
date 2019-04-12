@@ -16,7 +16,7 @@
  * Please contact the author ( cordis.victor@gmail.com ) if you need additional
  * information or have any questions.
  */
-package net.sourceforge.easyml.marshalling.dtd;
+package net.sourceforge.easyml.marshalling;
 
 import net.sourceforge.easyml.EasyML;
 import org.junit.Test;
@@ -27,16 +27,14 @@ import static org.junit.Assert.assertEquals;
  *
  * @author victor
  */
-public class IntStrategyTest {
+public class BooleanStrategyTest {
 
     private final EasyML easyml = new EasyML();
 
     @Test
     public void testMarshalUnmarshal() {
-        final int expected = -1;
+        final String xml = easyml.serialize(true);
 
-        final String xml = easyml.serialize(expected);
-
-        assertEquals(expected, easyml.deserialize(xml));
+        assertEquals(true, easyml.deserialize(xml));
     }
 }

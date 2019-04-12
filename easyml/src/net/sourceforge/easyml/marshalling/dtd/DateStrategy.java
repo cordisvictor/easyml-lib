@@ -37,7 +37,7 @@ import java.util.Date;
  * @version 1.3.5
  * @since 1.0
  */
-public final class DateStrategy extends AbstractStrategy<Date> implements SimpleStrategy<Date> {
+public final class DateStrategy extends AbstractStrategy implements SimpleStrategy<Date> {
 
     /**
      * Constant defining the singleton instance.

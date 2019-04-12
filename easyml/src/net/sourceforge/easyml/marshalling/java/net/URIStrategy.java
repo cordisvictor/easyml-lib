@@ -35,8 +35,7 @@ import java.net.URISyntaxException;
  * @version 1.2.2
  * @since 1.0
  */
-public final class URIStrategy extends AbstractStrategy<URI>
-        implements SimpleStrategy<URI> {
+public final class URIStrategy extends AbstractStrategy implements SimpleStrategy<URI> {
 
     /**
      * Constant defining the value used for the strategy name.

@@ -33,7 +33,7 @@ import java.util.EnumSet;
  * @version 1.4.7
  * @since 1.4.6
  */
-public final class EnumSetStrategy extends AbstractStrategy<EnumSet> implements CompositeStrategy<EnumSet> {
+public final class EnumSetStrategy extends AbstractStrategy implements CompositeStrategy<EnumSet> {
 
     /**
      * Constant defining the value used for the strategy name.

@@ -18,13 +18,16 @@
  */
 package net.sourceforge.easyml;
 
+import net.sourceforge.easyml.marshalling.dtd.IntStrategy;
+import org.junit.Test;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import net.sourceforge.easyml.marshalling.dtd.IntStrategy;
+
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  *

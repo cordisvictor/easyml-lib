@@ -20,6 +20,7 @@ package net.sourceforge.easyml;
 
 import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.marshalling.dtd.*;
+import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.*;
 import net.sourceforge.easyml.util.ReflectionUtil;
 import net.sourceforge.easyml.util.ValueType;
@@ -30,6 +31,10 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
+import java.util.function.IntConsumer;
+import java.util.function.LongConsumer;
 
 /**
  * XMLWriter class is responsible for writing object graphs output streams, the
@@ -55,11 +60,11 @@ import java.util.*;
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.0
+ * @version 1.5.1
  * @see XMLReader
  * @since 1.0
  */
-public class XMLWriter implements Flushable, Closeable {
+public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, LongConsumer, DoubleConsumer {
 
     /**
      * StrategyRegistry class is a {@linkplain Strategy} container used to add,
@@ -336,31 +341,18 @@ public class XMLWriter implements Flushable, Closeable {
             return this.target.prettyPrint;
         }
 
-        /**
-         * Returns <code>true</code> if a one-time only unique id is available,
-         * <code>false</code> otherwise.
-         *
-         * @return true if unique id available, false otherwise
-         */
-        public final boolean hasOneTimeUniqueId() {
-            return this.oneTimeUniqueId != null;
-        }
-
-        /**
-         * Returns and clears the current one-time only unique id, if available,
-         * or returns <code>null</code> if {@linkplain #hasOneTimeUniqueId() }
-         * is false.
-         *
-         * @return one-time only unique or null
-         */
-        public final String oneTimeUniqueId() {
-            final String result = this.oneTimeUniqueId;
-            this.oneTimeUniqueId = null;
-            return result;
-        }
-
         private final void setOneTimeUniqueIdTo(String uniqueId) {
             this.oneTimeUniqueId = uniqueId;
+        }
+
+        /**
+         * Writes the one-time only unique id, if available.
+         */
+        public final void writeOneTimeUniqueId(Consumer<String> uniqueIdWriter) {
+            if (this.oneTimeUniqueId != null) {
+                uniqueIdWriter.accept(this.oneTimeUniqueId);
+                this.oneTimeUniqueId = null;
+            }
         }
 
         /**
@@ -1030,6 +1022,11 @@ public class XMLWriter implements Flushable, Closeable {
      */
     public void clearCache() {
         this.checkNotSharedConfiguration();
+        // clear SerializableStrategy cache if present:
+        final CompositeStrategy serialStrategy = this.compositeStrategies.lookup(SerializableStrategy.TARGET);
+        if (serialStrategy instanceof SerializableStrategy) {
+            ((SerializableStrategy) serialStrategy).clearCache();
+        }
     }
 
     /**
@@ -1047,6 +1044,38 @@ public class XMLWriter implements Flushable, Closeable {
         this.exclusions = null;
         this.compositeStrategies = null;
         this.simpleStrategies = null;
+    }
+
+    /**
+     * Consumes the given object by writing it.
+     */
+    @Override
+    public void accept(Object t) {
+        this.write(t);
+    }
+
+    /**
+     * Consumes the given int by writing it as int.
+     */
+    @Override
+    public void accept(int value) {
+        this.writeInt(value);
+    }
+
+    /**
+     * Consumes the given long by writing it as long.
+     */
+    @Override
+    public void accept(long value) {
+        this.writeLong(value);
+    }
+
+    /**
+     * Consumes the given double by writing it as double.
+     */
+    @Override
+    public void accept(double value) {
+        this.writeDouble(value);
     }
 
     private final class MarshalContextImpl implements MarshalContext {

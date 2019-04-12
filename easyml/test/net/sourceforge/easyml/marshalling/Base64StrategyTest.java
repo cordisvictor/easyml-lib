@@ -16,29 +16,34 @@
  * Please contact the author ( cordis.victor@gmail.com ) if you need additional
  * information or have any questions.
  */
-package net.sourceforge.easyml.marshalling.dtd;
+package net.sourceforge.easyml.marshalling;
 
 import net.sourceforge.easyml.EasyML;
 import org.junit.Test;
 
-import java.util.Date;
+import javax.swing.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- *
  * @author victor
  */
-public class DateStrategyTest {
+public class Base64StrategyTest {
 
     private final EasyML easyml = new EasyML();
 
     @Test
-    public void testMarshalUnmarshal() {
-        final Date expected = new Date();
+    public void testMarshalUnmarshal() throws Exception {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        new ObjectOutputStream(out).writeObject(new JLabel("TXT"));
 
-        final String xml = easyml.serialize(expected);
+        final String xml = easyml.serialize(out.toByteArray());
 
-        assertEquals(expected, easyml.deserialize(xml));
+        final byte[] base64 = (byte[]) easyml.deserialize(xml);
+        assertEquals("TXT", ((JLabel) new ObjectInputStream(new ByteArrayInputStream(base64)).readObject()).getText());
     }
 }

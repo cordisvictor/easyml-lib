@@ -16,25 +16,21 @@
  * Please contact the author ( cordis.victor@gmail.com ) if you need additional
  * information or have any questions.
  */
-package net.sourceforge.easyml.marshalling.dtd;
-
-import net.sourceforge.easyml.EasyML;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+package net.sourceforge.easyml.marshalling;
 
 /**
+ * Named interface defines objects with names.
  *
- * @author victor
+ * @author Victor Cordis ( cordis.victor at gmail.com)
+ * @version 1.5.1
+ * @since 1.5.1
  */
-public class BooleanStrategyTest {
+public interface Named {
 
-    private final EasyML easyml = new EasyML();
-
-    @Test
-    public void testMarshalUnmarshal() {
-        final String xml = easyml.serialize(true);
-
-        assertEquals(true, easyml.deserialize(xml));
-    }
+    /**
+     * Returns the name of this instance.
+     *
+     * @return the non-null and non-empty name
+     */
+    String name();
 }

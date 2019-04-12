@@ -77,7 +77,7 @@ public class BugsTest {
         easyml = new EasyMLBuilder()
                 //.withStyle(EasyML.Style.PRETTY)
                 //.withProfile(EasyML.Profile.GENERIC)
-                .withStrategy(SerializableStrategy.INSTANCE)
+                .withStrategy(new SerializableStrategy())
                 .withoutStrategy(BitSetStrategy.INSTANCE)
                 .build();
 

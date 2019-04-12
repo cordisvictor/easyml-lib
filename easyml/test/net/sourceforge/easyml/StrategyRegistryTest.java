@@ -18,18 +18,15 @@
  */
 package net.sourceforge.easyml;
 
-import java.io.Serializable;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import net.sourceforge.easyml.marshalling.AbstractStrategy;
-import net.sourceforge.easyml.marshalling.CompositeReader;
-import net.sourceforge.easyml.marshalling.CompositeStrategy;
-import net.sourceforge.easyml.marshalling.CompositeWriter;
-import net.sourceforge.easyml.marshalling.MarshalContext;
-import net.sourceforge.easyml.marshalling.UnmarshalContext;
+import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.marshalling.dtd.IntStrategy;
-import static org.junit.Assert.*;
 import org.junit.Test;
+
+import javax.swing.*;
+import java.io.Serializable;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -82,7 +79,7 @@ public class StrategyRegistryTest {
         assertEquals(serial, xw.getCompositeStrategies().lookup(JLabel.class));
     }
 
-    private static class SerlialStrategy extends AbstractStrategy<Serializable> implements CompositeStrategy<Serializable> {
+    private static class SerlialStrategy extends AbstractStrategy implements CompositeStrategy<Serializable> {
 
         @Override
         public boolean strict() {
@@ -120,7 +117,7 @@ public class StrategyRegistryTest {
         }
     }
 
-    private static class JCompStrategy extends AbstractStrategy<JComponent> implements CompositeStrategy<JComponent> {
+    private static class JCompStrategy extends AbstractStrategy implements CompositeStrategy<JComponent> {
 
         @Override
         public boolean strict() {

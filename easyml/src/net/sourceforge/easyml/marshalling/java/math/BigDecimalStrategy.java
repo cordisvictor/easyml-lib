@@ -35,8 +35,7 @@ import java.math.BigDecimal;
  * @version 1.2.2
  * @since 1.0
  */
-public final class BigDecimalStrategy extends AbstractStrategy<BigDecimal>
-        implements SimpleStrategy<BigDecimal> {
+public final class BigDecimalStrategy extends AbstractStrategy implements SimpleStrategy<BigDecimal> {
 
     /**
      * Constant defining the value used for the strategy name.

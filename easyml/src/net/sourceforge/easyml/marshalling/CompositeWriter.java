@@ -18,15 +18,20 @@
  */
 package net.sourceforge.easyml.marshalling;
 
+import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
+import java.util.function.IntConsumer;
+import java.util.function.LongConsumer;
+
 /**
  * CompositeWriter interface is used by {@linkplain CompositeStrategy} instances
  * to write composite datatypes into XML.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.5
+ * @version 1.5.1
  * @since 1.0
  */
-public interface CompositeWriter extends CompositeAttributeWriter {
+public interface CompositeWriter extends Consumer, IntConsumer, LongConsumer, DoubleConsumer {
 
     /**
      * Writes the start of an element with the given name.
@@ -49,6 +54,17 @@ public interface CompositeWriter extends CompositeAttributeWriter {
      * invocations.
      */
     void endElement();
+
+    /**
+     * Writes an attribute-equals-value pair to the current start tag attribute
+     * list.
+     * <br/>
+     * <b>Note:</b> this writer must be at an element start tag.
+     *
+     * @param attribute the attribute name
+     * @param value     the attribute value
+     */
+    void setAttribute(String attribute, String value);
 
     /**
      * Writes the given boolean in XML format.
@@ -139,4 +155,36 @@ public interface CompositeWriter extends CompositeAttributeWriter {
      * @throws IllegalArgumentException if value is null
      */
     void writeValue(String value);
+
+    /**
+     * Consumes the given object by writing it.
+     */
+    @Override
+    default void accept(Object t) {
+        this.write(t);
+    }
+
+    /**
+     * Consumes the given int by writing it as int.
+     */
+    @Override
+    default void accept(int value) {
+        this.writeInt(value);
+    }
+
+    /**
+     * Consumes the given long by writing it as long.
+     */
+    @Override
+    default void accept(long value) {
+        this.writeLong(value);
+    }
+
+    /**
+     * Consumes the given double by writing it as double.
+     */
+    @Override
+    default void accept(double value) {
+        this.writeDouble(value);
+    }
 }

@@ -46,10 +46,10 @@ import java.util.Arrays;
  * <br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.3
+ * @version 1.5.1
  * @since 1.4.4
  */
-public class ExternalizableStrategy extends AbstractStrategy<Externalizable> implements CompositeStrategy<Externalizable> {
+public final class ExternalizableStrategy extends AbstractStrategy implements CompositeStrategy<Externalizable> {
 
     /**
      * Constant defining the value used for the strategy name.
@@ -62,7 +62,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
     private static final String METHOD_WRITEREPLACE = "writeReplace";
     private static final String METHOD_READRESOLVE = "readResolve";
 
-    protected ExternalizableStrategy() {
+    private ExternalizableStrategy() {
     }
 
     /**
@@ -98,19 +98,6 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
     }
 
     /**
-     * Marshalling writing root attributes stage. Writes the <code>class</code>
-     * attribute.
-     *
-     * @param target target to extract attribute values from
-     * @param writer to write attributes with
-     * @param ctx    the context
-     */
-    protected void marshalDoAttributes(Externalizable target, CompositeAttributeWriter writer, MarshalContext ctx) {
-        final Class c = target.getClass();
-        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasOrNameFor(c));
-    }
-
-    /**
      * {@inheritDoc }
      */
     @Override
@@ -140,10 +127,10 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
         }
         // begin object encoding:
         writer.startElement(this.name());
-        this.marshalDoAttributes(theTarget, writer, ctx);
+        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasOrNameFor(theTarget.getClass()));
         // process composition:
         try {
-            theTarget.writeExternal(new EOutputStream(writer));
+            theTarget.writeExternal(new ExtOutputStream(writer));
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -155,8 +142,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
      * {@inheritDoc }
      */
     @Override
-    public Externalizable unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Externalizable unmarshalNew(CompositeReader reader, UnmarshalContext ctx) throws ClassNotFoundException {
         final String classAttrVal = reader.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS);
         final Class cls = ctx.classFor(classAttrVal);
         if (Externalizable.class.isAssignableFrom(cls)) {
@@ -181,7 +167,7 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
         }
         final Class cls = target.getClass();
         try {
-            target.readExternal(new EInputStream(reader));
+            target.readExternal(new ExtInputStream(reader));
         } catch (ClassNotFoundException | IOException ex) {
             throw new IllegalArgumentException(ex);
         }
@@ -208,11 +194,11 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "missing element end: " + this.name());
     }
 
-    private final class EOutputStream implements ObjectOutput {
+    private static final class ExtOutputStream implements ObjectOutput {
 
         private final CompositeWriter writer;
 
-        public EOutputStream(CompositeWriter writer) {
+        public ExtOutputStream(CompositeWriter writer) {
             this.writer = writer;
         }
 
@@ -304,11 +290,11 @@ public class ExternalizableStrategy extends AbstractStrategy<Externalizable> imp
         }
     }
 
-    private final class EInputStream implements ObjectInput {
+    private static final class ExtInputStream implements ObjectInput {
 
         private final CompositeReader reader;
 
-        public EInputStream(CompositeReader reader) {
+        public ExtInputStream(CompositeReader reader) {
             this.reader = reader;
         }
 

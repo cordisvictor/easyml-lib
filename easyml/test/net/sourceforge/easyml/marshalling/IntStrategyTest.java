@@ -18,24 +18,25 @@
  */
 package net.sourceforge.easyml.marshalling;
 
-/**
- * CompositeAttributeWriter interface is used by {@linkplain CompositeStrategy}
- * instances to write composite datatype XML attributes.
- *
- * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.0
- * @since 1.0
- */
-public interface CompositeAttributeWriter {
+import net.sourceforge.easyml.EasyML;
+import org.junit.Test;
 
-    /**
-     * Writes an attribute-equals-value pair to the current start tag attribute
-     * list.
-     * <br/>
-     * <b>Note:</b> this writer must be at an element start tag.
-     *
-     * @param attribute the attribute name
-     * @param value     the attribute value
-     */
-    void setAttribute(String attribute, String value);
+import static org.junit.Assert.assertEquals;
+
+/**
+ *
+ * @author victor
+ */
+public class IntStrategyTest {
+
+    private final EasyML easyml = new EasyML();
+
+    @Test
+    public void testMarshalUnmarshal() {
+        final int expected = -1;
+
+        final String xml = easyml.serialize(expected);
+
+        assertEquals(expected, easyml.deserialize(xml));
+    }
 }

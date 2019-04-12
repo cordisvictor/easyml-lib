@@ -35,8 +35,7 @@ import java.net.URL;
  * @version 1.2.2
  * @since 1.0
  */
-public final class URLStrategy extends AbstractStrategy<URL>
-        implements SimpleStrategy<URL> {
+public final class URLStrategy extends AbstractStrategy implements SimpleStrategy<URL> {
 
     /**
      * Constant defining the value used for the strategy name.

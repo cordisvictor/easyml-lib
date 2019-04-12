@@ -32,8 +32,7 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * @version 1.2.2
  * @since 1.0
  */
-public final class FloatStrategy extends AbstractStrategy<Float>
-        implements SimpleStrategy<Float> {
+public final class FloatStrategy extends AbstractStrategy implements SimpleStrategy<Float> {
 
     /**
      * Constant defining the value used for the strategy name.

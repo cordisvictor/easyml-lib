@@ -19,14 +19,14 @@
 package net.sourceforge.easyml.marshalling;
 
 /**
- * Strategy interface used to marshal a data type to EasyML and back again.
+ * Strategy interface is a {@linkplain Named} object used to marshal a data type to EasyML and back again.
  *
  * @param <T> target class
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.0
+ * @version 1.5.1
  * @since 1.0
  */
-public interface Strategy<T> {
+public interface Strategy<T> extends Named {
 
     /**
      * Returns true if this instance applies strictly to one
@@ -55,13 +55,4 @@ public interface Strategy<T> {
      * @return true if can be marshalled and un-marshalled using this strategy
      */
     boolean appliesTo(Class<T> c);
-
-    /**
-     * Returns the name of this instance which will be written and used at
-     * reading. <b>Note:</b> the name must be a valid XML element name and
-     * should not be in conflict with a DTD-defined element.
-     *
-     * @return the non-null and non-empty name
-     */
-    String name();
 }

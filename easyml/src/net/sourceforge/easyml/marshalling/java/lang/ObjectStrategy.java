@@ -26,6 +26,7 @@ import net.sourceforge.easyml.util.ValueType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Objects;
 
 /**
  * ObjectStrategy class that implements the {@linkplain CompositeStrategy}
@@ -45,12 +46,10 @@ import java.lang.reflect.Modifier;
  * <br/>This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.8
+ * @version 1.5.1
  * @since 1.0
  */
-public class ObjectStrategy extends AbstractStrategy
-        implements CompositeStrategy {
-
+public final class ObjectStrategy extends AbstractStrategy implements CompositeStrategy {
     /**
      * Constant defining the value used for the strategy name.
      */
@@ -63,7 +62,7 @@ public class ObjectStrategy extends AbstractStrategy
     private static final String ELEMENT_SUPER = "this.sup";
     private static final String ATTRIBUTE_NIL = "nil";
 
-    protected ObjectStrategy() {
+    private ObjectStrategy() {
     }
 
     /**
@@ -99,40 +98,15 @@ public class ObjectStrategy extends AbstractStrategy
     }
 
     /**
-     * Returns true if the given inheritance <code>level</code> will be included
-     * in the processing (marshalling or unmarshalling), false if processing
-     * will end at the given level.
-     *
-     * @param level the inheritance level
-     * @return true if continue, false otherwise
-     */
-    protected boolean continueProcessFor(Class level) {
-        return level != Object.class;
-    }
-
-    /**
-     * Marshalling writing root attributes stage. Writes the <code>class</code>
-     * attribute.
-     *
-     * @param target target to extract attribute values from
-     * @param writer to write attributes with
-     * @param ctx    the context
-     */
-    protected void marshalDoAttributes(Object target, CompositeAttributeWriter writer, MarshalContext ctx) {
-        final Class c = target.getClass();
-        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasOrNameFor(c));
-    }
-
-    /**
      * {@inheritDoc }
      */
     @Override
     public void marshal(Object target, CompositeWriter writer, MarshalContext ctx) {
         // begin object encoding: class
-        writer.startElement(this.name());
-        this.marshalDoAttributes(target, writer, ctx);
-        // begin object encoding: if non-static inner class then write outer instance:
         Class cls = target.getClass();
+        writer.startElement(this.name());
+        writer.setAttribute(DTD.ATTRIBUTE_CLASS, ctx.aliasOrNameFor(cls));
+        // if inner class then write outer instance:
         final Field outerRef = ReflectionUtil.outerRefField(cls);
         Object defTarget = null;
         Object outer = null;
@@ -157,7 +131,7 @@ public class ObjectStrategy extends AbstractStrategy
         }
         // process inheritance:
         boolean notFirst = false;
-        while (this.continueProcessFor(cls)) {
+        while (cls != Object.class) {
             if (notFirst) {
                 writer.startElement(ELEMENT_SUPER);
                 writer.endElement();
@@ -169,45 +143,39 @@ public class ObjectStrategy extends AbstractStrategy
                 if (Modifier.isStatic(f.getModifiers())
                         || (outerRef != null && f.getName().equals(outerRef.getName()))
                         || ctx.excluded(f)) {
-                    continue; // skip static, already encoded outer-refed object, or excluded field.
+                    continue; // skip static, already encoded outer-ref object, or excluded field.
                 }
                 ReflectionUtil.setAccessible(f);
                 // process field value:
-                Object attributeValue = null;
-                Object defaultValue = null;
+                Object fieldValue = null;
+                Object fieldDefaultValue = null;
                 if (skipDefaults && defTarget != null) { // default defined:
                     try {
-                        attributeValue = f.get(target);
-                        defaultValue = f.get(defTarget);
+                        fieldValue = f.get(target);
+                        fieldDefaultValue = f.get(defTarget);
                     } catch (IllegalAccessException neverThrown) {
                         // ignored.
                     }
                     // null-safe equality test:
-                    if (attributeValue == null) {
-                        if (defaultValue == null) {
-                            continue; // skip default value.
-                        }
-                    } else {
-                        if (attributeValue.equals(defaultValue)) {
-                            continue; // skip default value.
-                        }
+                    if (Objects.equals(fieldValue, fieldDefaultValue)) {
+                        continue; // skip default value.
                     }
                 } else { // default not defined:
                     try {
-                        attributeValue = f.get(target);
+                        fieldValue = f.get(target);
                     } catch (IllegalAccessException neverThrown) {
                         // ignored.
                     }
                 }
                 // write non-default attribute value:
                 writer.startElement(ctx.aliasOrNameFor(f));
-                if (attributeValue == null) {
+                if (fieldValue == null) {
                     writer.setAttribute(ATTRIBUTE_NIL, Boolean.toString(true));
                 } else { // non-null:
                     if (ValueType.is(f.getType())) {
-                        writer.writeValue(attributeValue.toString());
+                        writer.writeValue(fieldValue.toString());
                     } else {
-                        writer.write(attributeValue);
+                        writer.write(fieldValue);
                     }
                 }
                 writer.endElement();
@@ -222,8 +190,7 @@ public class ObjectStrategy extends AbstractStrategy
      * {@inheritDoc }
      */
     @Override
-    public Object unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public Object unmarshalNew(CompositeReader reader, UnmarshalContext ctx) throws ClassNotFoundException {
         final Class cls = ctx.classFor(reader.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS));
         Object ret;
         try {
@@ -249,8 +216,7 @@ public class ObjectStrategy extends AbstractStrategy
      * {@inheritDoc }
      */
     @Override
-    public Object unmarshalInit(Object target, CompositeReader reader, UnmarshalContext ctx)
-            throws IllegalAccessException {
+    public Object unmarshalInit(Object target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
         // read object fields: in exactly the same order as they were written:
         Class cls = target.getClass();
         while (reader.next()) {
@@ -261,7 +227,7 @@ public class ObjectStrategy extends AbstractStrategy
                 } else {
                     // field: search the class for it:
                     final String localPartName = reader.elementName();
-                    Field f = null;
+                    Field f;
                     try {
                         f = ctx.fieldFor(cls, localPartName);
                     } catch (NoSuchFieldException invalidFieldName) {

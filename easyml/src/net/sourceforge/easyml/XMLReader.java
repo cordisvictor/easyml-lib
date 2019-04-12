@@ -23,6 +23,7 @@ import net.sourceforge.easyml.marshalling.CompositeStrategy;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 import net.sourceforge.easyml.marshalling.dtd.*;
+import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.*;
 import net.sourceforge.easyml.util.ReflectionUtil;
 import net.sourceforge.easyml.util.ValueType;
@@ -38,6 +39,9 @@ import java.lang.reflect.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * XMLReader class is responsible for reading XML written by the
@@ -55,18 +59,18 @@ import java.util.*;
  * int i3 = r.readInt();
  * int i2 = r.readInt();
  * int i1 = r.readInt();
- * String easy =(String) r.read();
+ * String easy = r.readString();
  * r.close();
  * </pre>
  * <b>Note:</b> this implementation is NOT thread-safe, but instances with
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.0
+ * @version 1.5.1
  * @see XMLWriter
  * @since 1.0
  */
-public class XMLReader implements Closeable {
+public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier, IntSupplier, LongSupplier, DoubleSupplier {
 
     /**
      * SecurityPolicy class is a {@linkplain Class} container used, for security
@@ -263,15 +267,6 @@ public class XMLReader implements Closeable {
         }
 
         /**
-         * Calculates a descriptor detailing the current driver position inside
-         * the XML. This information should be used as exception message for
-         * detailing read exceptions.
-         *
-         * @return the position descriptor
-         */
-        public abstract String positionDescriptor();
-
-        /**
          * {@inheritDoc }
          */
         @Override
@@ -457,13 +452,13 @@ public class XMLReader implements Closeable {
         this.init(new HashMap<>());
     }
 
-    private void init(Map<String, Object> aliasFieldCache) {
+    private void init(Map<String, Object> aliasReflectCache) {
         this.beforeRoot = true;
         this.rootTag = DTD.ELEMENT_EASYML;
         this.decoded = new HashMap<>();
         this.sharedConfiguration = false;
         this.context = new UnmarshalContextImpl();
-        this.cachedAliasingReflection = aliasFieldCache;
+        this.cachedAliasingReflection = aliasReflectCache;
         this.simpleStrategies = new StrategyHashMap<>();
         this.compositeStrategies = new StrategyHashMap<>();
         this.dateFormat = new SimpleDateFormat(DTD.FORMAT_DATE);
@@ -850,7 +845,7 @@ public class XMLReader implements Closeable {
         try {
             final Object ret = this.read0(componentType);
             return ret;
-        } catch (IllegalClassException ex) {
+        } catch (IllegalClassException | InvalidFormatException ex) {
             this.driver.consumeFully();
             throw ex;
         } finally {
@@ -1098,22 +1093,32 @@ public class XMLReader implements Closeable {
         final Iterator<Map.Entry<String, Object>> iter = this.cachedAliasingReflection.entrySet().iterator();
         while (iter.hasNext()) {
             final Map.Entry<String, Object> crt = iter.next();
-            final Object crtVal = crt.getValue();
-            if (crtVal.getClass() == Field.class) {
-                if (fieldNameFrom(crt.getKey())
-                        .equals(((Field) crtVal).getName())) {
-                    iter.remove(); // removed non-alias entry.
-                }
-            } else if (crtVal.getClass() == Class.class) {
-                if (crt.getKey().equals(((Class) crtVal).getName())) {
-                    iter.remove(); // removed non-alias entry.
-                }
+            String key = crt.getKey();
+            Object val = crt.getValue();
+            String name;
+            if (val.getClass() == Field.class) {
+                key = fieldNameFrom(key);
+                name = ((Field) val).getName();
+            } else {
+                name = ((Class) val).getName();
             }
+            if (isCacheEntry(key, name)) {
+                iter.remove(); // removed non-alias entry.
+            }
+        }
+        // clear SerializableStrategy cache if present:
+        final CompositeStrategy serialStrategy = this.compositeStrategies.get(SerializableStrategy.NAME);
+        if (serialStrategy instanceof SerializableStrategy) {
+            ((SerializableStrategy) serialStrategy).clearCache();
         }
     }
 
     private static String fieldNameFrom(String fieldFQN) {
         return fieldFQN.substring(fieldFQN.indexOf(FIELD_FQN_SEPARATOR) + 1);
+    }
+
+    private static boolean isCacheEntry(String key, String name) {
+        return key.equals(name);
     }
 
     /**
@@ -1130,6 +1135,104 @@ public class XMLReader implements Closeable {
         this.compositeStrategies = null;
         this.simpleStrategies = null;
         this.securityPolicy = null;
+    }
+
+    /**
+     * Returns an iterator over this reader.
+     *
+     * @return a lazy iterator
+     */
+    @Override
+    public Iterator iterator() {
+        return new Iterator() {
+
+            @Override
+            public boolean hasNext() {
+                return hasMore();
+            }
+
+            @Override
+            public Object next() {
+                return read();
+            }
+        };
+    }
+
+    /**
+     * Returns a stream of over this reader.
+     * <b>Note:</b> after execution of the terminal stream operation there are no
+     * guarantees that the underlying reader will be at a specific
+     * position from which to read the next object.
+     *
+     * @return a lazy stream of objects
+     */
+    public Stream stream() {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED), false);
+    }
+
+    /**
+     * Returns a typed stream of over this reader.
+     * The stream will only contain the objects of the given <code>streamElements</code>
+     * type, including nulls.
+     * <b>Note:</b> after execution of the terminal stream operation there are no
+     * guarantees that the underlying reader will be at a specific
+     * position from which to read the next object.
+     *
+     * @return a lazy typed stream of objects
+     */
+    public <T> Stream<T> stream(Class<T> streamElements) {
+        return stream()
+                .filter(o -> o == null || streamElements.isAssignableFrom(o.getClass()));
+    }
+
+    /**
+     * Gets an object by reading it.
+     *
+     * @return the read object
+     */
+    @Override
+    public Object get() {
+        return this.read();
+    }
+
+    /**
+     * Gets a boolean by reading it.
+     *
+     * @return the read boolean
+     */
+    @Override
+    public boolean getAsBoolean() {
+        return this.readBoolean();
+    }
+
+    /**
+     * Gets an int by reading it.
+     *
+     * @return the read int
+     */
+    @Override
+    public int getAsInt() {
+        return this.readInt();
+    }
+
+    /**
+     * Gets a long by reading it.
+     *
+     * @return the read long
+     */
+    @Override
+    public long getAsLong() {
+        return this.readLong();
+    }
+
+    /**
+     * Gets a double by reading it.
+     *
+     * @return the read double
+     */
+    @Override
+    public double getAsDouble() {
+        return this.readDouble();
     }
 
     private final class UnmarshalContextImpl implements UnmarshalContext {
@@ -1160,11 +1263,6 @@ public class XMLReader implements Closeable {
         }
 
         @Override
-        public String readerPositionDescriptor() {
-            return driver.positionDescriptor();
-        }
-
-        @Override
         public Date parseDate(String date) throws ParseException {
             return dateFormat.parse(date);
         }
@@ -1172,6 +1270,11 @@ public class XMLReader implements Closeable {
         @Override
         public String rootTag() {
             return rootTag;
+        }
+
+        @Override
+        public String readerPositionDescriptor() {
+            return driver.positionDescriptor();
         }
     }
 }

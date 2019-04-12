@@ -36,8 +36,7 @@ import java.util.Properties;
  * @version 1.4.7
  * @since 1.0
  */
-public final class PropertiesStrategy extends AbstractStrategy<Properties>
-        implements CompositeStrategy<Properties> {
+public final class PropertiesStrategy extends AbstractStrategy implements CompositeStrategy<Properties> {
 
     /**
      * Constant defining the value used for the strategy name.

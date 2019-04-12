@@ -32,8 +32,7 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * @version 1.0
  * @since 1.0
  */
-public final class StringBufferStrategy extends AbstractStrategy<StringBuffer>
-        implements SimpleStrategy<StringBuffer> {
+public final class StringBufferStrategy extends AbstractStrategy implements SimpleStrategy<StringBuffer> {
 
     /**
      * Constant defining the value used for the strategy name.

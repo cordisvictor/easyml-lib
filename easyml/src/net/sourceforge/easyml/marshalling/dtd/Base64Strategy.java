@@ -34,7 +34,7 @@ import net.sourceforge.migbase64.util.Base64;
  * @version 1.0
  * @since 1.0
  */
-public final class Base64Strategy extends AbstractStrategy<byte[]> implements SimpleStrategy<byte[]> {
+public final class Base64Strategy extends AbstractStrategy implements SimpleStrategy<byte[]> {
 
     /**
      * Constant defining the singleton instance.

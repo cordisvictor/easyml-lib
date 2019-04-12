@@ -32,7 +32,7 @@ import java.util.BitSet;
  * @version 1.4.3
  * @since 1.4.3
  */
-public final class BitSetStrategy extends AbstractStrategy<BitSet> implements CompositeStrategy<BitSet> {
+public final class BitSetStrategy extends AbstractStrategy implements CompositeStrategy<BitSet> {
 
     /**
      * Constant defining the value used for the strategy name.

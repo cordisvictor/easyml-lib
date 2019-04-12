@@ -18,17 +18,19 @@
  */
 package net.sourceforge.easyml;
 
+import net.sourceforge.easyml.marshalling.dtd.StringStrategy;
+import net.sourceforge.easyml.testmodel.AbstractDTO;
+import net.sourceforge.easyml.testmodel.PersonDTO;
+import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import net.sourceforge.easyml.marshalling.dtd.StringStrategy;
-import net.sourceforge.easyml.testmodel.AbstractDTO;
-import net.sourceforge.easyml.testmodel.PersonDTO;
-
-import static org.junit.Assert.*;
-
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author victor
@@ -107,5 +109,39 @@ public class EasyMLTest {
                 .withSecurityPolicy(true, new Class[]{Integer.class}, new Class[]{Number[].class})
                 .build();
         easyml.deserialize(easyml.serialize(new Number[]{1, 2.1, 2}));
+    }
+
+    @Test(expected = InvalidFormatException.class)
+    public void testContinuousIOStreamWriteRead() {
+        ByteArrayOutputStream continuousIO = new ByteArrayOutputStream();
+
+        easyml = new EasyMLBuilder()
+                .build();
+        XMLWriter writer = easyml.newWriter(continuousIO);
+        writer.write("unu");
+        writer.write("doi");
+        writer.write("trei");
+        writer.flush();
+        writer.writeInt(1);
+        writer.writeInt(2);
+        writer.writeInt(3);
+        writer.close();
+
+        System.out.println(continuousIO);
+
+        XMLReader reader = easyml.newReader(new ByteArrayInputStream(continuousIO.toByteArray()));
+
+        assertEquals("unu", reader.read());
+        assertEquals("doi", reader.read());
+        assertEquals("trei", reader.read());
+        assertEquals(1, reader.readInt());
+        assertEquals(2, reader.readInt());
+        assertEquals(3, reader.readInt());
+
+        try {
+            reader.read();
+        } finally {
+            reader.close();
+        }
     }
 }

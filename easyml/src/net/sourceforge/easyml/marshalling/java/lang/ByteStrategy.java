@@ -32,8 +32,7 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * @version 1.2.2
  * @since 1.0
  */
-public final class ByteStrategy extends AbstractStrategy<Byte>
-        implements SimpleStrategy<Byte> {
+public final class ByteStrategy extends AbstractStrategy implements SimpleStrategy<Byte> {
 
     /**
      * Constant defining the value used for the strategy name.

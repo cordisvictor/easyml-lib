@@ -18,20 +18,17 @@
  */
 package net.sourceforge.easyml;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import org.junit.Test;
+import org.w3c.dom.Document;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.*;
+
 import static org.junit.Assert.*;
-import org.junit.Test;
-import org.w3c.dom.Document;
 
 /**
  *
@@ -109,14 +106,14 @@ public class SecurityPolicyTest {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         final XMLWriter w = new XMLWriter(out);
-        EasyML.Profile.SPECIFIC.configure(w);
+        EasyML.defaultConfiguration(w);
         w.write(1);
         w.write(2.1);
         w.write(3);
         w.close();
 
         final XMLReader r = new XMLReader(new ByteArrayInputStream(out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(r);
+        EasyML.defaultConfiguration(r);
         r.getSecurityPolicy().setWhitelistMode();
         r.getSecurityPolicy().add(Integer.class);
         assertEquals(1, r.read());
@@ -135,14 +132,14 @@ public class SecurityPolicyTest {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         final XMLWriter w = new XMLWriter(out);
-        EasyML.Profile.SPECIFIC.configure(w);
+        EasyML.defaultConfiguration(w);
         w.write(1);
         w.write(3);
         w.write(2.1);
         w.close();
 
         final XMLReader r = new XMLReader(new ByteArrayInputStream(out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(r);
+        EasyML.defaultConfiguration(r);
         r.getSecurityPolicy().setWhitelistMode();
         r.getSecurityPolicy().add(Integer.class);
         assertEquals(1, r.read());
@@ -162,14 +159,14 @@ public class SecurityPolicyTest {
         Document dom = dBuilder.newDocument();
 
         final XMLWriter w = new XMLWriter(dom);
-        EasyML.Profile.SPECIFIC.configure(w);
+        EasyML.defaultConfiguration(w);
         w.write(1);
         w.write(2.1);
         w.write(3);
         w.close();
 
         final XMLReader r = new XMLReader(dom);
-        EasyML.Profile.SPECIFIC.configure(r);
+        EasyML.defaultConfiguration(r);
         r.getSecurityPolicy().setWhitelistMode();
         r.getSecurityPolicy().add(Integer.class);
         assertEquals(1, r.read());
@@ -190,14 +187,14 @@ public class SecurityPolicyTest {
         Document dom = dBuilder.newDocument();
 
         final XMLWriter w = new XMLWriter(dom);
-        EasyML.Profile.SPECIFIC.configure(w);
+        EasyML.defaultConfiguration(w);
         w.write(1);
         w.write(3);
         w.write(2.1);
         w.close();
 
         final XMLReader r = new XMLReader(dom);
-        EasyML.Profile.SPECIFIC.configure(r);
+        EasyML.defaultConfiguration(r);
         r.getSecurityPolicy().setWhitelistMode();
         r.getSecurityPolicy().add(Integer.class);
         assertEquals(1, r.read());
@@ -215,14 +212,14 @@ public class SecurityPolicyTest {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         final XMLWriter w = new XMLWriter(out);
-        EasyML.Profile.SPECIFIC.configure(w);
+        EasyML.defaultConfiguration(w);
         w.write(1);
         w.write(2.1);
         w.write(3);
         w.close();
 
         final XMLReader r = new XMLReader(new ByteArrayInputStream(out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(r);
+        EasyML.defaultConfiguration(r);
         r.getSecurityPolicy().setBlacklistMode();
         r.getSecurityPolicy().add(Double.class);
 
@@ -243,14 +240,14 @@ public class SecurityPolicyTest {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         final XMLWriter w = new XMLWriter(out);
-        EasyML.Profile.SPECIFIC.configure(w);
+        EasyML.defaultConfiguration(w);
         w.writeInt(1);
         w.write(new SecurityPolicyTest());
         w.writeInt(3);
         w.close();
 
         final XMLReader r = new XMLReader(new ByteArrayInputStream(out.toByteArray()));
-        EasyML.Profile.SPECIFIC.configure(r);
+        EasyML.defaultConfiguration(r);
         r.getSecurityPolicy().setBlacklistMode();
         r.getSecurityPolicy().add(SecurityPolicyTest.class);
 

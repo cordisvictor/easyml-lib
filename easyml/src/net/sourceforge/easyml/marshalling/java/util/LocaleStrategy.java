@@ -35,8 +35,7 @@ import java.util.Locale;
  * @version 1.3.3
  * @since 1.0
  */
-public final class LocaleStrategy extends AbstractStrategy<Locale>
-        implements SimpleStrategy<Locale> {
+public final class LocaleStrategy extends AbstractStrategy implements SimpleStrategy<Locale> {
 
     /**
      * Constant defining the value used for the strategy name.

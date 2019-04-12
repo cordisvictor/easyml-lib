@@ -20,8 +20,6 @@ package net.sourceforge.easyml;
 
 import net.sourceforge.easyml.marshalling.CompositeStrategy;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
-import net.sourceforge.easyml.marshalling.custom.NodeListStrategy;
-import net.sourceforge.easyml.marshalling.custom.NodeStrategy;
 import net.sourceforge.easyml.marshalling.java.awt.ColorStrategy;
 import net.sourceforge.easyml.marshalling.java.io.ExternalizableStrategy;
 import net.sourceforge.easyml.marshalling.java.io.FileStrategy;
@@ -31,6 +29,7 @@ import net.sourceforge.easyml.marshalling.java.math.BigDecimalStrategy;
 import net.sourceforge.easyml.marshalling.java.math.BigIntegerStrategy;
 import net.sourceforge.easyml.marshalling.java.net.URIStrategy;
 import net.sourceforge.easyml.marshalling.java.net.URLStrategy;
+import net.sourceforge.easyml.marshalling.java.time.*;
 import net.sourceforge.easyml.marshalling.java.util.*;
 import net.sourceforge.easyml.marshalling.java.util.concurrent.ConcurrentHashMapStrategy;
 import net.sourceforge.easyml.marshalling.java.util.regex.PatternStrategy;
@@ -81,7 +80,7 @@ import java.util.function.Supplier;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.0
+ * @version 1.5.1
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -152,243 +151,6 @@ public final class EasyML {
     }
 
     /**
-     * Profile enum defines standard configuration profiles for the EasyML
-     * extension for the Java programming language. These configurations consist
-     * of strategy usage and aliasing. <br/> The user can choose between
-     * applying one of the standard profiles, altering the applied profile, or
-     * manually configuring {@linkplain XMLReader}, {@linkplain XMLWriter}
-     * instances from scratch.
-     *
-     * @author Victor Cordis ( cordis.victor at gmail.com)
-     * @version 1.4.6
-     * @see XMLReader
-     * @see XMLWriter
-     * @since 1.0
-     */
-    public enum Profile {
-
-        /**
-         * Sacrifices efficiency for maximal portability, in the idea that
-         * non-DTD types can be passed between languages which define similar
-         * types. For example: passing StringBuilder between Java and C#.
-         * <br/>The goal XML is human-readable and the contained structures
-         * should be as generic and aliased as possible.
-         */
-        GENERIC {
-            @Override
-            public void configure(XMLWriter writer) {
-                final XMLWriter.StrategyRegistry<SimpleStrategy> simple = writer.getSimpleStrategies();
-                // are included by default, because of the primitives API:
-                //                        simple.add(ByteStrategy.INSTANCE);
-                //                        simple.add(CharacterStrategy.INSTANCE);
-                //                        simple.add(FloatStrategy.INSTANCE);
-                //                        simple.add(LongStrategy.INSTANCE);
-                //                        simple.add(ShortStrategy.INSTANCE);
-                simple.add(FileStrategy.INSTANCE);
-                simple.add(CharsStrategy.INSTANCE);
-                simple.add(ClassStrategy.INSTANCE);
-                simple.add(StringBufferStrategy.INSTANCE);
-                simple.add(StringBuilderStrategy.INSTANCE);
-                simple.add(BigDecimalStrategy.INSTANCE);
-                simple.add(BigIntegerStrategy.INSTANCE);
-                simple.add(URIStrategy.INSTANCE);
-                simple.add(URLStrategy.INSTANCE);
-                simple.add(LocaleStrategy.INSTANCE);
-                simple.add(UUIDStrategy.INSTANCE);
-                final XMLWriter.StrategyRegistry<CompositeStrategy> composite = writer.getCompositeStrategies();
-                composite.add(ColorStrategy.INSTANCE);
-                composite.add(BitSetStrategy.INSTANCE);
-                composite.add(ArrayListStrategy.INSTANCE);
-                composite.add(HashMapStrategy.INSTANCE);
-                composite.add(HashSetStrategy.INSTANCE);
-                composite.add(HashtableStrategy.INSTANCE);
-                composite.add(TreeMapStrategy.INSTANCE);
-                composite.add(TreeSetStrategy.INSTANCE);
-                composite.add(EnumMapStrategy.INSTANCE);
-                composite.add(EnumSetStrategy.INSTANCE);
-                composite.add(IdentityHashMapStrategy.INSTANCE);
-                composite.add(ConcurrentHashMapStrategy.INSTANCE);
-                composite.add(LinkedHashMapStrategy.INSTANCE);
-                composite.add(LinkedHashSetStrategy.INSTANCE);
-                composite.add(LinkedListStrategy.INSTANCE);
-                composite.add(PropertiesStrategy.INSTANCE);
-                composite.add(VectorStrategy.INSTANCE);
-                composite.add(StackStrategy.INSTANCE);
-            }
-
-            @Override
-            public void configure(XMLReader reader) {
-                final Map<String, SimpleStrategy> simple = reader.getSimpleStrategies();
-                // are included by default, because of the primitives API:
-                //                        simple.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
-                //                        simple.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
-                //                        simple.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
-                //                        simple.put(LongStrategy.NAME, LongStrategy.INSTANCE);
-                //                        simple.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
-                simple.put(FileStrategy.NAME, FileStrategy.INSTANCE);
-                simple.put(CharsStrategy.NAME, CharsStrategy.INSTANCE);
-                simple.put(ClassStrategy.NAME, ClassStrategy.INSTANCE);
-                simple.put(StringBufferStrategy.NAME, StringBufferStrategy.INSTANCE);
-                simple.put(StringBuilderStrategy.NAME, StringBuilderStrategy.INSTANCE);
-                simple.put(BigDecimalStrategy.NAME, BigDecimalStrategy.INSTANCE);
-                simple.put(BigIntegerStrategy.NAME, BigIntegerStrategy.INSTANCE);
-                simple.put(URIStrategy.NAME, URIStrategy.INSTANCE);
-                simple.put(URLStrategy.NAME, URLStrategy.INSTANCE);
-                simple.put(LocaleStrategy.NAME, LocaleStrategy.INSTANCE);
-                simple.put(UUIDStrategy.NAME, UUIDStrategy.INSTANCE);
-                final Map<String, CompositeStrategy> composite = reader.getCompositeStrategies();
-                composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
-                composite.put(BitSetStrategy.NAME, BitSetStrategy.INSTANCE);
-                composite.put(ArrayListStrategy.NAME, ArrayListStrategy.INSTANCE);
-                composite.put(HashMapStrategy.NAME, HashMapStrategy.INSTANCE);
-                composite.put(HashSetStrategy.NAME, HashSetStrategy.INSTANCE);
-                composite.put(HashtableStrategy.NAME, HashtableStrategy.INSTANCE);
-                composite.put(TreeMapStrategy.NAME, TreeMapStrategy.INSTANCE);
-                composite.put(TreeSetStrategy.NAME, TreeSetStrategy.INSTANCE);
-                composite.put(EnumMapStrategy.NAME, EnumMapStrategy.INSTANCE);
-                composite.put(EnumSetStrategy.NAME, EnumSetStrategy.INSTANCE);
-                composite.put(IdentityHashMapStrategy.NAME, IdentityHashMapStrategy.INSTANCE);
-                composite.put(ConcurrentHashMapStrategy.NAME, ConcurrentHashMapStrategy.INSTANCE);
-                composite.put(LinkedHashMapStrategy.NAME, LinkedHashMapStrategy.INSTANCE);
-                composite.put(LinkedHashSetStrategy.NAME, LinkedHashSetStrategy.INSTANCE);
-                composite.put(LinkedListStrategy.NAME, LinkedListStrategy.INSTANCE);
-                composite.put(PropertiesStrategy.NAME, PropertiesStrategy.INSTANCE);
-                composite.put(VectorStrategy.NAME, VectorStrategy.INSTANCE);
-                composite.put(StackStrategy.NAME, StackStrategy.INSTANCE);
-            }
-
-        },
-        /**
-         * Sacrifices portability for maximal efficiency and Java-specific
-         * support. The goal XML is human-readable but contains structures which
-         * are Java-API dependent, such as the Java IO Serialization.
-         */
-        SPECIFIC {
-            @Override
-            public void configure(XMLWriter writer) {
-                final XMLWriter.StrategyRegistry<SimpleStrategy> simple = writer.getSimpleStrategies();
-                // are included by default, because of the primitives API:
-                //                        simple.add(ByteStrategy.INSTANCE);
-                //                        simple.add(CharacterStrategy.INSTANCE);
-                //                        simple.add(FloatStrategy.INSTANCE);
-                //                        simple.add(LongStrategy.INSTANCE);
-                //                        simple.add(ShortStrategy.INSTANCE);
-                simple.add(FileStrategy.INSTANCE);
-                simple.add(CharsStrategy.INSTANCE);
-                simple.add(ClassStrategy.INSTANCE);
-                simple.add(EnumStrategy.INSTANCE);
-                simple.add(StackTraceElementStrategy.INSTANCE);
-                simple.add(StringBufferStrategy.INSTANCE);
-                simple.add(StringBuilderStrategy.INSTANCE);
-                simple.add(BigDecimalStrategy.INSTANCE);
-                simple.add(BigIntegerStrategy.INSTANCE);
-                simple.add(URIStrategy.INSTANCE);
-                simple.add(URLStrategy.INSTANCE);
-                simple.add(LocaleStrategy.INSTANCE);
-                simple.add(UUIDStrategy.INSTANCE);
-                final XMLWriter.StrategyRegistry<CompositeStrategy> composite = writer.getCompositeStrategies();
-                composite.add(ColorStrategy.INSTANCE);
-                composite.add(ArrayStrategy.INSTANCE);
-                composite.add(ObjectStrategy.INSTANCE);
-                composite.add(ExternalizableStrategy.INSTANCE);
-                composite.add(SerializableStrategy.INSTANCE);
-                composite.add(BitSetStrategy.INSTANCE);
-                composite.add(ArrayListStrategy.INSTANCE);
-                composite.add(HashMapStrategy.INSTANCE);
-                composite.add(HashSetStrategy.INSTANCE);
-                composite.add(HashtableStrategy.INSTANCE);
-                composite.add(IdentityHashMapStrategy.INSTANCE);
-                composite.add(ConcurrentHashMapStrategy.INSTANCE);
-                composite.add(TreeMapStrategy.INSTANCE);
-                composite.add(TreeSetStrategy.INSTANCE);
-                composite.add(EnumMapStrategy.INSTANCE);
-                composite.add(EnumSetStrategy.INSTANCE);
-                composite.add(LinkedHashMapStrategy.INSTANCE);
-                composite.add(LinkedHashSetStrategy.INSTANCE);
-                composite.add(LinkedListStrategy.INSTANCE);
-                composite.add(PropertiesStrategy.INSTANCE);
-                composite.add(VectorStrategy.INSTANCE);
-                composite.add(StackStrategy.INSTANCE);
-                composite.add(SingletonSetStrategy.INSTANCE);
-                composite.add(SingletonListStrategy.INSTANCE);
-                composite.add(SingletonMapStrategy.INSTANCE);
-                composite.add(PatternStrategy.INSTANCE);
-            }
-
-            @Override
-            public void configure(XMLReader reader) {
-                final Map<String, SimpleStrategy> simple = reader.getSimpleStrategies();
-                // are included by default, because of the primitives API:
-                //                        simple.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
-                //                        simple.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
-                //                        simple.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
-                //                        simple.put(LongStrategy.NAME, LongStrategy.INSTANCE);
-                //                        simple.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
-                simple.put(FileStrategy.NAME, FileStrategy.INSTANCE);
-                simple.put(CharsStrategy.NAME, CharsStrategy.INSTANCE);
-                simple.put(ClassStrategy.NAME, ClassStrategy.INSTANCE);
-                simple.put(EnumStrategy.NAME, EnumStrategy.INSTANCE);
-                simple.put(StackTraceElementStrategy.NAME, StackTraceElementStrategy.INSTANCE);
-                simple.put(StringBufferStrategy.NAME, StringBufferStrategy.INSTANCE);
-                simple.put(StringBuilderStrategy.NAME, StringBuilderStrategy.INSTANCE);
-                simple.put(BigDecimalStrategy.NAME, BigDecimalStrategy.INSTANCE);
-                simple.put(BigIntegerStrategy.NAME, BigIntegerStrategy.INSTANCE);
-                simple.put(URIStrategy.NAME, URIStrategy.INSTANCE);
-                simple.put(URLStrategy.NAME, URLStrategy.INSTANCE);
-                simple.put(LocaleStrategy.NAME, LocaleStrategy.INSTANCE);
-                simple.put(UUIDStrategy.NAME, UUIDStrategy.INSTANCE);
-                final Map<String, CompositeStrategy> composite = reader.getCompositeStrategies();
-                composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
-                composite.put(ExternalizableStrategy.NAME, ExternalizableStrategy.INSTANCE);
-                composite.put(SerializableStrategy.NAME, SerializableStrategy.INSTANCE);
-                composite.put(ArrayStrategy.NAME, ArrayStrategy.INSTANCE);
-                composite.put(ObjectStrategy.NAME, ObjectStrategy.INSTANCE);
-                composite.put(BitSetStrategy.NAME, BitSetStrategy.INSTANCE);
-                composite.put(ArrayListStrategy.NAME, ArrayListStrategy.INSTANCE);
-                composite.put(HashMapStrategy.NAME, HashMapStrategy.INSTANCE);
-                composite.put(HashSetStrategy.NAME, HashSetStrategy.INSTANCE);
-                composite.put(HashtableStrategy.NAME, HashtableStrategy.INSTANCE);
-                composite.put(IdentityHashMapStrategy.NAME, IdentityHashMapStrategy.INSTANCE);
-                composite.put(ConcurrentHashMapStrategy.NAME, ConcurrentHashMapStrategy.INSTANCE);
-                composite.put(TreeMapStrategy.NAME, TreeMapStrategy.INSTANCE);
-                composite.put(TreeSetStrategy.NAME, TreeSetStrategy.INSTANCE);
-                composite.put(EnumMapStrategy.NAME, EnumMapStrategy.INSTANCE);
-                composite.put(EnumSetStrategy.NAME, EnumSetStrategy.INSTANCE);
-                composite.put(LinkedHashMapStrategy.NAME, LinkedHashMapStrategy.INSTANCE);
-                composite.put(LinkedHashSetStrategy.NAME, LinkedHashSetStrategy.INSTANCE);
-                composite.put(LinkedListStrategy.NAME, LinkedListStrategy.INSTANCE);
-                composite.put(PropertiesStrategy.NAME, PropertiesStrategy.INSTANCE);
-                composite.put(VectorStrategy.NAME, VectorStrategy.INSTANCE);
-                composite.put(StackStrategy.NAME, StackStrategy.INSTANCE);
-                composite.put(SingletonSetStrategy.NAME, SingletonSetStrategy.INSTANCE);
-                composite.put(SingletonListStrategy.NAME, SingletonListStrategy.INSTANCE);
-                composite.put(SingletonMapStrategy.NAME, SingletonMapStrategy.INSTANCE);
-                composite.put(PatternStrategy.NAME, PatternStrategy.INSTANCE);
-            }
-
-        };
-
-        /**
-         * Configures the given <code>writer</code>.
-         *
-         * @param writer to configure
-         */
-        public abstract void configure(XMLWriter writer);
-
-        /**
-         * Configures the given <code>reader</code>.
-         *
-         * @param reader to configure
-         */
-        public abstract void configure(XMLReader reader);
-    }
-
-    /**
-     * Constant defining the default EasyML profile setting.
-     */
-    public static final Profile DEFAULT_PROFILE = Profile.SPECIFIC;
-
-    /**
      * The writer configuration prototype, configured the same as its reader
      * counterpart.
      */
@@ -416,26 +178,188 @@ public final class EasyML {
      * writer strategies.
      */
     public EasyML() {
-        this(DEFAULT_PROFILE);
-    }
-
-    private EasyML(Profile profile) {
         this.writerPrototype = new XMLWriter();
         this.readerPrototype = new XMLReader(new ConcurrentHashMap<>());
-        profile.configure(this.writerPrototype);
-        profile.configure(this.readerPrototype);
+        defaultConfiguration(this.writerPrototype);
+        defaultConfiguration(this.readerPrototype);
         this.perThreadWriter = ThreadLocal.withInitial(() -> new XMLWriter(writerPrototype));
         this.perThreadReader = ThreadLocal.withInitial(() -> new XMLReader(readerPrototype));
     }
 
-    EasyML(Profile profile, Style style, Supplier<XmlPullParser> xmlPullParserProvider,
-           String dateFormat, String customRootTag, NodeListStrategy customArrayTag, NodeStrategy customStringTag,
-           Map<Class, String> classToAlias, Map<Field, String> fieldToAlias, Set<Field> excludedFields,
-           XMLReader.SecurityPolicy deserializationSecurityPolicy,
+    /**
+     * Configures all default strategies to the given writer.
+     *
+     * @param writer to configure
+     */
+    public static void defaultConfiguration(XMLWriter writer) {
+        final XMLWriter.StrategyRegistry<SimpleStrategy> simple = writer.getSimpleStrategies();
+        final XMLWriter.StrategyRegistry<CompositeStrategy> composite = writer.getCompositeStrategies();
+        // dtd: because of the primitives API, DTD are included by default in the writer:
+//        simple.add(Base64Strategy.INSTANCE);
+//        simple.add(BooleanStrategy.INSTANCE);
+//        simple.add(DateStrategy.INSTANCE);
+//        simple.add(DoubleStrategy.INSTANCE);
+//        simple.add(IntStrategy.INSTANCE);
+//        simple.add(StringStrategy.INSTANCE);
+        // awt:
+        composite.add(ColorStrategy.INSTANCE);
+        // io:
+        composite.add(ExternalizableStrategy.INSTANCE);
+        simple.add(FileStrategy.INSTANCE);
+        composite.add(new SerializableStrategy());
+        // lang: because of the primitives API, non-DTD value types are included by default in the writer:
+//        simple.add(ByteStrategy.INSTANCE);
+//        simple.add(CharacterStrategy.INSTANCE);
+//        simple.add(FloatStrategy.INSTANCE);
+//        simple.add(LongStrategy.INSTANCE);
+//        simple.add(ShortStrategy.INSTANCE);
+        composite.add(ArrayStrategy.INSTANCE);
+        simple.add(CharsStrategy.INSTANCE);
+        simple.add(ClassStrategy.INSTANCE);
+        simple.add(EnumStrategy.INSTANCE);
+        composite.add(ObjectStrategy.INSTANCE);
+        simple.add(StackTraceElementStrategy.INSTANCE);
+        simple.add(StringBufferStrategy.INSTANCE);
+        simple.add(StringBuilderStrategy.INSTANCE);
+        // math:
+        simple.add(BigDecimalStrategy.INSTANCE);
+        simple.add(BigIntegerStrategy.INSTANCE);
+        // net:
+        simple.add(URIStrategy.INSTANCE);
+        simple.add(URLStrategy.INSTANCE);
+        // time:
+        simple.add(ChronologyStrategy.INSTANCE);
+        simple.add(DurationStrategy.INSTANCE);
+        simple.add(InstantStrategy.INSTANCE);
+        simple.add(LocalDateStrategy.INSTANCE);
+        simple.add(LocalDateTimeStrategy.INSTANCE);
+        simple.add(LocalTimeStrategy.INSTANCE);
+        simple.add(MonthDayStrategy.INSTANCE);
+        simple.add(PeriodStrategy.INSTANCE);
+        simple.add(YearMonthStrategy.INSTANCE);
+        simple.add(YearStrategy.INSTANCE);
+        simple.add(ZonedDateTimeStrategy.INSTANCE);
+        simple.add(ZoneIdStrategy.INSTANCE);
+        // util:
+        composite.add(ArrayListStrategy.INSTANCE);
+        composite.add(BitSetStrategy.INSTANCE);
+        composite.add(CalendarStrategy.INSTANCE);
+        composite.add(EnumMapStrategy.INSTANCE);
+        composite.add(EnumSetStrategy.INSTANCE);
+        composite.add(HashMapStrategy.INSTANCE);
+        composite.add(HashSetStrategy.INSTANCE);
+        composite.add(HashtableStrategy.INSTANCE);
+        composite.add(IdentityHashMapStrategy.INSTANCE);
+        composite.add(LinkedHashMapStrategy.INSTANCE);
+        composite.add(LinkedHashSetStrategy.INSTANCE);
+        composite.add(LinkedListStrategy.INSTANCE);
+        simple.add(LocaleStrategy.INSTANCE);
+        composite.add(OptionalStrategy.INSTANCE);
+        composite.add(PropertiesStrategy.INSTANCE);
+        composite.add(SingletonListStrategy.INSTANCE);
+        composite.add(SingletonMapStrategy.INSTANCE);
+        composite.add(SingletonSetStrategy.INSTANCE);
+        composite.add(StackStrategy.INSTANCE);
+        composite.add(TreeMapStrategy.INSTANCE);
+        composite.add(TreeSetStrategy.INSTANCE);
+        simple.add(UUIDStrategy.INSTANCE);
+        composite.add(VectorStrategy.INSTANCE);
+        // util.concurrent:
+        composite.add(ConcurrentHashMapStrategy.INSTANCE);
+        // util.regex:
+        composite.add(PatternStrategy.INSTANCE);
+    }
+
+    /**
+     * Configures all default strategies to the given reader.
+     *
+     * @param reader to configure
+     */
+    public static void defaultConfiguration(XMLReader reader) {
+        final Map<String, SimpleStrategy> simple = reader.getSimpleStrategies();
+        final Map<String, CompositeStrategy> composite = reader.getCompositeStrategies();
+        // dtd: because of the primitives API, DTD are included by default in the reader:
+//        simple.put(Base64Strategy.NAME, Base64Strategy.INSTANCE);
+//        simple.put(BooleanStrategy.NAME, BooleanStrategy.INSTANCE);
+//        simple.put(DateStrategy.NAME, DateStrategy.INSTANCE);
+//        simple.put(DoubleStrategy.NAME, DoubleStrategy.INSTANCE);
+//        simple.put(IntStrategy.NAME, IntStrategy.INSTANCE);
+//        simple.put(StringStrategy.NAME, StringStrategy.INSTANCE);
+        // awt:
+        composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
+        // io:
+        composite.put(ExternalizableStrategy.NAME, ExternalizableStrategy.INSTANCE);
+        simple.put(FileStrategy.NAME, FileStrategy.INSTANCE);
+        composite.put(SerializableStrategy.NAME, new SerializableStrategy());
+        // lang: because of the primitives API, non-DTD value types are included by default in the reader:
+//        simple.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
+//        simple.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
+//        simple.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
+//        simple.put(LongStrategy.NAME, LongStrategy.INSTANCE);
+//        simple.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
+        composite.put(ArrayStrategy.NAME, ArrayStrategy.INSTANCE);
+        simple.put(CharsStrategy.NAME, CharsStrategy.INSTANCE);
+        simple.put(ClassStrategy.NAME, ClassStrategy.INSTANCE);
+        simple.put(EnumStrategy.NAME, EnumStrategy.INSTANCE);
+        composite.put(ObjectStrategy.NAME, ObjectStrategy.INSTANCE);
+        simple.put(StackTraceElementStrategy.NAME, StackTraceElementStrategy.INSTANCE);
+        simple.put(StringBufferStrategy.NAME, StringBufferStrategy.INSTANCE);
+        simple.put(StringBuilderStrategy.NAME, StringBuilderStrategy.INSTANCE);
+        // math:
+        simple.put(BigDecimalStrategy.NAME, BigDecimalStrategy.INSTANCE);
+        simple.put(BigIntegerStrategy.NAME, BigIntegerStrategy.INSTANCE);
+        // net:
+        simple.put(URIStrategy.NAME, URIStrategy.INSTANCE);
+        simple.put(URLStrategy.NAME, URLStrategy.INSTANCE);
+        // time:
+        simple.put(ChronologyStrategy.NAME, ChronologyStrategy.INSTANCE);
+        simple.put(DurationStrategy.NAME, DurationStrategy.INSTANCE);
+        simple.put(InstantStrategy.NAME, InstantStrategy.INSTANCE);
+        simple.put(LocalDateStrategy.NAME, LocalDateStrategy.INSTANCE);
+        simple.put(LocalDateTimeStrategy.NAME, LocalDateTimeStrategy.INSTANCE);
+        simple.put(LocalTimeStrategy.NAME, LocalTimeStrategy.INSTANCE);
+        simple.put(MonthDayStrategy.NAME, MonthDayStrategy.INSTANCE);
+        simple.put(PeriodStrategy.NAME, PeriodStrategy.INSTANCE);
+        simple.put(YearMonthStrategy.NAME, YearMonthStrategy.INSTANCE);
+        simple.put(YearStrategy.NAME, YearStrategy.INSTANCE);
+        simple.put(ZonedDateTimeStrategy.NAME, ZonedDateTimeStrategy.INSTANCE);
+        simple.put(ZoneIdStrategy.NAME, ZoneIdStrategy.INSTANCE);
+        // util:
+        composite.put(ArrayListStrategy.NAME, ArrayListStrategy.INSTANCE);
+        composite.put(BitSetStrategy.NAME, BitSetStrategy.INSTANCE);
+        composite.put(CalendarStrategy.NAME, CalendarStrategy.INSTANCE);
+        composite.put(EnumMapStrategy.NAME, EnumMapStrategy.INSTANCE);
+        composite.put(EnumSetStrategy.NAME, EnumSetStrategy.INSTANCE);
+        composite.put(HashMapStrategy.NAME, HashMapStrategy.INSTANCE);
+        composite.put(HashSetStrategy.NAME, HashSetStrategy.INSTANCE);
+        composite.put(HashtableStrategy.NAME, HashtableStrategy.INSTANCE);
+        composite.put(IdentityHashMapStrategy.NAME, IdentityHashMapStrategy.INSTANCE);
+        composite.put(LinkedHashMapStrategy.NAME, LinkedHashMapStrategy.INSTANCE);
+        composite.put(LinkedHashSetStrategy.NAME, LinkedHashSetStrategy.INSTANCE);
+        composite.put(LinkedListStrategy.NAME, LinkedListStrategy.INSTANCE);
+        simple.put(LocaleStrategy.NAME, LocaleStrategy.INSTANCE);
+        composite.put(OptionalStrategy.NAME, OptionalStrategy.INSTANCE);
+        composite.put(PropertiesStrategy.NAME, PropertiesStrategy.INSTANCE);
+        composite.put(SingletonListStrategy.NAME, SingletonListStrategy.INSTANCE);
+        composite.put(SingletonMapStrategy.NAME, SingletonMapStrategy.INSTANCE);
+        composite.put(SingletonSetStrategy.NAME, SingletonSetStrategy.INSTANCE);
+        composite.put(StackStrategy.NAME, StackStrategy.INSTANCE);
+        composite.put(TreeMapStrategy.NAME, TreeMapStrategy.INSTANCE);
+        composite.put(TreeSetStrategy.NAME, TreeSetStrategy.INSTANCE);
+        simple.put(UUIDStrategy.NAME, UUIDStrategy.INSTANCE);
+        composite.put(VectorStrategy.NAME, VectorStrategy.INSTANCE);
+        // util.concurrent:
+        composite.put(ConcurrentHashMapStrategy.NAME, ConcurrentHashMapStrategy.INSTANCE);
+        // util.regex:
+        composite.put(PatternStrategy.NAME, PatternStrategy.INSTANCE);
+    }
+
+    EasyML(Style style, Supplier<XmlPullParser> xmlPullParserProvider,
+           String dateFormat, String customRootTag, Map<Class, String> classToAlias, Map<Field, String> fieldToAlias,
+           Set<Field> excludedFields, XMLReader.SecurityPolicy deserializationSecurityPolicy,
            Set<SimpleStrategy> registeredSimple, Set<CompositeStrategy> registeredComposite,
            Set<SimpleStrategy> unregisteredSimple, Set<CompositeStrategy> unregisteredComposite) {
-        // profile:
-        this(profile != null ? profile : DEFAULT_PROFILE);
+        this();
         // style:
         if (style != null) {
             style.applyTo(this.writerPrototype);
@@ -451,16 +375,6 @@ public final class EasyML {
         if (customRootTag != null) {
             this.writerPrototype.setRootTag(customRootTag);
             this.readerPrototype.setRootTag(customRootTag);
-        }
-        // customArrayTag:
-        if (customArrayTag != null) {
-            this.writerPrototype.getCompositeStrategies().add(customArrayTag);
-            this.readerPrototype.getCompositeStrategies().put(customArrayTag.name(), customArrayTag);
-        }
-        // customStringTag:
-        if (customStringTag != null) {
-            this.writerPrototype.getSimpleStrategies().add(customStringTag);
-            this.readerPrototype.getSimpleStrategies().put(customStringTag.name(), customStringTag);
         }
         // classToAlias:
         if (classToAlias != null) {
