@@ -18,10 +18,7 @@
  */
 package net.sourceforge.easyml;
 
-import net.sourceforge.easyml.marshalling.CompositeReader;
-import net.sourceforge.easyml.marshalling.CompositeStrategy;
-import net.sourceforge.easyml.marshalling.SimpleStrategy;
-import net.sourceforge.easyml.marshalling.UnmarshalContext;
+import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.marshalling.dtd.*;
 import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.*;
@@ -1090,6 +1087,7 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
      */
     public void clearCache() {
         this.checkNotSharedConfiguration();
+        // clear class and field cache:
         final Iterator<Map.Entry<String, Object>> iter = this.cachedAliasingReflection.entrySet().iterator();
         while (iter.hasNext()) {
             final Map.Entry<String, Object> crt = iter.next();
@@ -1106,11 +1104,9 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
                 iter.remove(); // removed non-alias entry.
             }
         }
-        // clear SerializableStrategy cache if present:
-        final CompositeStrategy serialStrategy = this.compositeStrategies.get(SerializableStrategy.NAME);
-        if (serialStrategy instanceof SerializableStrategy) {
-            ((SerializableStrategy) serialStrategy).clearCache();
-        }
+        // clear strategies cache:
+        this.simpleStrategies.values().forEach(XMLReader::clearCache);
+        this.compositeStrategies.values().forEach(XMLReader::clearCache);
     }
 
     private static String fieldNameFrom(String fieldFQN) {
@@ -1119,6 +1115,12 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
 
     private static boolean isCacheEntry(String key, String name) {
         return key.equals(name);
+    }
+
+    private static void clearCache(Strategy s) {
+        if (s instanceof Caching) {
+            ((Caching) s).clearCache();
+        }
     }
 
     /**

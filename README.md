@@ -60,9 +60,13 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+!Release 1.5.2
+- feature: added generic mechanism for cache clearing.
+
+
 !Release 1.5.1
-- feature: add functional API.
-- feature: add CalendarStrategy and OptionalStrategy.
+- feature: added functional API.
+- feature: added CalendarStrategy and OptionalStrategy.
 - feature: added java.time strategies.
 - performance: added caching to SerializableStrategy.
 - refactor: remove Profile feature.

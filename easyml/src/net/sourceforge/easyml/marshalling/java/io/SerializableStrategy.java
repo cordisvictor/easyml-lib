@@ -54,7 +54,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version 1.5.1
  * @since 1.0
  */
-public final class SerializableStrategy extends AbstractStrategy implements CompositeStrategy<Serializable> {
+public final class SerializableStrategy extends AbstractStrategy implements CompositeStrategy<Serializable>, Caching {
     /**
      * Constant defining the value used for the strategy name.
      */
@@ -97,6 +97,10 @@ public final class SerializableStrategy extends AbstractStrategy implements Comp
         readObjectCache = new ConcurrentHashMap<>();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void clearCache() {
         writeReplaceCache.clear();
         writeObjectCache.clear();

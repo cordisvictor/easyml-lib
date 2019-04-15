@@ -202,6 +202,17 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
         }
 
         /**
+         * Applies the consumer on all registered strategies.
+         */
+        public void forEach(Consumer<S> consumer) {
+            this.strict.forEach((k, v) -> consumer.accept(v));
+            this.range.forEach(consumer);
+            if (this.backup != null) {
+                this.backup.forEach(consumer);
+            }
+        }
+
+        /**
          * Clears this instance of all strategies.
          */
         public void clear() {
@@ -1022,10 +1033,15 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
      */
     public void clearCache() {
         this.checkNotSharedConfiguration();
-        // clear SerializableStrategy cache if present:
-        final CompositeStrategy serialStrategy = this.compositeStrategies.lookup(SerializableStrategy.TARGET);
-        if (serialStrategy instanceof SerializableStrategy) {
-            ((SerializableStrategy) serialStrategy).clearCache();
+        // no class and field cache.
+        // clear strategies cache:
+        this.simpleStrategies.forEach(XMLWriter::clearCache);
+        this.compositeStrategies.forEach(XMLWriter::clearCache);
+    }
+
+    private static void clearCache(Strategy s) {
+        if (s instanceof Caching) {
+            ((Caching) s).clearCache();
         }
     }
 
