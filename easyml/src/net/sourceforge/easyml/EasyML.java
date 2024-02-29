@@ -84,7 +84,7 @@ import java.util.function.Supplier;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.3
+ * @version 1.7.0
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -222,6 +222,7 @@ public final class EasyML {
         simple.add(ClassStrategy.INSTANCE);
         simple.add(EnumStrategy.INSTANCE);
         composite.add(ObjectStrategy.INSTANCE);
+        composite.add(RecordStrategy.INSTANCE);
         simple.add(StackTraceElementStrategy.INSTANCE);
         simple.add(StringBufferStrategy.INSTANCE);
         simple.add(StringBuilderStrategy.INSTANCE);
@@ -315,6 +316,7 @@ public final class EasyML {
         simple.put(ClassStrategy.NAME, ClassStrategy.INSTANCE);
         simple.put(EnumStrategy.NAME, EnumStrategy.INSTANCE);
         composite.put(ObjectStrategy.NAME, ObjectStrategy.INSTANCE);
+        composite.put(RecordStrategy.NAME, RecordStrategy.INSTANCE);
         simple.put(StackTraceElementStrategy.NAME, StackTraceElementStrategy.INSTANCE);
         simple.put(StringBufferStrategy.NAME, StringBufferStrategy.INSTANCE);
         simple.put(StringBuilderStrategy.NAME, StringBuilderStrategy.INSTANCE);

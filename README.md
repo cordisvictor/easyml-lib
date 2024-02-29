@@ -60,6 +60,10 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+Release 1.7.0 (requires Java 17, recommended from Java 17)
+- feature: support for Java records.
+
+
 Release 1.6.0 (requires Java 9, recommended up to Java 17)
 - XMLWriter and XMLReader use getters and setters.
 - feature: support for Java 9 modules.

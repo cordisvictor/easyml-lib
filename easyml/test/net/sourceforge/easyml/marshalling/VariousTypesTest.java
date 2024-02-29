@@ -20,6 +20,7 @@ package net.sourceforge.easyml.marshalling;
 
 import net.sourceforge.easyml.XMLReader;
 import net.sourceforge.easyml.XMLWriter;
+import net.sourceforge.easyml.marshalling.java.lang.RecordStrategy;
 import net.sourceforge.easyml.marshalling.java.time.InstantStrategy;
 import net.sourceforge.easyml.marshalling.java.time.LocalDateTimeStrategy;
 import net.sourceforge.easyml.marshalling.java.time.ZoneIdStrategy;
@@ -36,6 +37,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicReference;
@@ -177,5 +179,27 @@ public class VariousTypesTest {
         xis.getSimpleStrategies().put(TimeZoneStrategy.INSTANCE.name(), TimeZoneStrategy.INSTANCE);
         assertEquals(expected, xis.read());
         xis.close();
+    }
+
+    @Test
+    public void testRecordStrategy() {
+        final MyRecord expected = new MyRecord("fn ln", new Date());
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.getCompositeStrategies().add(RecordStrategy.INSTANCE);
+        xos.write(expected);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getCompositeStrategies().put(RecordStrategy.INSTANCE.name(), RecordStrategy.INSTANCE);
+        assertEquals(expected, xis.read());
+        xis.close();
+    }
+
+    public record MyRecord(
+            String name,
+            Date theDate) {
     }
 }
