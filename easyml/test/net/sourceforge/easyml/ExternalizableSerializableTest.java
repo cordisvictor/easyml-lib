@@ -20,16 +20,11 @@ package net.sourceforge.easyml;
 
 import net.sourceforge.easyml.marshalling.java.io.ExternalizableStrategy;
 import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.ArrayStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.ClassStrategy;
-import net.sourceforge.easyml.marshalling.java.lang.EnumStrategy;
 import org.junit.After;
 import org.junit.Test;
 
 import java.io.*;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 
@@ -46,43 +41,14 @@ public class ExternalizableSerializableTest {
     }
 
     @Test
-    public void testEnumSetStrategy() {
-        final EnumSet expected = EnumSet.allOf(EasyML.Style.class);
-
-        final XMLWriter xos = new XMLWriter(this.out);
-        xos.alias(EasyML.Style.class, "emlStype");
-        xos.getSimpleStrategies().add(EnumStrategy.INSTANCE);
-        xos.getSimpleStrategies().add(ClassStrategy.INSTANCE);
-        xos.getCompositeStrategies().add(ArrayStrategy.INSTANCE);
-        xos.getCompositeStrategies().add(new SerializableStrategy());
-        xos.write(expected);
-        xos.close();
-
-        System.out.println(this.out);
-
-        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        xis.alias(EasyML.Style.class, "emlStype");
-        xis.getSimpleStrategies().put(EnumStrategy.NAME, EnumStrategy.INSTANCE);
-        xis.getSimpleStrategies().put(ClassStrategy.NAME, ClassStrategy.INSTANCE);
-        xis.getCompositeStrategies().put(ArrayStrategy.NAME, ArrayStrategy.INSTANCE);
-        xis.getCompositeStrategies().put(SerializableStrategy.NAME, new SerializableStrategy());
-        assertEquals(expected, xis.read());
-        xis.close();
-    }
-
-    @Test
     public void testSerialPersistentFields() {
-        final Map expected = new ConcurrentHashMap(2);
-        expected.put(1, "unu");
-        expected.put(2, "doi");
+        final ObjectUsingPutGetFields expected = new ObjectUsingPutGetFields("someText");
         final XMLWriter xos = new XMLWriter(this.out);
-        xos.getCompositeStrategies().add(ArrayStrategy.INSTANCE);
         xos.getCompositeStrategies().add(new SerializableStrategy());
         xos.write(expected);
         xos.close();
         System.out.println(this.out);
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        xis.getCompositeStrategies().put(ArrayStrategy.NAME, ArrayStrategy.INSTANCE);
         xis.getCompositeStrategies().put(SerializableStrategy.NAME, new SerializableStrategy());
         assertEquals(expected, xis.read());
         xis.close();
@@ -107,7 +73,43 @@ public class ExternalizableSerializableTest {
         xis.close();
     }
 
-    // mock Java 8 java.time api:
+    private static final class ObjectUsingPutGetFields implements Serializable {
+
+        private String text;
+
+        public ObjectUsingPutGetFields(String text) {
+            this.text = text;
+        }
+
+        private void writeObject(ObjectOutputStream s) throws IOException {
+
+            ObjectOutputStream.PutField fields = s.putFields();
+            fields.put("text", text);
+            s.writeFields();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ObjectUsingPutGetFields that = (ObjectUsingPutGetFields) o;
+            return Objects.equals(text, that.text);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(text);
+        }
+
+        @Override
+        public String toString() {
+            return "ObjectUsingPutGetFields{" +
+                    "text='" + text + '\'' +
+                    '}';
+        }
+    }
+
+    // mock java.base java.time api:
     public static final class Duration implements Serializable {
 
         private final long seconds;

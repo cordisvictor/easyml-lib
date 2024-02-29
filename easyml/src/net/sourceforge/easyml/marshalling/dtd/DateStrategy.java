@@ -51,24 +51,8 @@ public final class DateStrategy extends AbstractStrategy implements SimpleStrate
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Date> target() {
         return Date.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Date> c) {
-        return c == Date.class;
     }
 
     /**

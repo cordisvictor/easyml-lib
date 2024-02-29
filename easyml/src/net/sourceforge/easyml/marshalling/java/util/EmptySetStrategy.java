@@ -22,30 +22,30 @@ import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
 
 import java.util.Collections;
-import java.util.Map;
+import java.util.Set;
 
 /**
- * SingletonMapStrategy class that implements {@linkplain CompositeStrategy} for
- * the {@linkplain Collections#singletonMap(java.lang.Object, java.lang.Object)} implementation.
+ * EmptySetStrategy class that implements {@linkplain CompositeStrategy} for
+ * the {@linkplain Collections#emptySet()} implementation.
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
  * @version 1.5.3
- * @since 1.0.2
+ * @since 1.5.3
  */
-public final class SingletonMapStrategy extends AbstractStrategy implements CompositeStrategy<Map> {
+public final class EmptySetStrategy extends AbstractStrategy implements CompositeStrategy<Set> {
 
     /**
      * Constant defining the value used for the strategy name.
      */
-    public static final String NAME = "singleton-map";
+    public static final String NAME = "empty-set";
     /**
      * Constant defining the singleton instance.
      */
-    public static final SingletonMapStrategy INSTANCE = new SingletonMapStrategy();
-    private static final Class TARGET = Collections.singletonMap(null, null).getClass();
+    public static final EmptySetStrategy INSTANCE = new EmptySetStrategy();
+    private static final Class TARGET = Collections.emptySet().getClass();
 
-    private SingletonMapStrategy() {
+    private EmptySetStrategy() {
     }
 
     /**
@@ -53,7 +53,7 @@ public final class SingletonMapStrategy extends AbstractStrategy implements Comp
      */
     @Override
     public Class target() {
-        return SingletonMapStrategy.TARGET;
+        return EmptySetStrategy.TARGET;
     }
 
     /**
@@ -61,18 +61,15 @@ public final class SingletonMapStrategy extends AbstractStrategy implements Comp
      */
     @Override
     public String name() {
-        return SingletonMapStrategy.NAME;
+        return EmptySetStrategy.NAME;
     }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public void marshal(Map target, CompositeWriter writer, MarshalContext ctx) {
-        writer.startElement(SingletonMapStrategy.NAME);
-        final Map.Entry entry = (Map.Entry) target.entrySet().iterator().next();
-        writer.write(entry.getKey());
-        writer.write(entry.getValue());
+    public void marshal(Set target, CompositeWriter writer, MarshalContext ctx) {
+        writer.startElement(EmptySetStrategy.NAME);
         writer.endElement();
     }
 
@@ -80,22 +77,19 @@ public final class SingletonMapStrategy extends AbstractStrategy implements Comp
      * {@inheritDoc }
      */
     @Override
-    public Map unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
-        return Collections.singletonMap(null, null);
+    public Set unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
+        return Collections.emptySet();
     }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public Map unmarshalInit(Map target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
+    public Set unmarshalInit(Set target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
         // consume root tag:
         reader.next();
-        // read and set singleton element:
-        final Object singletonK = reader.read();
-        final Object singletonV = reader.read();
-        if (reader.atElementEnd() && reader.elementName().equals(SingletonMapStrategy.NAME)) {
-            return Collections.singletonMap(singletonK, singletonV);
+        if (reader.atElementEnd() && reader.elementName().equals(EmptySetStrategy.NAME)) {
+            return target;
         }
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "unexpected element end");
     }

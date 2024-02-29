@@ -53,24 +53,8 @@ public final class MonthDayStrategy extends AbstractStrategy implements SimpleSt
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<MonthDay> target() {
         return MonthDay.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<MonthDay> c) {
-        return c == MonthDay.class;
     }
 
     /**

@@ -20,9 +20,7 @@ package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
-import net.sourceforge.easyml.util.ReflectionUtil;
 
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Set;
 
@@ -32,7 +30,7 @@ import java.util.Set;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.5.3
  * @since 1.0.2
  */
 public final class SingletonSetStrategy extends AbstractStrategy implements CompositeStrategy<Set> {
@@ -45,20 +43,7 @@ public final class SingletonSetStrategy extends AbstractStrategy implements Comp
      * Constant defining the singleton instance.
      */
     public static final SingletonSetStrategy INSTANCE = new SingletonSetStrategy();
-    private static final Class TARGET;
-    private static final Field TARGET_ELEMENT;
-
-    static {
-        TARGET = Collections.singleton(null).getClass();
-        Field singletonListElement;
-        try {
-            singletonListElement = TARGET.getDeclaredField("element");
-            ReflectionUtil.setAccessible(singletonListElement);
-        } catch (NoSuchFieldException | SecurityException ignored) {
-            singletonListElement = null;
-        }
-        TARGET_ELEMENT = singletonListElement;
-    }
+    private static final Class TARGET = Collections.singleton(null).getClass();
 
     private SingletonSetStrategy() {
     }
@@ -67,24 +52,8 @@ public final class SingletonSetStrategy extends AbstractStrategy implements Comp
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class target() {
         return SingletonSetStrategy.TARGET;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Set> c) {
-        return c == SingletonSetStrategy.TARGET;
     }
 
     /**
@@ -121,9 +90,9 @@ public final class SingletonSetStrategy extends AbstractStrategy implements Comp
         // consume root tag:
         reader.next();
         // read and set singleton element:
-        TARGET_ELEMENT.set(target, reader.read());
+        final Object singleton = reader.read();
         if (reader.atElementEnd() && reader.elementName().equals(SingletonSetStrategy.NAME)) {
-            return target;
+            return Collections.singleton(singleton);
         }
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "unexpected element end");
     }

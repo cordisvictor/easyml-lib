@@ -36,8 +36,7 @@ import java.io.ByteArrayOutputStream;
 import static org.junit.Assert.*;
 
 /**
- *
- * @author victor
+ * @author Victor Cordis ( cordis.victor at gmail.com)
  */
 public class XMLWriterTest {
 
@@ -209,6 +208,19 @@ public class XMLWriterTest {
 
     @Test
     public void testWriteObjectGraphDOM() throws Exception {
+//        EnumMap o = new EnumMap(ValueType.class);
+//        o.put(ValueType.BOOLEAN, true);
+
+//        XStream xStream = new XStream();
+//        xStream.allowTypeHierarchy(Map.class);
+//        xStream.allowTypes(new Class[]{ValueType.class});
+//        System.out.println(xStream.toXML(o));
+
+//        String xml = new EasyMLBuilder().withStyle(EasyML.Style.DETAILED).build().serialize(Collections.emptyMap());
+//        System.out.println(xml);
+//        System.out.println(new EasyML().deserialize(xml));
+
+
         final Node n0 = new Node(1, new Node(2, null));
         n0.next.next = n0;
 
@@ -228,10 +240,10 @@ public class XMLWriterTest {
         }
     }
 
-    private static class Node {
+    public static class Node {
 
-        public int id;
-        public Node next;
+        private int id;
+        private Node next;
 
         public Node() {
         }
@@ -250,6 +262,6 @@ public class XMLWriterTest {
         }
     }
 
-    private static class NoFields {
+    public static class NoFields {
     }
 }

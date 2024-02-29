@@ -38,6 +38,7 @@ import java.util.Arrays;
  * <li><code>writeReplace()</code></li>
  * <li><code>readResolve()</code></li>
  * </ul>
+ * <br/>This implementation depends on {@linkplain SerializableStrategy} to also be configured.
  * <br/>Pure Java reflection is used when un-marshalling objects, because the
  * Externalizable interface states that its implementations must define "public
  * no-arg constructors".
@@ -46,7 +47,7 @@ import java.util.Arrays;
  * <br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.6.0
  * @since 1.4.4
  */
 public final class ExternalizableStrategy extends AbstractStrategy implements CompositeStrategy<Externalizable> {
@@ -86,7 +87,7 @@ public final class ExternalizableStrategy extends AbstractStrategy implements Co
      */
     @Override
     public boolean appliesTo(Class<Externalizable> c) {
-        return Externalizable.class.isAssignableFrom(c);
+        return Externalizable.class.isAssignableFrom(c) && ReflectionUtil.isUnrestrictedOrOpen(c, ExternalizableStrategy.class);
     }
 
     /**
@@ -147,7 +148,7 @@ public final class ExternalizableStrategy extends AbstractStrategy implements Co
         final Class cls = ctx.classFor(classAttrVal);
         if (Externalizable.class.isAssignableFrom(cls)) {
             try {
-                return (Externalizable) cls.newInstance();
+                return (Externalizable) ReflectionUtil.instantiate(cls);
             } catch (ReflectiveOperationException noDefaultConstructorX) {
                 throw new IllegalArgumentException("Externalizable class with invalid default constructor", noDefaultConstructorX);
             }
@@ -175,7 +176,7 @@ public final class ExternalizableStrategy extends AbstractStrategy implements Co
             // check for readResolve():
             try {
                 final Method readResolveM = cls.getDeclaredMethod(METHOD_READRESOLVE, ReflectionUtil.METHOD_NO_PARAMS);
-                ReflectionUtil.setAccessible(readResolveM); // method may be private. Hence must be set accessible true.
+                ReflectionUtil.setAccessible(readResolveM); // method may be private. Hence, must be set accessible true.
                 final Object resolved = readResolveM.invoke(target);
                 if (resolved == null) {
                     return null;

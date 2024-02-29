@@ -16,7 +16,7 @@
  * Please contact the author ( cordis.victor@gmail.com ) if you need additional
  * information or have any questions.
  */
-package net.sourceforge.easyml.marshalling.java.time;
+package net.sourceforge.easyml.marshalling.java.util.concurrent.atomic;
 
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.AbstractStrategy;
@@ -24,44 +24,36 @@ import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoField;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * LocalDateTimeStrategy class that implements the {@linkplain SimpleStrategy}
- * interface for the {@linkplain LocalDateTime}. This implementation is thread-safe.
+ * AtomicLongStrategy class that implements the {@linkplain SimpleStrategy} interface
+ * for the {@linkplain AtomicLong} datatype. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
- * @since 1.5.1
+ * @version 1.0
+ * @since 1.5.3
  */
-public final class LocalDateTimeStrategy extends AbstractStrategy implements SimpleStrategy<LocalDateTime> {
+public final class AtomicLongStrategy extends AbstractStrategy implements SimpleStrategy<AtomicLong> {
 
     /**
      * Constant defining the value used for the strategy name.
      */
-    public static final String NAME = "localdatetime";
+    public static final String NAME = "atomic-long";
     /**
      * Constant defining the singleton instance.
      */
-    public static final LocalDateTimeStrategy INSTANCE = new LocalDateTimeStrategy();
-    private static final DateTimeFormatter DATETIME_FORMATTER = new DateTimeFormatterBuilder()
-            .appendPattern("uuuu-MM-dd'T'HH:mm:ss")
-            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
-            .toFormatter();
+    public static final AtomicLongStrategy INSTANCE = new AtomicLongStrategy();
 
-    private LocalDateTimeStrategy() {
+    private AtomicLongStrategy() {
     }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public Class<LocalDateTime> target() {
-        return LocalDateTime.class;
+    public Class<AtomicLong> target() {
+        return AtomicLong.class;
     }
 
     /**
@@ -76,19 +68,19 @@ public final class LocalDateTimeStrategy extends AbstractStrategy implements Sim
      * {@inheritDoc }
      */
     @Override
-    public String marshal(LocalDateTime target, MarshalContext ctx) {
-        return DATETIME_FORMATTER.format(target);
+    public String marshal(AtomicLong target, MarshalContext ctx) {
+        return String.valueOf(target.get());
     }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public LocalDateTime unmarshal(String text, UnmarshalContext ctx) {
+    public AtomicLong unmarshal(String text, UnmarshalContext ctx) {
         try {
-            return LocalDateTime.parse(text);
-        } catch (DateTimeParseException dtpX) {
-            throw new InvalidFormatException(ctx.readerPositionDescriptor(), dtpX);
+            return new AtomicLong(Long.parseLong(text));
+        } catch (NumberFormatException nfx) {
+            throw new InvalidFormatException(ctx.readerPositionDescriptor(), nfx);
         }
     }
 }

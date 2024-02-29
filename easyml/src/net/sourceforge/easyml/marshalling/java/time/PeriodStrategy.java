@@ -53,24 +53,8 @@ public final class PeriodStrategy extends AbstractStrategy implements SimpleStra
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Period> target() {
         return Period.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Period> c) {
-        return c == Period.class;
     }
 
     /**

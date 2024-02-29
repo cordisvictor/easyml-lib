@@ -20,15 +20,15 @@ package net.sourceforge.easyml;
 
 import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.marshalling.dtd.*;
-import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.*;
 import net.sourceforge.easyml.util.ReflectionUtil;
-import net.sourceforge.easyml.util.ValueType;
+import net.sourceforge.easyml.util.ReflectionUtil.ValueType;
 import net.sourceforge.easyml.util.XMLUtil;
 import org.w3c.dom.Document;
 
 import java.io.*;
-import java.lang.reflect.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Consumer;
@@ -60,7 +60,7 @@ import java.util.function.LongConsumer;
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.6.0
  * @see XMLReader
  * @since 1.0
  */
@@ -450,12 +450,8 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
             }
             try {
                 this.target.write0(o);
-            } catch (NoSuchMethodException nDC) {
-                throw new IllegalArgumentException("value: no default constructor: " + nDC.getMessage(), nDC);
-            } catch (InvocationTargetException | InstantiationException iDC) {
-                throw new IllegalArgumentException("value: invalid default constructor: " + iDC.getMessage(), iDC);
-            } catch (IllegalAccessException iDCM) {
-                throw new IllegalArgumentException("value: invalid default constructor modifier: " + iDCM.getMessage(), iDCM);
+            } catch (IllegalAccessException ex) {
+                throw new IllegalArgumentException("o: invalid bean: " + ex.getMessage(), ex);
             }
         }
 
@@ -853,19 +849,14 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
      * objects, and arrays, starting from the given <code>o</code> node.
      *
      * @param o the write start-point node
-     * @throws IllegalArgumentException if an illegal (non values/bean/array) is
-     *                                  encountered
+     * @throws IllegalArgumentException if an invalid bean is encountered
      */
     public final void write(Object o) {
         this.ensureRootWritten();
         try {
             this.write0(o);
-        } catch (NoSuchMethodException nDC) {
-            throw new IllegalArgumentException("o: no default constructor: " + nDC.getMessage(), nDC);
-        } catch (InvocationTargetException | InstantiationException iDC) {
-            throw new IllegalArgumentException("o: invalid default constructor: " + iDC.getMessage(), iDC);
-        } catch (IllegalAccessException iDCM) {
-            throw new IllegalArgumentException("o: invalid default constructor modifier: " + iDCM.getMessage(), iDCM);
+        } catch (IllegalAccessException ex) {
+            throw new IllegalArgumentException("o: invalid bean: " + ex.getMessage(), ex);
         }
     }
 
@@ -880,9 +871,7 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
         return this.driver == null || this.driver.state == XMLWriter.Driver.STATE_INITIAL;
     }
 
-    private void write0(Object data)
-            throws NoSuchMethodException, InvocationTargetException,
-            InstantiationException, IllegalAccessException {
+    private void write0(Object data) throws IllegalAccessException {
         // simple strategy:
         // nil:
         if (data == null) {
@@ -925,9 +914,7 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
     }
 
     // array: the array of unknown class to write as XML
-    private void writeArray(Object array)
-            throws NoSuchMethodException, InvocationTargetException,
-            InstantiationException, IllegalAccessException {
+    private void writeArray(Object array) throws IllegalAccessException {
         final int length = Array.getLength(array);
         this.driver.startElement(DTD.ELEMENT_ARRAY);
         this.driver.setAttribute(DTD.ATTRIBUTE_LENGTH, Integer.toString(length));
@@ -947,25 +934,25 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
     }
 
     // obj: "object with properties" to write
-    private void writeObject(Object obj)
-            throws NoSuchMethodException, InstantiationException,
-            InvocationTargetException, IllegalAccessException {
+    private void writeObject(Object obj) throws IllegalAccessException {
         // begin bean encoding:
-        this.driver.startElement(DTD.ELEMENT_OBJECT);
         Class cls = obj.getClass();
+        this.driver.startElement(DTD.ELEMENT_OBJECT);
         this.driver.setAttribute(DTD.ATTRIBUTE_CLASS, this.context.aliasOrNameFor(cls));
         // encode properties:
         while (cls != Object.class) { // process inheritance:
             for (Field f : cls.getDeclaredFields()) { // process composition:
-                if (!ReflectionUtil.isFieldProperty(f) || this.context.excluded(f)) {
-                    continue; // skip static or non-property or excluded field.
+                if (this.context.excluded(f)) {
+                    continue; // skip excluded field.
                 }
-                // get property field:
-                ReflectionUtil.setAccessible(f);
+                final ReflectionUtil.FieldInfo fi = ReflectionUtil.fieldInfoForRead(f);
+                if (!fi.isProperty) {
+                    continue; // skip non-property.
+                }
                 // write property value:
                 final String aliasedFieldName = this.context.aliasOrNameFor(f);
                 this.driver.startElement(aliasedFieldName);
-                this.write0(f.get(obj));
+                this.write0(ReflectionUtil.readProperty(obj, f, fi.accessor));
                 this.driver.endElement();
             }
             cls = cls.getSuperclass();

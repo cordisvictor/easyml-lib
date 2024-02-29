@@ -32,6 +32,10 @@ import net.sourceforge.easyml.marshalling.java.net.URLStrategy;
 import net.sourceforge.easyml.marshalling.java.time.*;
 import net.sourceforge.easyml.marshalling.java.util.*;
 import net.sourceforge.easyml.marshalling.java.util.concurrent.ConcurrentHashMapStrategy;
+import net.sourceforge.easyml.marshalling.java.util.concurrent.atomic.AtomicBooleanStrategy;
+import net.sourceforge.easyml.marshalling.java.util.concurrent.atomic.AtomicIntegerStrategy;
+import net.sourceforge.easyml.marshalling.java.util.concurrent.atomic.AtomicLongStrategy;
+import net.sourceforge.easyml.marshalling.java.util.concurrent.atomic.AtomicReferenceStrategy;
 import net.sourceforge.easyml.marshalling.java.util.regex.PatternStrategy;
 import org.w3c.dom.Document;
 import org.xmlpull.v1.XmlPullParser;
@@ -80,7 +84,7 @@ import java.util.function.Supplier;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.5.3
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -246,6 +250,9 @@ public final class EasyML {
         composite.add(CalendarStrategy.INSTANCE);
         composite.add(EnumMapStrategy.INSTANCE);
         composite.add(EnumSetStrategy.INSTANCE);
+        composite.add(EmptyListStrategy.INSTANCE);
+        composite.add(EmptyMapStrategy.INSTANCE);
+        composite.add(EmptySetStrategy.INSTANCE);
         composite.add(HashMapStrategy.INSTANCE);
         composite.add(HashSetStrategy.INSTANCE);
         composite.add(HashtableStrategy.INSTANCE);
@@ -262,10 +269,16 @@ public final class EasyML {
         composite.add(StackStrategy.INSTANCE);
         composite.add(TreeMapStrategy.INSTANCE);
         composite.add(TreeSetStrategy.INSTANCE);
+        simple.add(TimeZoneStrategy.INSTANCE);
         simple.add(UUIDStrategy.INSTANCE);
         composite.add(VectorStrategy.INSTANCE);
         // util.concurrent:
         composite.add(ConcurrentHashMapStrategy.INSTANCE);
+        // util.concurrent.atomic:
+        simple.add(AtomicBooleanStrategy.INSTANCE);
+        simple.add(AtomicIntegerStrategy.INSTANCE);
+        simple.add(AtomicLongStrategy.INSTANCE);
+        composite.add(AtomicReferenceStrategy.INSTANCE);
         // util.regex:
         composite.add(PatternStrategy.INSTANCE);
     }
@@ -330,6 +343,9 @@ public final class EasyML {
         composite.put(CalendarStrategy.NAME, CalendarStrategy.INSTANCE);
         composite.put(EnumMapStrategy.NAME, EnumMapStrategy.INSTANCE);
         composite.put(EnumSetStrategy.NAME, EnumSetStrategy.INSTANCE);
+        composite.put(EmptyListStrategy.NAME, EmptyListStrategy.INSTANCE);
+        composite.put(EmptyMapStrategy.NAME, EmptyMapStrategy.INSTANCE);
+        composite.put(EmptySetStrategy.NAME, EmptySetStrategy.INSTANCE);
         composite.put(HashMapStrategy.NAME, HashMapStrategy.INSTANCE);
         composite.put(HashSetStrategy.NAME, HashSetStrategy.INSTANCE);
         composite.put(HashtableStrategy.NAME, HashtableStrategy.INSTANCE);
@@ -346,10 +362,16 @@ public final class EasyML {
         composite.put(StackStrategy.NAME, StackStrategy.INSTANCE);
         composite.put(TreeMapStrategy.NAME, TreeMapStrategy.INSTANCE);
         composite.put(TreeSetStrategy.NAME, TreeSetStrategy.INSTANCE);
+        simple.put(TimeZoneStrategy.NAME, TimeZoneStrategy.INSTANCE);
         simple.put(UUIDStrategy.NAME, UUIDStrategy.INSTANCE);
         composite.put(VectorStrategy.NAME, VectorStrategy.INSTANCE);
         // util.concurrent:
         composite.put(ConcurrentHashMapStrategy.NAME, ConcurrentHashMapStrategy.INSTANCE);
+        // util.concurrent.atomic:
+        simple.put(AtomicBooleanStrategy.NAME, AtomicBooleanStrategy.INSTANCE);
+        simple.put(AtomicIntegerStrategy.NAME, AtomicIntegerStrategy.INSTANCE);
+        simple.put(AtomicLongStrategy.NAME, AtomicLongStrategy.INSTANCE);
+        composite.put(AtomicReferenceStrategy.NAME, AtomicReferenceStrategy.INSTANCE);
         // util.regex:
         composite.put(PatternStrategy.NAME, PatternStrategy.INSTANCE);
     }

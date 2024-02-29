@@ -165,23 +165,6 @@ public class ArraysCollectionsTest {
     }
 
     @Test
-    public void testStack() {
-        final Stack<String> expected = new Stack();
-        expected.push("call1");
-        expected.push("call2");
-        expected.push("call3");
-        final XMLWriter xos = new XMLWriter(this.out);
-        xos.getCompositeStrategies().add(new SerializableStrategy());
-        xos.write(expected);
-        xos.close();
-        System.out.println(this.out);
-        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
-        xis.getCompositeStrategies().put(SerializableStrategy.NAME, new SerializableStrategy());
-        assertEquals(expected, xis.read());
-        xis.close();
-    }
-
-    @Test
     public void testCharArray() {
         final char[] expected = new char[]{'a', '&', 'c'};
         final XMLWriter xos = new XMLWriter(this.out);

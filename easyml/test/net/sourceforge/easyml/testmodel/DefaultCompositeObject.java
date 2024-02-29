@@ -21,8 +21,7 @@ package net.sourceforge.easyml.testmodel;
 import java.io.Serializable;
 
 /**
- *
- * @author victor
+ * @author Victor Cordis ( cordis.victor at gmail.com)
  */
 public class DefaultCompositeObject implements Serializable {
 

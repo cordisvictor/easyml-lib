@@ -23,9 +23,31 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * @author victor
+ * @author Victor Cordis ( cordis.victor at gmail.com)
  */
 public class ReflectionUtilTest {
+
+    @Test
+    public void testFieldInfoForRead() throws Exception {
+        ReflectionUtil.FieldInfo fiI = ReflectionUtil.fieldInfoForRead(TestBean.class.getDeclaredField("i"));
+        ReflectionUtil.FieldInfo fiData = ReflectionUtil.fieldInfoForRead(TestBean.class.getDeclaredField("data"));
+        ReflectionUtil.FieldInfo fiNonProp = ReflectionUtil.fieldInfoForRead(TestBean.class.getDeclaredField("nonProp"));
+
+        assertTrue(fiI.isProperty && fiI.accessor != null);
+        assertTrue(fiData.isProperty && fiData.accessor == null);
+        assertTrue(!fiNonProp.isProperty && fiNonProp.accessor == null);
+    }
+
+    @Test
+    public void testFieldInfoForWrite() throws Exception {
+        ReflectionUtil.FieldInfo fiI = ReflectionUtil.fieldInfoForWrite(TestBean.class.getDeclaredField("i"));
+        ReflectionUtil.FieldInfo fiData = ReflectionUtil.fieldInfoForWrite(TestBean.class.getDeclaredField("data"));
+        ReflectionUtil.FieldInfo fiNonProp = ReflectionUtil.fieldInfoForWrite(TestBean.class.getDeclaredField("nonProp"));
+
+        assertTrue(fiI.isProperty && fiI.accessor != null);
+        assertTrue(fiData.isProperty && fiData.accessor == null);
+        assertTrue(!fiNonProp.isProperty && fiNonProp.accessor == null);
+    }
 
     @Test
     public void testForName() throws Exception {
@@ -39,13 +61,6 @@ public class ReflectionUtilTest {
         final Object instantiated = ReflectionUtil.instantiateUnsafely(NoDefCtorObject.class);
         assertNotNull(instantiated);
         assertEquals(NoDefCtorObject.class, instantiated.getClass());
-    }
-
-    @Test
-    public void testIsFieldProperty() throws Exception {
-        assertTrue(ReflectionUtil.isFieldProperty(TestBean.class.getDeclaredField("i")));
-        assertTrue(ReflectionUtil.isFieldProperty(TestBean.class.getDeclaredField("data")));
-        assertFalse(ReflectionUtil.isFieldProperty(TestBean.class.getDeclaredField("nonProp")));
     }
 
     private static class TestC1 {

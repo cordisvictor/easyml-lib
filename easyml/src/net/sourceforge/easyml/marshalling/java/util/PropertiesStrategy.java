@@ -20,11 +20,10 @@ package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
-import net.sourceforge.easyml.util.ReflectionUtil;
 
-import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * PropertiesStrategy class that implements the {@linkplain CompositeStrategy}
@@ -33,7 +32,7 @@ import java.util.Properties;
  * {@linkplain Map}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.5.3
  * @since 1.0
  */
 public final class PropertiesStrategy extends AbstractStrategy implements CompositeStrategy<Properties> {
@@ -50,18 +49,6 @@ public final class PropertiesStrategy extends AbstractStrategy implements Compos
     private static final String ELEMENT_ENTRY = "entry";
     private static final String ATTRIBUTE_KEY = "key";
     private static final String ATTRIBUTE_VALUE = "value";
-    private static final Field propertiesDefaults;
-
-    static {
-        Field propertiesDefs;
-        try {
-            propertiesDefs = Properties.class.getDeclaredField("defaults");
-            ReflectionUtil.setAccessible(propertiesDefs);
-        } catch (NoSuchFieldException | SecurityException ignored) {
-            propertiesDefs = null;
-        }
-        propertiesDefaults = propertiesDefs;
-    }
 
     private PropertiesStrategy() {
     }
@@ -70,24 +57,8 @@ public final class PropertiesStrategy extends AbstractStrategy implements Compos
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Properties> target() {
         return Properties.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Properties> c) {
-        return c == Properties.class;
     }
 
     /**
@@ -104,12 +75,7 @@ public final class PropertiesStrategy extends AbstractStrategy implements Compos
     @Override
     public void marshal(Properties target, CompositeWriter writer, MarshalContext ctx) {
         writer.startElement(PropertiesStrategy.NAME);
-        Properties defaults = null;
-        try {
-            defaults = (Properties) PropertiesStrategy.propertiesDefaults.get(target);
-        } catch (IllegalArgumentException | IllegalAccessException ex) {
-            // will never happen.
-        }
+        final Properties defaults = defaultsOf(target);
         if (defaults != null) {
             writer.startElement(ELEMENT_DEFAULTS);
             writer.write(defaults);
@@ -129,7 +95,7 @@ public final class PropertiesStrategy extends AbstractStrategy implements Compos
      */
     @Override
     public Properties unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
-        return new Properties();// do not consume properties start: let the second step while do it.
+        return new Properties();// do not consume properties start: let unmarshalInit() while-loop do it.
     }
 
     /**
@@ -137,32 +103,55 @@ public final class PropertiesStrategy extends AbstractStrategy implements Compos
      */
     @Override
     public Properties unmarshalInit(Properties target, CompositeReader reader, UnmarshalContext ctx) {
+        Properties result = target; // result might be reinited in order to set defaults.
         while (reader.next()) {// read Properties entries:
             if (reader.atElementStart()) {
                 switch (reader.elementName()) {
                     case PropertiesStrategy.ELEMENT_ENTRY:
-                        target.setProperty(
+                        result.setProperty(
                                 reader.elementRequiredAttribute(PropertiesStrategy.ATTRIBUTE_KEY),
                                 reader.elementRequiredAttribute(PropertiesStrategy.ATTRIBUTE_VALUE));
                         reader.next(); // consumed entry element start.
                         break;
                     case PropertiesStrategy.ELEMENT_DEFAULTS:
-                        reader.next(); // consumed defaults element start.
-                        try {
-                            PropertiesStrategy.propertiesDefaults.set(target, reader.read());
-                        } catch (IllegalAccessException neverThrown) {
-                            // ignore it.
+                        if (!result.isEmpty()) {
+                            throw new InvalidFormatException(ctx.readerPositionDescriptor(), "Properties defaults must be first element");
                         }
-                        // do not consume defaults element end: let the next while do it.
+                        reader.next(); // consumed defaults element start.
+
+                        final Object defaults = reader.read();
+                        if (!(defaults instanceof Properties)) {
+                            throw new InvalidFormatException(ctx.readerPositionDescriptor(),
+                                    "expected Properties defaults, found " + (defaults != null ? defaults.getClass() : null));
+                        }
+                        result = new Properties((Properties) defaults);
                         break;
                     default:
                         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "unexpected element start");
                 }
             } else if (reader.atElementEnd()
                     && reader.elementName().equals(PropertiesStrategy.NAME)) {
-                return target;
+                return result;
             }
         }
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "missing element end");
     }
+
+    private static Properties defaultsOf(Properties source) {
+        final Set<String> allNames = source.stringPropertyNames();
+        final Set<Object> propertyNames = source.keySet();
+
+        if (allNames.size() == propertyNames.size()) {
+            return null;
+        }
+
+        final Properties defaults = new Properties();
+        for (String name : allNames) {
+            if (!propertyNames.contains(name)) {
+                defaults.setProperty(name, source.getProperty(name));
+            }
+        }
+        return defaults;
+    }
+
 }

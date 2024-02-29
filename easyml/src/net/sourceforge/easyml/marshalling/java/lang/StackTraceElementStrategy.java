@@ -52,24 +52,8 @@ public final class StackTraceElementStrategy extends AbstractStrategy implements
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<StackTraceElement> target() {
         return StackTraceElement.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<StackTraceElement> c) {
-        return c == StackTraceElement.class;
     }
 
     /**

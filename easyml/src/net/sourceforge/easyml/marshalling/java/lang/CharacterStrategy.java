@@ -51,14 +51,6 @@ public final class CharacterStrategy extends AbstractStrategy implements SimpleS
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Character> target() {
         return Character.class;
     }

@@ -52,24 +52,8 @@ public final class UUIDStrategy extends AbstractStrategy implements SimpleStrate
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<UUID> target() {
         return UUID.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<UUID> c) {
-        return c == UUID.class;
     }
 
     /**

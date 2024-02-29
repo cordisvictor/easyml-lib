@@ -48,24 +48,8 @@ public final class Base64Strategy extends AbstractStrategy implements SimpleStra
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<byte[]> target() {
         return byte[].class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<byte[]> c) {
-        return c == byte[].class;
     }
 
     /**

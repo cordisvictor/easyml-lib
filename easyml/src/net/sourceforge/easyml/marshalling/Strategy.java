@@ -20,10 +20,11 @@ package net.sourceforge.easyml.marshalling;
 
 /**
  * Strategy interface is a {@linkplain Named} object used to marshal a data type to EasyML and back again.
+ * By default, Strategy is strict.
  *
  * @param <T> target class
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.5.3
  * @since 1.0
  */
 public interface Strategy<T> extends Named {
@@ -32,10 +33,25 @@ public interface Strategy<T> extends Named {
      * Returns true if this instance applies strictly to one
      * <code>Class</code>. False means that the implementation is applicable to
      * a class hierarchy.
+     * Strict, by default.
      *
      * @return true if strict, false if inheritance applicable
      */
-    boolean strict();
+    default boolean strict(){
+        return true;
+    }
+
+    /**
+     * Returns true if this instance is applicable to the given class, false
+     * otherwise.
+     * Strict, by default.
+     *
+     * @param c to test
+     * @return true if can be marshalled and un-marshalled using this strategy
+     */
+    default boolean appliesTo(Class<T> c){
+        return c == target();
+    }
 
     /**
      * Returns the class on which this instance operates. The non-
@@ -47,12 +63,4 @@ public interface Strategy<T> extends Named {
      */
     Class target();
 
-    /**
-     * Returns true if this instance is applicable to the given class, false
-     * otherwise.
-     *
-     * @param c to test
-     * @return true if can be marshalled and un-marshalled using this strategy
-     */
-    boolean appliesTo(Class<T> c);
 }

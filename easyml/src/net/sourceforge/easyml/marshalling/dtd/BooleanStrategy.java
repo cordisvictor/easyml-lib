@@ -21,8 +21,8 @@ package net.sourceforge.easyml.marshalling.dtd;
 import net.sourceforge.easyml.DTD;
 import net.sourceforge.easyml.marshalling.AbstractStrategy;
 import net.sourceforge.easyml.marshalling.MarshalContext;
-import net.sourceforge.easyml.marshalling.UnmarshalContext;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
+import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
 /**
  * BooleanStrategy class that implements the {@linkplain SimpleStrategy}
@@ -40,14 +40,6 @@ public final class BooleanStrategy extends AbstractStrategy implements SimpleStr
     public static final BooleanStrategy INSTANCE = new BooleanStrategy();
 
     private BooleanStrategy() {
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean strict() {
-        return true;
     }
 
     /**

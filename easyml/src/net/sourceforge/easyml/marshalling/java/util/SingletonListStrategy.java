@@ -20,19 +20,17 @@ package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
-import net.sourceforge.easyml.util.ReflectionUtil;
 
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
 /**
  * SingletonListStrategy class that implements {@linkplain CompositeStrategy}
- * for the {@linkplain Collections#singletonList(java.lang.Object) } list
- * implementation. This implementation is thread-safe.
+ * for the {@linkplain Collections#singletonList(java.lang.Object) } implementation.
+ * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.5.3
  * @since 1.0.2
  */
 public final class SingletonListStrategy extends AbstractStrategy implements CompositeStrategy<List> {
@@ -45,20 +43,7 @@ public final class SingletonListStrategy extends AbstractStrategy implements Com
      * Constant defining the singleton instance.
      */
     public static final SingletonListStrategy INSTANCE = new SingletonListStrategy();
-    private static final Class TARGET;
-    private static final Field TARGET_ELEMENT;
-
-    static {
-        TARGET = Collections.singletonList(null).getClass();
-        Field singletonListElement;
-        try {
-            singletonListElement = TARGET.getDeclaredField("element");
-            ReflectionUtil.setAccessible(singletonListElement);
-        } catch (NoSuchFieldException | SecurityException ignored) {
-            singletonListElement = null;
-        }
-        TARGET_ELEMENT = singletonListElement;
-    }
+    private static final Class TARGET = Collections.singletonList(null).getClass();
 
     private SingletonListStrategy() {
     }
@@ -67,24 +52,8 @@ public final class SingletonListStrategy extends AbstractStrategy implements Com
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class target() {
         return SingletonListStrategy.TARGET;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<List> c) {
-        return c == SingletonListStrategy.TARGET;
     }
 
     /**
@@ -121,9 +90,9 @@ public final class SingletonListStrategy extends AbstractStrategy implements Com
         // consume root tag:
         reader.next();
         // read and set singleton element:
-        TARGET_ELEMENT.set(target, reader.read());
+        final Object singleton = reader.read();
         if (reader.atElementEnd() && reader.elementName().equals(SingletonListStrategy.NAME)) {
-            return target;
+            return Collections.singletonList(singleton);
         }
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "unexpected element end");
     }

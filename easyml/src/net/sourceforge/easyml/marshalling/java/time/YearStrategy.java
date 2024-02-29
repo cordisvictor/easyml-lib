@@ -52,24 +52,8 @@ public final class YearStrategy extends AbstractStrategy implements SimpleStrate
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Year> target() {
         return Year.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Year> c) {
-        return c == Year.class;
     }
 
     /**

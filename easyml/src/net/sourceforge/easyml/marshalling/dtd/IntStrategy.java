@@ -47,14 +47,6 @@ public final class IntStrategy extends AbstractStrategy implements SimpleStrateg
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Integer> target() {
         return Integer.class;
     }

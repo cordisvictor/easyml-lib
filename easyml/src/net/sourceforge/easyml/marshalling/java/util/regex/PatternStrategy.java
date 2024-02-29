@@ -53,24 +53,8 @@ public final class PatternStrategy extends AbstractStrategy implements Composite
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Pattern> target() {
         return Pattern.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Pattern> c) {
-        return c == Pattern.class;
     }
 
     /**

@@ -53,24 +53,8 @@ public final class InstantStrategy extends AbstractStrategy implements SimpleStr
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Instant> target() {
         return Instant.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Instant> c) {
-        return c == Instant.class;
     }
 
     /**

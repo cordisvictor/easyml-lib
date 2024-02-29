@@ -50,24 +50,8 @@ public final class OptionalStrategy extends AbstractStrategy implements Composit
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Optional> target() {
         return Optional.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Optional> c) {
-        return c == Optional.class;
     }
 
     /**

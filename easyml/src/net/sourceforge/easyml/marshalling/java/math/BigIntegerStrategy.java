@@ -53,24 +53,8 @@ public final class BigIntegerStrategy extends AbstractStrategy implements Simple
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<BigInteger> target() {
         return BigInteger.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<BigInteger> c) {
-        return c == BigInteger.class;
     }
 
     /**

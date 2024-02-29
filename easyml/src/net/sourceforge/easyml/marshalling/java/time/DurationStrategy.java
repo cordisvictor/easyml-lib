@@ -53,24 +53,8 @@ public final class DurationStrategy extends AbstractStrategy implements SimpleSt
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Duration> target() {
         return Duration.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Duration> c) {
-        return c == Duration.class;
     }
 
     /**

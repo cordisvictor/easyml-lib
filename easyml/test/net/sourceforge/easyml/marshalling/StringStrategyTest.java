@@ -24,8 +24,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- *
- * @author victor
+ * @author Victor Cordis ( cordis.victor at gmail.com)
  */
 public class StringStrategyTest {
 

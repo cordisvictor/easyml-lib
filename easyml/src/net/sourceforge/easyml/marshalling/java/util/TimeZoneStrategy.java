@@ -16,45 +16,59 @@
  * Please contact the author ( cordis.victor@gmail.com ) if you need additional
  * information or have any questions.
  */
-package net.sourceforge.easyml.marshalling.java.time;
+package net.sourceforge.easyml.marshalling.java.util;
 
-import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.AbstractStrategy;
 import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.SimpleStrategy;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
-import java.time.YearMonth;
-import java.time.format.DateTimeParseException;
+import java.util.TimeZone;
 
 /**
- * YearMonthStrategy class that implements the {@linkplain SimpleStrategy}
- * interface for the {@linkplain YearMonth}. This implementation is thread-safe.
+ * TimeZoneStrategy class that implements the {@linkplain SimpleStrategy}
+ * interface for the {@linkplain TimeZone}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
- * @since 1.5.1
+ * @version 1.5.3
+ * @since 1.5.3
  */
-public final class YearMonthStrategy extends AbstractStrategy implements SimpleStrategy<YearMonth> {
+public final class TimeZoneStrategy extends AbstractStrategy implements SimpleStrategy<TimeZone> {
 
     /**
      * Constant defining the value used for the strategy name.
      */
-    public static final String NAME = "yearmonth";
+    public static final String NAME = "timezone";
     /**
      * Constant defining the singleton instance.
      */
-    public static final YearMonthStrategy INSTANCE = new YearMonthStrategy();
+    public static final TimeZoneStrategy INSTANCE = new TimeZoneStrategy();
 
-    private YearMonthStrategy() {
+    private TimeZoneStrategy() {
     }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public Class<YearMonth> target() {
-        return YearMonth.class;
+    public boolean strict() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public Class<TimeZone> target() {
+        return TimeZone.class;
+    }
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public boolean appliesTo(Class<TimeZone> c) {
+        return TimeZone.class.isAssignableFrom(c);
     }
 
     /**
@@ -69,19 +83,15 @@ public final class YearMonthStrategy extends AbstractStrategy implements SimpleS
      * {@inheritDoc }
      */
     @Override
-    public String marshal(YearMonth target, MarshalContext ctx) {
-        return target.toString();
+    public String marshal(TimeZone target, MarshalContext ctx) {
+        return target.getID();
     }
 
     /**
      * {@inheritDoc }
      */
     @Override
-    public YearMonth unmarshal(String text, UnmarshalContext ctx) {
-        try {
-            return YearMonth.parse(text);
-        } catch (DateTimeParseException dtpX) {
-            throw new InvalidFormatException(ctx.readerPositionDescriptor(), dtpX);
-        }
+    public TimeZone unmarshal(String text, UnmarshalContext ctx) {
+        return TimeZone.getTimeZone(text);
     }
 }

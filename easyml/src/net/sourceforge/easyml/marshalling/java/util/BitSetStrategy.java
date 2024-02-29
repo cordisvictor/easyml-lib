@@ -54,24 +54,8 @@ public final class BitSetStrategy extends AbstractStrategy implements CompositeS
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class target() {
         return BitSet.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<BitSet> c) {
-        return c == BitSet.class;
     }
 
     /**

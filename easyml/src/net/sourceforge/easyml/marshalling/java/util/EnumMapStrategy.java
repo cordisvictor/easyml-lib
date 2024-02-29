@@ -20,9 +20,7 @@ package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
-import net.sourceforge.easyml.util.ReflectionUtil;
 
-import java.lang.reflect.Field;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +30,7 @@ import java.util.Set;
  * the {@linkplain EnumMap}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.5.3
  * @since 1.4.6
  */
 public final class EnumMapStrategy extends AbstractStrategy implements CompositeStrategy<EnumMap> {
@@ -46,28 +44,8 @@ public final class EnumMapStrategy extends AbstractStrategy implements Composite
      */
     public static final EnumMapStrategy INSTANCE = new EnumMapStrategy();
     private static final String ATTRIBUTE_KEYTYPE = "keyType";
-    private static final Field keyType;
-
-    static {
-        Field keyT;
-        try {
-            keyT = EnumMap.class.getDeclaredField("keyType");
-            ReflectionUtil.setAccessible(keyT);
-        } catch (NoSuchFieldException | SecurityException ignored) {
-            keyT = null;
-        }
-        keyType = keyT;
-    }
 
     private EnumMapStrategy() {
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean strict() {
-        return true;
     }
 
     /**
@@ -82,14 +60,6 @@ public final class EnumMapStrategy extends AbstractStrategy implements Composite
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<EnumMap> c) {
-        return c == EnumMap.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public String name() {
         return EnumMapStrategy.NAME;
     }
@@ -97,7 +67,7 @@ public final class EnumMapStrategy extends AbstractStrategy implements Composite
     @Override
     public void marshal(EnumMap target, CompositeWriter writer, MarshalContext ctx) {
         writer.startElement(EnumMapStrategy.NAME);
-        writer.setAttribute(ATTRIBUTE_KEYTYPE, ctx.aliasOrNameFor(reflectKeyType(target)));
+        writer.setAttribute(ATTRIBUTE_KEYTYPE, ctx.aliasOrNameFor(maybeKeyType(target)));
 
         Set<Map.Entry> entrySet = target.entrySet();
         for (Map.Entry e : entrySet) {
@@ -107,12 +77,11 @@ public final class EnumMapStrategy extends AbstractStrategy implements Composite
         writer.endElement();
     }
 
-    private static Class reflectKeyType(EnumMap target) {
-        try {
-            return (Class) keyType.get(target);
-        } catch (IllegalArgumentException | IllegalAccessException ignored) {
-            return null;
+    private static <K extends Enum<K>, V> Class<K> maybeKeyType(EnumMap<K, V> target) {
+        if (target.isEmpty()) {
+            throw new IllegalArgumentException("target EnumMap is empty");
         }
+        return target.keySet().iterator().next().getDeclaringClass();
     }
 
     @Override
@@ -122,10 +91,15 @@ public final class EnumMapStrategy extends AbstractStrategy implements Composite
 
     @Override
     public Object unmarshalInit(EnumMap target, CompositeReader reader, UnmarshalContext ctx) {
+        final Class keyTypeCls;
+        try {
+            keyTypeCls = ctx.classFor(reader.elementRequiredAttribute(ATTRIBUTE_KEYTYPE));
+        } catch (ClassNotFoundException e) {
+            throw new InvalidFormatException(ctx.readerPositionDescriptor(), "invalid " + ATTRIBUTE_KEYTYPE + ": " + e.getMessage());
+        }
         // consume root element:
         reader.next();
         // read elements:
-        final Class keyTypeCls = reflectKeyType(target);
         while (true) {
             if (reader.atElementEnd() && reader.elementName().equals(EnumMapStrategy.NAME)) {
                 return target;

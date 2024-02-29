@@ -19,17 +19,20 @@
 package net.sourceforge.easyml;
 
 import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
-import net.sourceforge.easyml.marshalling.java.util.BitSetStrategy;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.BitSet;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author victor
+ * @author Victor Cordis ( cordis.victor at gmail.com)
  */
 public class BugsTest {
 
@@ -72,22 +75,13 @@ public class BugsTest {
 
     @Test
     public void testBugSerial_PutGetFieldsCustomKeys() throws Exception {
-        // we want to test the serialization protocol on the bitset as usecase
-        // so we make sure that SerializableStrategy will be used:
         easyml = new EasyMLBuilder()
                 //.withStyle(EasyML.Style.PRETTY)
                 //.withProfile(EasyML.Profile.GENERIC)
                 .withStrategy(new SerializableStrategy())
-                .withoutStrategy(BitSetStrategy.INSTANCE)
                 .build();
 
-        final BitSet expected = new BitSet();
-        expected.set(1);
-        expected.set(3);
-        expected.set(8);
-        expected.set(11);
-        expected.set(0);
-        expected.set(64);
+        final ObjectUsingPutGetFields expected = new ObjectUsingPutGetFields("testText");
 
         String xml = easyml.serialize(expected);
         System.out.println(xml);
@@ -196,6 +190,51 @@ public class BugsTest {
             public String toString() {
                 return "val2";
             }
+        }
+    }
+
+    private static final class ObjectUsingPutGetFields implements Serializable {
+
+        private String text;
+
+        public ObjectUsingPutGetFields() {
+        }
+
+        public ObjectUsingPutGetFields(String text) {
+            this.text = text;
+        }
+
+        private void writeObject(ObjectOutputStream s) throws IOException {
+
+            ObjectOutputStream.PutField fields = s.putFields();
+            fields.put("data", text);
+            s.writeFields();
+        }
+
+        private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+
+            ObjectInputStream.GetField fields = s.readFields();
+            text = (String) fields.get("data", null);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ObjectUsingPutGetFields that = (ObjectUsingPutGetFields) o;
+            return Objects.equals(text, that.text);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(text);
+        }
+
+        @Override
+        public String toString() {
+            return "ObjectUsingPutGetFields{" +
+                    "text='" + text + '\'' +
+                    '}';
         }
     }
 }

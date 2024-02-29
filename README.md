@@ -60,11 +60,25 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
-!Release 1.5.2
+Release 1.6.0 (requires Java 9, recommended up to Java 17)
+- XMLWriter and XMLReader use getters and setters.
+- feature: support for Java 9 modules.
+- NON-BACKWARD COMPATIBLE refactor of ReflectionUtil.
+
+
+Release 1.5.3
+- refactor: remove deprecated Class.newInstance() usages.
+- refactor: limited reflection usage from Properties, EnumSet, EnumMap,
+SingletonList, SingletonSet, SingletonMap strategies.
+- feature: added java.util.concurrent.atomic strategies.
+- feature: added java.util.Collections emptyList, emptyMap, emptySet strategies.
+
+
+Release 1.5.2 (requires Java 8, recommended up to Java 9)
 - feature: added generic mechanism for cache clearing.
 
 
-!Release 1.5.1
+Release 1.5.1
 - feature: added functional API.
 - feature: added CalendarStrategy and OptionalStrategy.
 - feature: added java.time strategies.
@@ -72,19 +86,18 @@ for a higher control compared to the EasyML Facade.
 - refactor: remove Profile feature.
 
 
-!Release 1.5.0
-- requires Java 8 or later.
+Release 1.5.0 (requires Java 8)
+- feature: support for Java 9 security.
 - NON-BACKWARD COMPATIBLE refactor of ReflectionUtil.
-- feature: support for Java 9 security model.
 
 
-!Release 1.4.7
+Release 1.4.7
 - last Java 7 compatible release.
 - bugfix: performance regression in Serialization strategy.
 - remove AccessibleObject.isAccessible calls.
 
 
-!Release 1.4.6
+Release 1.4.6
 - remove deprecated v1.3.4 object-o and array-o strategies.
 - replaced MarshalContext aliasFor methods with aliasOrNameFor methods.
 - bugfix: EnumStrategy marshalling fix.
@@ -93,20 +106,20 @@ for a higher control compared to the EasyML Facade.
 - feature: added serialization serialPersistentFields support.
 
 
-!Release 1.4.5
+Release 1.4.5
 - performance: improved n.s.e.EasyML.deserialize() speed by reusing the
 XmlPullParser when available.
 - refactor: minor code improvements.
 
 
-!Release 1.4.4
+Release 1.4.4
 - refactor: made n.s.e.m.CompositeStrategy.unmarshalInit return type more
 loose to better support readResolve in n.s.e.m.j.i.ExternalizableStrategy.
 - refactor: n.s.e.XMLReader and n.s.e.XMLWriter use HashMap instead of
 ConcurrentHashMap if not in shared mode (i.e. if in standalone mode).
 
 
-!Release 1.4.3
+Release 1.4.3
 - feature: new n.s.e.m.j.i.ExternalizableStrategy offers support for the
 Java Externalizable protocol.
 - feature: new n.s.e.XMLReader.hasMore method.
@@ -116,35 +129,40 @@ EasyML.Profile.Generic for more portable XML.
 object input and output streams.
 
 
-!Release 1.4.2
+Release 1.4.2
 - bugfix: n.s.e.m.j.i.SerializableStrategy GetFieldImpl readFields fix.
 
 
-!Release 1.4.1
+Release 1.4.1
 - bugfix: XMLWriter text driver empty line when pretty printing.
 
 
-!Release 1.4.0
+Release 1.4.0
 - NON-BACKWARD COMPATIBLE refactor: EasyML now immutable(removed setters).
 - feature: EasyMLBuilder for easyml customization.
 
 
-!Release 1.3.10
+Release 1.3.11
+- bugfix: n.s.e.m.j.i.SerializableStrategy GetFieldImpl readFields fix.
+- bugfix: XMLWriter text driver startElement impl improvement.
+
+
+Release 1.3.10
 - bugfix: XMLWriter text driver empty line when pretty printing.
 - javadoc: improvements.
 
 
-!Release 1.3.9
+Release 1.3.9
 - feature: EasyML, XMLReader, XMLWriter custom XML root tag setting.
 - refactor: source level 1.7 warnings fixed.
 
 
-!Release 1.3.8
+Release 1.3.8
 - performance: EasyML cache reflected class constructors.
 - feature: EasyML, XMLReader, XMLWriter clearCache() methods.
 
 
-!Release 1.3.7
+Release 1.3.7
 - performance: EasyML and XMLReader cache reflected classes and fields.
 This is done via n.s.e.m.UnmarshalContext's classFor() and fieldFor().
 Distinct EasyML instances have separate caches.
@@ -154,13 +172,13 @@ XMLReaders share caches only when isSharedConfiguration().
 - bugfix: remove duplicate encoded.clear() from XMLWriter.reset().
 
 
-!Release 1.3.6
+Release 1.3.6
 - feature: added n.s.e.EasyML.releaseCurrentReader()
-and n.s.e.EasyML.releaseCurrentWriter() methods.
+    and n.s.e.EasyML.releaseCurrentWriter() methods.
 - performance: removed the redundant easyml version attribute.
 
 
-!Release 1.3.5
+Release 1.3.5
 - performance: reduced the impact of class aliasing and field aliasing
 features, even when NOT used, on serialize() and deserialize() times.
 - performance: n.s.e.u.ReflectionUtil unsafe instantiation method now
@@ -172,7 +190,7 @@ security reasons.
 it was deprecated since version 1.2.2.
 - refactor: renamed "object-o", "array-o" to "objectx", "arrayx"
 - bugfix: object field values could get inverted at read if ALL of the
-following conditions hold:
+    following conditions hold:
     1. skipDefaults is enabled.
     2. instance has same name fields on different inheritance levels.
     3. instance defines default values on each level.
@@ -184,32 +202,32 @@ XML outputted by versions 1.3.5 down to 1.2.1 and will produce only
 1.3.5 formatted XML.
 
 
-!Release 1.3.4
+Release 1.3.4
 - performance: n.s.e.XMLWriterTextDriver improvements allow EasyML to
-perform up to 20% faster. The performance improvement is more
-pronounced when pretty printing is enabled.
+    perform up to 20% faster. The performance improvement is more
+    pronounced when pretty printing is enabled.
 
 
-!Release 1.3.3
+Release 1.3.3
 - doc: better javadoc for n.s.e.EasyML, n.s.e.XMLReader, n.s.e.XMLWriter.
 - bugfix: include position descriptor in each InvalidFormatException case.
 - bugfix: n.s.e.XMLReaderTextDriver.consumeFully() fix.
 
 
-!Release 1.3.2
+Release 1.3.2
 - performance: n.s.e.EasyML serialize() and deserialize() methods use
 ThreadLocal internally for XMLWriter and XMLReader instance reuse,
 in order to improve performance, while remaining thread-safe.
 
 
-!Release 1.3.1
+Release 1.3.1
 - feature: added n.s.e.EasyML newReader() and newWriter methods in order
 to expose more API features at facade level.
 - bugfix: prevent shared-config readers and writers from allowing config
 modifications.
 
 
-!Release 1.3.0
+Release 1.3.0
 - NON-BACKWARD COMPATIBLE refactor:
 merged n.s.e.ExtendedEasyML into n.s.e.EasyML.
 - feature: n.s.e.EasyML facade is now thread-safe while the thread-unsafe
@@ -221,26 +239,4 @@ multithread features.
 - bugfix: setCustomArrayTag validation fixed.
 Note: except for the last mentioned bugfix, all other changes were made
       to offer an easier and faster API for multithreaded environments.
-
-
-!Release 1.2.6
-- feature: fail first security policy enforcement for n.s.e.XMLReader
-readObject and readArray.
-- bugfix: security policy now validates params at add and addHierarchy.
-- bugfix: consume remaining XML on security policy exception, to allow
-subsequent reads, if possible.
-- bugfix: better XMLWriter and XMLReader close method impls.
-
-
-!Release 1.2.5
-- feature: n.s.e.EasyML and n.s.e.XMLReader: new securityPolicy settings
-used to configure, if needed, black- or whitelists for objects found at
-deserialization time.
-
-
-!Release 1.2.4
-- NON-BACKWARD COMPATIBLE refactor: n.s.e.m.CompositeStrategy: removed the
-"defTarget" parameter as it was only used when skipDefaults was true
-and it was buggy in some cases such as a bean setting a property in a
-default sub-bean (composition, not inheritance) within it's default constructor.
 

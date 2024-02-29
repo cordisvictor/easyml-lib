@@ -50,14 +50,6 @@ public final class ByteStrategy extends AbstractStrategy implements SimpleStrate
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Byte> target() {
         return Byte.class;
     }

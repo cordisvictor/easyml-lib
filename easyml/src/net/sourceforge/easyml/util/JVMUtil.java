@@ -21,20 +21,31 @@ package net.sourceforge.easyml.util;
 import java.util.Optional;
 
 /**
- * JVMUtil utility class used to detect JVM settings.
+ * JVMUtil utility class used to detect JVM.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.0
+ * @version 1.6.0
  * @since 1.5.0
  */
 public final class JVMUtil {
 
-    private static final int javaMajorVersion = parseJavaVersion();
+    public static final int DEFAULT_JAVA_MAJOR_VERSION = 8;
+    public static final int JAVA_MAJOR_VERSION_MODULES = 9;
+    public static final int JAVA_MAJOR_VERSION_LAST_UNRESTRICTED = 11;
+
+    private static final int javaMajorVersion;
+    private static final boolean unrestricted;
+
+    static {
+        javaMajorVersion = parseJavaVersion();
+        unrestricted = javaMajorVersion <= JAVA_MAJOR_VERSION_LAST_UNRESTRICTED;
+    }
 
     private static int parseJavaVersion() {
         final String javaVersion = System.getProperty("java.version");
         return parseOracleOldOrNew(javaVersion)
-                .orElseGet(() -> parseNonOracle(javaVersion).orElse(8));
+                .orElseGet(() -> parseNonOracle(javaVersion)
+                        .orElse(DEFAULT_JAVA_MAJOR_VERSION));
     }
 
     private static Optional<Integer> parseOracleOldOrNew(String javaVersion) {
@@ -67,6 +78,10 @@ public final class JVMUtil {
 
     public static int getJavaMajorVersion() {
         return javaMajorVersion;
+    }
+
+    public static boolean isUnrestricted() {
+        return unrestricted;
     }
 
     private JVMUtil() {

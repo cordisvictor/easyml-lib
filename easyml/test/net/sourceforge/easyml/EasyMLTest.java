@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author victor
+ * @author Victor Cordis ( cordis.victor at gmail.com)
  */
 public class EasyMLTest {
 

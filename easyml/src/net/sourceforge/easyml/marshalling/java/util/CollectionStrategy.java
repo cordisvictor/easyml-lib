@@ -41,22 +41,6 @@ public abstract class CollectionStrategy<T extends Collection> extends AbstractS
     protected static final String ATTRIBUTE_SIZE = "size";
 
     /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<T> c) {
-        return c == this.target();
-    }
-
-    /**
      * Writes the {@linkplain #ATTRIBUTE_SIZE} for the given target. This method
      * can be overridden to write used-defined attributes for the root element.
      *

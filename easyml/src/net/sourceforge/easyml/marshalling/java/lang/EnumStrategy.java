@@ -30,7 +30,7 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.7
+ * @version 1.5.3
  * @since 1.0
  */
 public final class EnumStrategy extends AbstractStrategy implements SimpleStrategy<Enum> {
@@ -85,10 +85,7 @@ public final class EnumStrategy extends AbstractStrategy implements SimpleStrate
      */
     @Override
     public String marshal(Enum target, MarshalContext ctx) {
-        Class cls = target.getClass();
-        if (!cls.isEnum()) {// handle polymorphic enums:
-            cls = cls.getSuperclass();
-        }
+        final Class cls = target.getDeclaringClass(); // handle polymorphic enums.
         // build enum name and constant name:
         return new StringBuilder(ctx.aliasOrNameFor(cls))
                 .append(EnumStrategy.SEPARATOR)

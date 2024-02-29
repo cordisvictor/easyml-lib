@@ -50,24 +50,8 @@ public final class ClassStrategy extends AbstractStrategy implements SimpleStrat
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Class> target() {
         return Class.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Class> c) {
-        return c == Class.class;
     }
 
     /**

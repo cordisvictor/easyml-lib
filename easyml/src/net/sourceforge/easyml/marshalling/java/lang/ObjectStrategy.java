@@ -22,7 +22,7 @@ import net.sourceforge.easyml.DTD;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.util.ReflectionUtil;
-import net.sourceforge.easyml.util.ValueType;
+import net.sourceforge.easyml.util.ReflectionUtil.ValueType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -46,7 +46,7 @@ import java.util.Objects;
  * <br/>This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.6.0
  * @since 1.0
  */
 public final class ObjectStrategy extends AbstractStrategy implements CompositeStrategy {
@@ -86,7 +86,8 @@ public final class ObjectStrategy extends AbstractStrategy implements CompositeS
      */
     @Override
     public boolean appliesTo(Class c) {
-        return !c.isArray(); // do not override array strategy.
+        return !c.isArray() // do not override array strategy.
+                && ReflectionUtil.isUnrestrictedOrOpen(c, ObjectStrategy.class);
     }
 
     /**
@@ -112,7 +113,7 @@ public final class ObjectStrategy extends AbstractStrategy implements CompositeS
         Object outer = null;
         if (outerRef != null) {
             try {
-                outer = outerRef.get(target);
+                outer = ReflectionUtil.readField(target, outerRef);
             } catch (IllegalAccessException neverThrown) {
                 // ignored.
             }
@@ -124,7 +125,7 @@ public final class ObjectStrategy extends AbstractStrategy implements CompositeS
         final boolean skipDefaults = ctx.skipDefaults();
         if (skipDefaults) {
             try {
-                defTarget = (outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : cls.newInstance());
+                defTarget = (outerRef != null ? ReflectionUtil.instantiateInner(cls, outer) : ReflectionUtil.instantiate(cls));
             } catch (ReflectiveOperationException defaultConstructorX) {
                 // cannot use defaults defined.
             }
@@ -140,9 +141,7 @@ public final class ObjectStrategy extends AbstractStrategy implements CompositeS
             // process composition:
             for (Field f : cls.getDeclaredFields()) {
                 // process field:
-                if (Modifier.isStatic(f.getModifiers())
-                        || (outerRef != null && f.getName().equals(outerRef.getName()))
-                        || ctx.excluded(f)) {
+                if (Modifier.isStatic(f.getModifiers()) || (outerRef != null && f.getName().equals(outerRef.getName())) || ctx.excluded(f)) {
                     continue; // skip static, already encoded outer-ref object, or excluded field.
                 }
                 ReflectionUtil.setAccessible(f);
@@ -196,15 +195,14 @@ public final class ObjectStrategy extends AbstractStrategy implements CompositeS
         try {
             if (ReflectionUtil.isInnerClass(cls)) {
                 if (!reader.next() || !reader.atElementStart() || !reader.elementName().equals(ObjectStrategy.ELEMENT_OUTER)) {
-                    throw new InvalidFormatException(ctx.readerPositionDescriptor(),
-                            "expected element start: " + ObjectStrategy.ELEMENT_OUTER);
+                    throw new InvalidFormatException(ctx.readerPositionDescriptor(), "expected element start: " + ObjectStrategy.ELEMENT_OUTER);
                 }
                 reader.next(); // consumed this.outer start.
                 final Object outer = reader.read();
-                // do not consume this.outer end: let the second step while do it.
+                // do not consume this.outer end: let unmarshalInit() while-loop do it.
                 ret = ReflectionUtil.instantiateInner(cls, outer);
             } else {
-                ret = cls.newInstance();
+                ret = ReflectionUtil.instantiate(cls);
             }
         } catch (ReflectiveOperationException defaultConstructorX) {
             ret = ReflectionUtil.instantiateUnsafely(cls);
@@ -235,8 +233,7 @@ public final class ObjectStrategy extends AbstractStrategy implements CompositeS
                     }
                     // check if field is indeed valid:
                     if (Modifier.isStatic(f.getModifiers())) {
-                        throw new InvalidFormatException(ctx.readerPositionDescriptor(),
-                                "illegal field: " + cls.getName() + '.' + localPartName);
+                        throw new InvalidFormatException(ctx.readerPositionDescriptor(), "illegal field: " + cls.getName() + '.' + localPartName);
                     }
                     ReflectionUtil.setAccessible(f);
                     // read and set it to field:

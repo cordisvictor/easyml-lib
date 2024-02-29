@@ -25,6 +25,8 @@ import net.sourceforge.easyml.marshalling.java.time.LocalDateTimeStrategy;
 import net.sourceforge.easyml.marshalling.java.time.ZoneIdStrategy;
 import net.sourceforge.easyml.marshalling.java.util.CalendarStrategy;
 import net.sourceforge.easyml.marshalling.java.util.OptionalStrategy;
+import net.sourceforge.easyml.marshalling.java.util.TimeZoneStrategy;
+import net.sourceforge.easyml.marshalling.java.util.concurrent.atomic.AtomicReferenceStrategy;
 import org.junit.After;
 import org.junit.Test;
 
@@ -35,6 +37,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Optional;
+import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
 
@@ -48,6 +52,23 @@ public class VariousTypesTest {
     @After
     public void tearDown() {
         this.out.reset();
+    }
+
+    @Test
+    public void testAtomicRefStrategy() {
+        final String expected = "expected";
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.getCompositeStrategies().add(AtomicReferenceStrategy.INSTANCE);
+        xos.write(new AtomicReference(expected));
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getCompositeStrategies().put(AtomicReferenceStrategy.INSTANCE.name(), AtomicReferenceStrategy.INSTANCE);
+        assertEquals(expected, ((AtomicReference) xis.read()).get());
+        xis.close();
     }
 
     @Test
@@ -137,6 +158,23 @@ public class VariousTypesTest {
 
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.getSimpleStrategies().put(ZoneIdStrategy.INSTANCE.name(), ZoneIdStrategy.INSTANCE);
+        assertEquals(expected, xis.read());
+        xis.close();
+    }
+
+    @Test
+    public void testTimeZoneStrategy() {
+        final TimeZone expected = TimeZone.getDefault();
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.getSimpleStrategies().add(TimeZoneStrategy.INSTANCE);
+        xos.write(expected);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getSimpleStrategies().put(TimeZoneStrategy.INSTANCE.name(), TimeZoneStrategy.INSTANCE);
         assertEquals(expected, xis.read());
         xis.close();
     }

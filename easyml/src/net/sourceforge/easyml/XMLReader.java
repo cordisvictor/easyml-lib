@@ -20,10 +20,9 @@ package net.sourceforge.easyml;
 
 import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.marshalling.dtd.*;
-import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.*;
 import net.sourceforge.easyml.util.ReflectionUtil;
-import net.sourceforge.easyml.util.ValueType;
+import net.sourceforge.easyml.util.ReflectionUtil.ValueType;
 import net.sourceforge.easyml.util.XMLUtil;
 import org.w3c.dom.Document;
 import org.xmlpull.v1.XmlPullParser;
@@ -32,7 +31,10 @@ import java.io.Closeable;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.lang.reflect.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -63,7 +65,7 @@ import java.util.stream.StreamSupport;
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.6.0
  * @see XMLWriter
  * @since 1.0
  */
@@ -646,12 +648,12 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
         alias0(c, alias);
     }
 
-    private void alias0(Object toAlias, String alias) {
+    private void alias0(Object aliased, String alias) {
         if (alias == null || alias.isEmpty() || !XMLUtil.isLegalXMLText(alias)) {
             throw new IllegalArgumentException("alias: null, empty, or contains illegal XML chars: " + alias);
         }
         this.checkNotSharedConfiguration();
-        this.cachedAliasingReflection.put(alias, toAlias);
+        this.cachedAliasingReflection.put(alias, aliased);
     }
 
     /**
@@ -908,20 +910,25 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
                 return this.readArray0(componentType); // also consumes element end.
             }
             throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid element start: " + localPartName);
-        } catch (ClassNotFoundException iB) {
-            throw new InvalidFormatException(this.driver.positionDescriptor(), "unknown object class: " + iB.getMessage(), iB);
-        } catch (InstantiationException iDC) {
-            throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid object constructor: " + iDC.getMessage(), iDC);
-        } catch (IllegalAccessException iDC) {
-            throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid object constructor modifier: " + iDC.getMessage(), iDC);
+        } catch (ClassNotFoundException ex) {
+            throw new InvalidFormatException(this.driver.positionDescriptor(), "unknown element class: " + ex.getMessage(), ex);
+        } catch (NoSuchMethodException ex) {
+            throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid element class: " + ex.getMessage(), ex);
+        } catch (IllegalAccessException ex) {
+            throw new InvalidFormatException(this.driver.positionDescriptor(), "invalid element class: " + ex.getMessage(), ex);
+        } catch (InstantiationException ex) {
+            throw new InvalidFormatException(this.driver.positionDescriptor(), "failed element class instantiation: " + ex.getMessage(), ex);
+        } catch (InvocationTargetException ex) {
+            throw new InvalidFormatException(this.driver.positionDescriptor(), "failed element class invocation: " + ex.getMessage(), ex);
         }
     }
 
     // read0: readObj:
-    private Object readObject() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    private Object readObject()
+            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         // read object attributes and create instance and mark it as visited:
         Class cls = this.context.classFor(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_CLASS));
-        final Object ret = cls.newInstance();
+        final Object ret = ReflectionUtil.instantiate(cls);
         // security check:
         this.ensureSecurityPolicy(ret);
         this.decoded.put(this.driver.elementRequiredAttribute(DTD.ATTRIBUTE_ID), ret);
@@ -942,15 +949,18 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
                     cls = cls.getSuperclass();
                 }
                 // check if field is indeed an instance property:
-                if (f == null || !ReflectionUtil.isFieldProperty(f)) {
+                if (f == null) {
                     throw new InvalidFormatException(this.driver.positionDescriptor(), "undefined property: " + cls.getName() + '.' + localPartName);
                 }
-                ReflectionUtil.setAccessible(f);
+                final ReflectionUtil.FieldInfo fi = ReflectionUtil.fieldInfoForWrite(f);
+                if (!fi.isProperty) {
+                    throw new InvalidFormatException(this.driver.positionDescriptor(), "not a property: " + cls.getName() + '.' + localPartName);
+                }
                 // move down in the property value and read it:
                 if (!this.driver.next() || !this.driver.atElementStart()) {
                     throw new InvalidFormatException(this.driver.positionDescriptor(), "expected element start");
                 }
-                f.set(ret, this.read0(f.getType().getComponentType()));
+                ReflectionUtil.writeProperty(ret, this.read0(f.getType().getComponentType()), f, fi.accessor);
             } else if (this.driver.atElementEnd() && this.driver.elementName().equals(DTD.ELEMENT_OBJECT)) {
                 this.driver.next(); // consume object element end.
                 return ret;

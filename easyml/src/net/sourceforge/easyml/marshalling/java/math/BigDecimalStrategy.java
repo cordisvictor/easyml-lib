@@ -53,24 +53,8 @@ public final class BigDecimalStrategy extends AbstractStrategy implements Simple
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<BigDecimal> target() {
         return BigDecimal.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<BigDecimal> c) {
-        return c == BigDecimal.class;
     }
 
     /**

@@ -21,11 +21,12 @@ package net.sourceforge.easyml.marshalling;
 import net.sourceforge.easyml.EasyML;
 import org.junit.Test;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.Assert.assertEquals;
 
 /**
- *
- * @author victor
+ * @author Victor Cordis ( cordis.victor at gmail.com)
  */
 public class IntStrategyTest {
 
@@ -38,5 +39,12 @@ public class IntStrategyTest {
         final String xml = easyml.serialize(expected);
 
         assertEquals(expected, easyml.deserialize(xml));
+    }
+
+    @Test
+    public void testAtomicMarshalUnmarshal() {
+        final String xml = easyml.serialize(new AtomicInteger(153));
+
+        assertEquals(153, ((AtomicInteger) easyml.deserialize(xml)).get());
     }
 }

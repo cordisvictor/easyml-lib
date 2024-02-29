@@ -46,24 +46,8 @@ public final class StringStrategy extends AbstractStrategy implements SimpleStra
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<String> target() {
         return String.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<String> c) {
-        return c == String.class;
     }
 
     /**

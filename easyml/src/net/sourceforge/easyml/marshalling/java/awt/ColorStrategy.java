@@ -65,22 +65,6 @@ public final class ColorStrategy extends AbstractStrategy implements CompositeSt
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<Color> c) {
-        return c == TARGET;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Color> target() {
         return TARGET;
     }

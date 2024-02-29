@@ -50,14 +50,6 @@ public final class FloatStrategy extends AbstractStrategy implements SimpleStrat
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Float> target() {
         return Float.class;
     }

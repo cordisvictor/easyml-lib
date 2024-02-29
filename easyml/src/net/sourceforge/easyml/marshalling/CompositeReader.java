@@ -189,7 +189,7 @@ public interface CompositeReader extends Iterable, Supplier, BooleanSupplier, In
     /**
      * Reads the array-object starting from the element start this instance is
      * at and returns an array of <code>componentType</code>, if and only if the
-     * current start element is an array. This method is differs from
+     * current start element is an array. This method differs from
      * {@linkplain #read()} in that it allows the exact array class to be
      * specified.
      * <br/>

@@ -64,24 +64,8 @@ public final class ZonedDateTimeStrategy extends AbstractStrategy implements Sim
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<ZonedDateTime> target() {
         return ZonedDateTime.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<ZonedDateTime> c) {
-        return c == ZonedDateTime.class;
     }
 
     /**

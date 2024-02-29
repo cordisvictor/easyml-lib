@@ -21,28 +21,30 @@ package net.sourceforge.easyml.marshalling;
 import net.sourceforge.easyml.EasyML;
 import org.junit.Test;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Victor Cordis ( cordis.victor at gmail.com)
  */
-public class BooleanStrategyTest {
+public class LongStrategyTest {
 
     private final EasyML easyml = new EasyML();
 
     @Test
     public void testMarshalUnmarshal() {
-        final String xml = easyml.serialize(true);
+        final int expected = -1;
 
-        assertEquals(true, easyml.deserialize(xml));
+        final String xml = easyml.serialize(expected);
+
+        assertEquals(expected, easyml.deserialize(xml));
     }
 
     @Test
     public void testAtomicMarshalUnmarshal() {
-        final String xml = easyml.serialize(new AtomicBoolean(true));
+        final String xml = easyml.serialize(new AtomicLong(153));
 
-        assertEquals(true, ((AtomicBoolean) easyml.deserialize(xml)).get());
+        assertEquals(153, ((AtomicLong) easyml.deserialize(xml)).get());
     }
 }

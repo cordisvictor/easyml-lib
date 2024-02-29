@@ -50,24 +50,8 @@ public final class StringBuilderStrategy extends AbstractStrategy implements Sim
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<StringBuilder> target() {
         return StringBuilder.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<StringBuilder> c) {
-        return c == StringBuilder.class;
     }
 
     /**

@@ -53,24 +53,8 @@ public final class LocalDateStrategy extends AbstractStrategy implements SimpleS
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<LocalDate> target() {
         return LocalDate.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<LocalDate> c) {
-        return c == LocalDate.class;
     }
 
     /**

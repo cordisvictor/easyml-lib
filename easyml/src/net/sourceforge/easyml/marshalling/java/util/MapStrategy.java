@@ -42,22 +42,6 @@ public abstract class MapStrategy<T extends Map> extends AbstractStrategy implem
     protected static final String ATTRIBUTE_SIZE = "size";
 
     /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<T> c) {
-        return c == target();
-    }
-
-    /**
      * Writes the {@linkplain #ATTRIBUTE_SIZE} for the given target. This method
      * can be overridden to write used-defined attributes for the root element.
      *

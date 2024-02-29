@@ -49,24 +49,8 @@ public final class CharsStrategy extends AbstractStrategy implements SimpleStrat
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<char[]> target() {
         return char[].class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<char[]> c) {
-        return c == char[].class;
     }
 
     /**

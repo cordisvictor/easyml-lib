@@ -50,14 +50,6 @@ public final class ShortStrategy extends AbstractStrategy implements SimpleStrat
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Short> target() {
         return Short.class;
     }

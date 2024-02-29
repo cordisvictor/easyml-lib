@@ -30,8 +30,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
- *
- * @author victor
+ * @author Victor Cordis ( cordis.victor at gmail.com)
  */
 public class MultiThreadEasyMLTest {
 

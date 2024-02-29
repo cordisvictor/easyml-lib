@@ -54,24 +54,8 @@ public final class LocaleStrategy extends AbstractStrategy implements SimpleStra
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Locale> target() {
         return Locale.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<Locale> c) {
-        return c == Locale.class;
     }
 
     /**

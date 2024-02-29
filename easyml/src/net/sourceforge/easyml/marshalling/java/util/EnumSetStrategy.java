@@ -20,9 +20,7 @@ package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
-import net.sourceforge.easyml.util.ReflectionUtil;
 
-import java.lang.reflect.Field;
 import java.util.EnumSet;
 
 /**
@@ -30,7 +28,7 @@ import java.util.EnumSet;
  * the {@linkplain EnumSet}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.7
+ * @version 1.5.3
  * @since 1.4.6
  */
 public final class EnumSetStrategy extends AbstractStrategy implements CompositeStrategy<EnumSet> {
@@ -44,18 +42,6 @@ public final class EnumSetStrategy extends AbstractStrategy implements Composite
      */
     public static final EnumSetStrategy INSTANCE = new EnumSetStrategy();
     private static final String ATTRIBUTE_ELEMENTTYPE = "elementType";
-    private static final Field elementType;
-
-    static {
-        Field elemType;
-        try {
-            elemType = EnumSet.class.getDeclaredField("elementType");
-            ReflectionUtil.setAccessible(elemType);
-        } catch (NoSuchFieldException | SecurityException ignored) {
-            elemType = null;
-        }
-        elementType = elemType;
-    }
 
     private EnumSetStrategy() {
     }
@@ -95,19 +81,16 @@ public final class EnumSetStrategy extends AbstractStrategy implements Composite
     @Override
     public void marshal(EnumSet target, CompositeWriter writer, MarshalContext ctx) {
         writer.startElement(EnumSetStrategy.NAME);
-        writer.setAttribute(ATTRIBUTE_ELEMENTTYPE, ctx.aliasOrNameFor(reflectElementType(target)));
+        writer.setAttribute(ATTRIBUTE_ELEMENTTYPE, ctx.aliasOrNameFor(elementType(target)));
         for (Object e : target) {
             writer.writeString(((Enum) e).name());
         }
         writer.endElement();
     }
 
-    private static Class reflectElementType(EnumSet target) {
-        try {
-            return (Class) elementType.get(target);
-        } catch (IllegalArgumentException | IllegalAccessException ignored) {
-            return null;
-        }
+    private static <E extends Enum<E>> Class<E> elementType(EnumSet<E> source) {
+        final EnumSet<E> nonEmptySource = source.isEmpty() ? EnumSet.complementOf(source) : source;
+        return nonEmptySource.iterator().next().getDeclaringClass();
     }
 
     @Override
@@ -120,7 +103,7 @@ public final class EnumSetStrategy extends AbstractStrategy implements Composite
         // consume root element:
         reader.next();
         // read elements:
-        final Class elementTypeCls = reflectElementType(target);
+        final Class elementTypeCls = elementType(target);
         while (true) {
             if (reader.atElementEnd() && reader.elementName().equals(EnumSetStrategy.NAME)) {
                 return target;

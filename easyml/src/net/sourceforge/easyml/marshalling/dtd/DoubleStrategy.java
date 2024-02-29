@@ -47,14 +47,6 @@ public final class DoubleStrategy extends AbstractStrategy implements SimpleStra
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Double> target() {
         return Double.class;
     }

@@ -22,14 +22,17 @@ import net.sourceforge.easyml.DTD;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.util.ReflectionUtil;
-import net.sourceforge.easyml.util.ValueType;
+import net.sourceforge.easyml.util.ReflectionUtil.ValueType;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -51,7 +54,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.6.0
  * @since 1.0
  */
 public final class SerializableStrategy extends AbstractStrategy implements CompositeStrategy<Serializable>, Caching {
@@ -59,10 +62,6 @@ public final class SerializableStrategy extends AbstractStrategy implements Comp
      * Constant defining the value used for the strategy name.
      */
     public static final String NAME = "serial";
-    /**
-     * Constant defining the value used for the strategy target.
-     */
-    public static final Class TARGET = Serializable.class;
     private static final String ELEMENT_OUTER = "this.out";
     private static final String ELEMENT_FIELDS = "this.fields";
     private static final String ATTRIBUTE_NIL = "nil";
@@ -199,7 +198,9 @@ public final class SerializableStrategy extends AbstractStrategy implements Comp
      */
     @Override
     public boolean appliesTo(Class<Serializable> c) {
-        return Serializable.class.isAssignableFrom(c) && !c.isArray(); // do not override array strategy.
+        return Serializable.class.isAssignableFrom(c)
+                && !c.isArray() // do not override array strategy.
+                && ReflectionUtil.isUnrestrictedOrOpen(c, SerializableStrategy.class);
     }
 
     /**
@@ -243,7 +244,7 @@ public final class SerializableStrategy extends AbstractStrategy implements Comp
         Object outer = null;
         if (clsOuter != null) {
             try {
-                outer = clsOuter.get(theTarget);
+                outer = ReflectionUtil.readField(theTarget, clsOuter);
             } catch (IllegalAccessException neverThrown) {
                 // ignored.
             }
@@ -254,7 +255,7 @@ public final class SerializableStrategy extends AbstractStrategy implements Comp
         // if skipDefaults then init default for comparison usage:
         if (ctx.skipDefaults()) {
             try {
-                theDef = clsOuter != null ? ReflectionUtil.instantiateInner(cls, outer) : cls.newInstance();
+                theDef = clsOuter != null ? ReflectionUtil.instantiateInner(cls, outer) : ReflectionUtil.instantiate(cls);
             } catch (ReflectiveOperationException defaultConstructorX) {
                 // cannot use defaults defined.
             }
@@ -346,10 +347,10 @@ public final class SerializableStrategy extends AbstractStrategy implements Comp
                 }
                 reader.next(); // consumed start this.outer.
                 final Object outer = reader.read();
-                // do not consume this.outer end: let the second step while do it.
+                // do not consume this.outer end: let unmarshalInit() while-loop do it.
                 ret = ReflectionUtil.instantiateInner(cls, outer);
             } else {
-                ret = cls.newInstance();
+                ret = ReflectionUtil.instantiate(cls);
             }
         } catch (ReflectiveOperationException noDefaultConstructor) {
             ret = ReflectionUtil.instantiateUnsafely(cls);

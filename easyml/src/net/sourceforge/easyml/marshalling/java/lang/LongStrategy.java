@@ -50,14 +50,6 @@ public final class LongStrategy extends AbstractStrategy implements SimpleStrate
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<Long> target() {
         return Long.class;
     }

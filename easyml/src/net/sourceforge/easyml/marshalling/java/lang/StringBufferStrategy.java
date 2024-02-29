@@ -50,24 +50,8 @@ public final class StringBufferStrategy extends AbstractStrategy implements Simp
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<StringBuffer> target() {
         return StringBuffer.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<StringBuffer> c) {
-        return c == StringBuffer.class;
     }
 
     /**

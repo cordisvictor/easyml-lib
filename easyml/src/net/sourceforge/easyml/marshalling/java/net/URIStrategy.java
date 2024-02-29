@@ -53,24 +53,8 @@ public final class URIStrategy extends AbstractStrategy implements SimpleStrateg
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<URI> target() {
         return URI.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<URI> c) {
-        return c == URI.class;
     }
 
     /**

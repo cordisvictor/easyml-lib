@@ -31,8 +31,7 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 /**
- *
- * @author victor
+ * @author Victor Cordis ( cordis.victor at gmail.com)
  */
 public class SecurityPolicyTest {
 

@@ -21,7 +21,7 @@ package net.sourceforge.easyml.marshalling.java.lang;
 import net.sourceforge.easyml.DTD;
 import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
-import net.sourceforge.easyml.util.ValueType;
+import net.sourceforge.easyml.util.ReflectionUtil.ValueType;
 
 import java.lang.reflect.Array;
 

@@ -51,22 +51,6 @@ public final class FileStrategy extends AbstractStrategy implements SimpleStrate
      * {@inheritDoc }
      */
     @Override
-    public boolean appliesTo(Class<File> c) {
-        return c == File.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<File> target() {
         return File.class;
     }

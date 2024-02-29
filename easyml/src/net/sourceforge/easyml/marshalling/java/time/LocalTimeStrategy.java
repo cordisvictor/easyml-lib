@@ -60,24 +60,8 @@ public final class LocalTimeStrategy extends AbstractStrategy implements SimpleS
      * {@inheritDoc }
      */
     @Override
-    public boolean strict() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
     public Class<LocalTime> target() {
         return LocalTime.class;
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public boolean appliesTo(Class<LocalTime> c) {
-        return c == LocalTime.class;
     }
 
     /**
