@@ -28,7 +28,7 @@ package net.sourceforge.easyml.marshalling;
  *
  * @param <T> target class
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.4
+ * @version 1.7.1
  * @since 1.0
  */
 public interface CompositeStrategy<T> extends Strategy<T> {
@@ -49,7 +49,8 @@ public interface CompositeStrategy<T> extends Strategy<T> {
     /**
      * Un-marshaling first step, that is recreate the new instance,possibly
      * using the <code>reader</code> to read XML attributes which can
-     * parameterize the instantiation. <br/> <b>Note:</b> the reader's position
+     * parameterize the instantiation.<br/>
+     * <b>Note:</b> the reader's position
      * is at the composite root element start and must not be moved after the
      * root element end.
      *
@@ -66,18 +67,22 @@ public interface CompositeStrategy<T> extends Strategy<T> {
     /**
      * Un-marshaling second step, that is initialize the instance created at
      * step one, possibly using the <code>reader</code> to read XML elements.
-     * <br/> <b>Note:</b> the reader's position is where it was left at the
-     * first step and must be left at the root element end. <br/> <b>Note:</b>
-     * for recursive un-marshalling one must use the {@linkplain CompositeReader#read()
-     * } method because of internal computations such as graph-traversal
-     * marking.
+     * This defaults to a non-op, useful for immutable types which are
+     * fully processed at {@linkplain #unmarshalNew(CompositeReader, UnmarshalContext)}.
+     * <br/>
+     * <b>Note:</b> the reader's position is where it was left at the
+     * first step and must be left at the root element end.
+     * <br/>
+     * <b>Note:</b> for recursive un-marshalling one must use the {@linkplain CompositeReader#read()}
+     * method because of internal computations such as graph-traversal marking.
      *
      * @param target to initialize
      * @param reader reads XML elements
      * @param ctx    the un-marshalling context
-     * @return the initialized instance, possibly not the one referred by
-     * <code>target</code>
+     * @return the initialized instance, possibly not the one referred by <code>target</code>
      * @throws IllegalAccessException if a class initialization fails
      */
-    Object unmarshalInit(T target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException;
+    default Object unmarshalInit(T target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
+        return target;
+    }
 }

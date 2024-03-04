@@ -30,7 +30,7 @@ import java.util.List;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.3
+ * @version 1.7.1
  * @since 1.5.3
  */
 public final class EmptyListStrategy extends AbstractStrategy implements CompositeStrategy<List> {
@@ -78,18 +78,10 @@ public final class EmptyListStrategy extends AbstractStrategy implements Composi
      */
     @Override
     public List unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
-        return Collections.emptyList();
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public List unmarshalInit(List target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
         // consume root tag:
         reader.next();
         if (reader.atElementEnd() && reader.elementName().equals(EmptyListStrategy.NAME)) {
-            return target;
+            return Collections.emptyList();
         }
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "unexpected element end");
     }

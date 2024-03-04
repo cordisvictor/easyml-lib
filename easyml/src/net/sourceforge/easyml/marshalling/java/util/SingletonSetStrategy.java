@@ -30,7 +30,7 @@ import java.util.Set;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.3
+ * @version 1.7.1
  * @since 1.0.2
  */
 public final class SingletonSetStrategy extends AbstractStrategy implements CompositeStrategy<Set> {
@@ -79,14 +79,6 @@ public final class SingletonSetStrategy extends AbstractStrategy implements Comp
      */
     @Override
     public Set unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
-        return Collections.singleton(null);
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Set unmarshalInit(Set target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
         // consume root tag:
         reader.next();
         // read and set singleton element:

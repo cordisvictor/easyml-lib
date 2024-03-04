@@ -34,7 +34,7 @@ import java.util.Arrays;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.0
+ * @version 1.7.1
  * @since 1.7.0
  */
 public final class RecordStrategy extends AbstractStrategy implements CompositeStrategy<Record> {
@@ -156,13 +156,5 @@ public final class RecordStrategy extends AbstractStrategy implements CompositeS
                         MethodType.methodType(void.class, paramTypes))
                 .asType(MethodType.methodType(Object.class, paramTypes));
         return (Record) constructorMH.invokeWithArguments(args);
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Record unmarshalInit(Record target, CompositeReader reader, UnmarshalContext ctx) {
-        return target;
     }
 }

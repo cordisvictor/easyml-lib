@@ -30,7 +30,7 @@ import java.util.Map;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.3
+ * @version 1.7.1
  * @since 1.5.3
  */
 public final class EmptyMapStrategy extends AbstractStrategy implements CompositeStrategy<Map> {
@@ -78,18 +78,10 @@ public final class EmptyMapStrategy extends AbstractStrategy implements Composit
      */
     @Override
     public Map unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
-        return Collections.emptyMap();
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Map unmarshalInit(Map target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
         // consume root tag:
         reader.next();
         if (reader.atElementEnd() && reader.elementName().equals(EmptyMapStrategy.NAME)) {
-            return target;
+            return Collections.emptyMap();
         }
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "unexpected element end");
     }

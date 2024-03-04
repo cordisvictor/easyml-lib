@@ -30,7 +30,7 @@ import java.util.TimeZone;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.7.1
  * @since 1.5.1
  */
 public final class CalendarStrategy extends AbstractStrategy implements CompositeStrategy<Calendar> {
@@ -107,13 +107,5 @@ public final class CalendarStrategy extends AbstractStrategy implements Composit
         } catch (NumberFormatException nfx) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), nfx);
         }
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Object unmarshalInit(Calendar target, CompositeReader reader, UnmarshalContext ctx) {
-        return target;
     }
 }

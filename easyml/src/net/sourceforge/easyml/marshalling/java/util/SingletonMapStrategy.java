@@ -30,7 +30,7 @@ import java.util.Map;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.3
+ * @version 1.7.1
  * @since 1.0.2
  */
 public final class SingletonMapStrategy extends AbstractStrategy implements CompositeStrategy<Map> {
@@ -81,14 +81,6 @@ public final class SingletonMapStrategy extends AbstractStrategy implements Comp
      */
     @Override
     public Map unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
-        return Collections.singletonMap(null, null);
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Map unmarshalInit(Map target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
         // consume root tag:
         reader.next();
         // read and set singleton element:

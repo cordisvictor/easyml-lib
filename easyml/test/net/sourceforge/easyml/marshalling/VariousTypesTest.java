@@ -183,9 +183,10 @@ public class VariousTypesTest {
 
     @Test
     public void testRecordStrategy() {
-        final MyRecord expected = new MyRecord("fn ln", new Date());
+        final MyRecord expected = new MyRecord(Optional.of("fn ln"), new Date());
 
         final XMLWriter xos = new XMLWriter(this.out);
+        xos.getCompositeStrategies().add(OptionalStrategy.INSTANCE);
         xos.getCompositeStrategies().add(RecordStrategy.INSTANCE);
         xos.write(expected);
         xos.close();
@@ -193,13 +194,14 @@ public class VariousTypesTest {
         System.out.println(this.out);
 
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getCompositeStrategies().put(OptionalStrategy.INSTANCE.name(), OptionalStrategy.INSTANCE);
         xis.getCompositeStrategies().put(RecordStrategy.INSTANCE.name(), RecordStrategy.INSTANCE);
         assertEquals(expected, xis.read());
         xis.close();
     }
 
     public record MyRecord(
-            String name,
+            Optional<String> name,
             Date theDate) {
     }
 }

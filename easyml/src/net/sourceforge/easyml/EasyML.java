@@ -84,7 +84,7 @@ import java.util.function.Supplier;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.0
+ * @version 1.7.1
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -249,6 +249,7 @@ public final class EasyML {
         composite.add(ArrayListStrategy.INSTANCE);
         composite.add(BitSetStrategy.INSTANCE);
         composite.add(CalendarStrategy.INSTANCE);
+        CollectionsStrategies.forEach(composite::add);
         composite.add(EnumMapStrategy.INSTANCE);
         composite.add(EnumSetStrategy.INSTANCE);
         composite.add(EmptyListStrategy.INSTANCE);
@@ -258,6 +259,7 @@ public final class EasyML {
         composite.add(HashSetStrategy.INSTANCE);
         composite.add(HashtableStrategy.INSTANCE);
         composite.add(IdentityHashMapStrategy.INSTANCE);
+        ImmutableCollectionsStrategies.forEach(composite::add);
         composite.add(LinkedHashMapStrategy.INSTANCE);
         composite.add(LinkedHashSetStrategy.INSTANCE);
         composite.add(LinkedListStrategy.INSTANCE);
@@ -343,6 +345,7 @@ public final class EasyML {
         composite.put(ArrayListStrategy.NAME, ArrayListStrategy.INSTANCE);
         composite.put(BitSetStrategy.NAME, BitSetStrategy.INSTANCE);
         composite.put(CalendarStrategy.NAME, CalendarStrategy.INSTANCE);
+        CollectionsStrategies.forEach(s -> composite.put(s.name(), s));
         composite.put(EnumMapStrategy.NAME, EnumMapStrategy.INSTANCE);
         composite.put(EnumSetStrategy.NAME, EnumSetStrategy.INSTANCE);
         composite.put(EmptyListStrategy.NAME, EmptyListStrategy.INSTANCE);
@@ -352,6 +355,7 @@ public final class EasyML {
         composite.put(HashSetStrategy.NAME, HashSetStrategy.INSTANCE);
         composite.put(HashtableStrategy.NAME, HashtableStrategy.INSTANCE);
         composite.put(IdentityHashMapStrategy.NAME, IdentityHashMapStrategy.INSTANCE);
+        ImmutableCollectionsStrategies.forEach(s -> composite.put(s.name(), s));
         composite.put(LinkedHashMapStrategy.NAME, LinkedHashMapStrategy.INSTANCE);
         composite.put(LinkedHashSetStrategy.NAME, LinkedHashSetStrategy.INSTANCE);
         composite.put(LinkedListStrategy.NAME, LinkedListStrategy.INSTANCE);

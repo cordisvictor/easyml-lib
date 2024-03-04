@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.0
+ * @version 1.7.1
  * @since 1.5.3
  */
 public final class AtomicReferenceStrategy extends AbstractStrategy implements CompositeStrategy<AtomicReference> {
@@ -79,13 +79,5 @@ public final class AtomicReferenceStrategy extends AbstractStrategy implements C
     public AtomicReference unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
         reader.next(); // consume atomic-ref start.
         return new AtomicReference(reader.read());
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public AtomicReference unmarshalInit(AtomicReference target, CompositeReader reader, UnmarshalContext ctx) {
-        return target;
     }
 }

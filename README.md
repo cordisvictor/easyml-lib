@@ -60,6 +60,11 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+Release 1.7.1
+- feature: added List.of, Map.of, Set.of strategies.
+- feature: added java.util.Collections unmodifiableList, unmodifiableMap, unmodifiableSet strategies.
+
+
 Release 1.7.0 (requires Java 17, recommended from Java 17)
 - feature: support for Java records.
 
@@ -78,7 +83,7 @@ SingletonList, SingletonSet, SingletonMap strategies.
 - feature: added java.util.Collections emptyList, emptyMap, emptySet strategies.
 
 
-Release 1.5.2 (requires Java 8, recommended up to Java 9)
+Release 1.5.2
 - feature: added generic mechanism for cache clearing.
 
 
@@ -90,7 +95,7 @@ Release 1.5.1
 - refactor: remove Profile feature.
 
 
-Release 1.5.0 (requires Java 8)
+Release 1.5.0 (requires Java 8, recommended up to Java 9)
 - feature: support for Java 9 security.
 - NON-BACKWARD COMPATIBLE refactor of ReflectionUtil.
 

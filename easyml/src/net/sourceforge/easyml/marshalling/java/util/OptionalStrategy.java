@@ -28,7 +28,7 @@ import java.util.Optional;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.7.1
  * @since 1.5.1
  */
 public final class OptionalStrategy extends AbstractStrategy implements CompositeStrategy<Optional> {
@@ -86,13 +86,5 @@ public final class OptionalStrategy extends AbstractStrategy implements Composit
             return Optional.empty();
         }
         return Optional.of(reader.read());
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Object unmarshalInit(Optional target, CompositeReader reader, UnmarshalContext ctx) {
-        return target;
     }
 }

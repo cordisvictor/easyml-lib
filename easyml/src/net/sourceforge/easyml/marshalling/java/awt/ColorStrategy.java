@@ -29,7 +29,7 @@ import java.awt.*;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.2.4
+ * @version 1.7.1
  * @since 1.0
  */
 public final class ColorStrategy extends AbstractStrategy implements CompositeStrategy<Color> {
@@ -109,15 +109,8 @@ public final class ColorStrategy extends AbstractStrategy implements CompositeSt
                     Integer.parseInt(reader.elementRequiredAttribute(ATTRIBUTE_BLUE)));
         } catch (NumberFormatException nfx) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), nfx);
+        } finally {
+            reader.next(); // moved the reader from the root element start to end.
         }
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Color unmarshalInit(Color target, CompositeReader reader, UnmarshalContext ctx) {
-        reader.next(); // moved the reader from the root element start to end.
-        return target;
     }
 }

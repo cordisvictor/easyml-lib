@@ -30,7 +30,7 @@ import java.util.regex.PatternSyntaxException;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.2.4
+ * @version 1.7.1
  * @since 1.0
  */
 public final class PatternStrategy extends AbstractStrategy implements CompositeStrategy<Pattern> {
@@ -88,19 +88,13 @@ public final class PatternStrategy extends AbstractStrategy implements Composite
         final String regex = reader.elementRequiredAttribute(PatternStrategy.ATTRIBUTE_REGEX);
         final String flagsStr = reader.elementAttribute(PatternStrategy.ATTRIBUTE_FLAGS);
         try {
-            return (flagsStr != null) ? Pattern.compile(regex, Integer.parseInt(flagsStr))
-                    : Pattern.compile(regex);
+            return flagsStr != null ?
+                    Pattern.compile(regex, Integer.parseInt(flagsStr)) :
+                    Pattern.compile(regex);
         } catch (NumberFormatException | PatternSyntaxException nfx) {
             throw new InvalidFormatException(ctx.readerPositionDescriptor(), nfx);
+        } finally {
+            reader.next(); // moved the reader on the root element end.
         }
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Pattern unmarshalInit(Pattern target, CompositeReader reader, UnmarshalContext ctx) {
-        reader.next(); // moved the reader on the root element end.
-        return target;
     }
 }

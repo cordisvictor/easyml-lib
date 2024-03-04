@@ -30,7 +30,7 @@ import java.util.Set;
  * This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.3
+ * @version 1.7.1
  * @since 1.5.3
  */
 public final class EmptySetStrategy extends AbstractStrategy implements CompositeStrategy<Set> {
@@ -78,18 +78,10 @@ public final class EmptySetStrategy extends AbstractStrategy implements Composit
      */
     @Override
     public Set unmarshalNew(CompositeReader reader, UnmarshalContext ctx) {
-        return Collections.emptySet();
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public Set unmarshalInit(Set target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
         // consume root tag:
         reader.next();
         if (reader.atElementEnd() && reader.elementName().equals(EmptySetStrategy.NAME)) {
-            return target;
+            return Collections.emptySet();
         }
         throw new InvalidFormatException(ctx.readerPositionDescriptor(), "unexpected element end");
     }
