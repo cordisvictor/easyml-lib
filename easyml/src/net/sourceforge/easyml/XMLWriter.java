@@ -60,7 +60,7 @@ import java.util.function.LongConsumer;
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.6.0
+ * @version 1.7.2
  * @see XMLReader
  * @since 1.0
  */
@@ -352,7 +352,7 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
             return this.target.prettyPrint;
         }
 
-        private final void setOneTimeUniqueIdTo(String uniqueId) {
+        private void setOneTimeUniqueIdTo(String uniqueId) {
             this.oneTimeUniqueId = uniqueId;
         }
 
@@ -486,8 +486,8 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
     private StrategyRegistry<CompositeStrategy> compositeStrategies;
 
     /**
-     * Creates a new configuration prototype instance, to be used by
-     * {@linkplain EasyML} only.
+     * Creates a new configuration prototype instance.
+     * To be used by {@linkplain EasyML} only.
      */
     XMLWriter() {
         this.driver = null;
@@ -522,12 +522,12 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
     }
 
     /**
-     * Creates a new shared-configuration instance, to be used by
-     * {@linkplain EasyML} only.
+     * Creates a new shared-configuration instance.
+     * To be used by {@linkplain EasyML} only.
      */
-    XMLWriter(XMLWriter configured) {
+    XMLWriter(XMLWriter prototype) {
         this.driver = null;
-        this.initIdentically(configured);
+        this.initIdentically(prototype);
     }
 
     private void initIdentically(XMLWriter other) {
@@ -560,8 +560,7 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
      * @param out stream to output to
      */
     public XMLWriter(OutputStream out) {
-        this.driver = new XMLWriterTextDriver(this, new OutputStreamWriter(out));
-        this.init();
+        this(new OutputStreamWriter(out));
     }
 
     /**
@@ -571,6 +570,20 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
      */
     public XMLWriter(Document out) {
         this.driver = new XMLWriterDOMDriver(this, out);
+        this.init();
+    }
+
+    /**
+     * Creates a new instance with the given <code>driver</code>.
+     * For generic formats, other than XML.
+     *
+     * @param driver for generic formats
+     */
+    public XMLWriter(XMLWriter.Driver driver) {
+        if (driver == null) {
+            throw new IllegalArgumentException("driver: null");
+        }
+        this.driver = driver;
         this.init();
     }
 

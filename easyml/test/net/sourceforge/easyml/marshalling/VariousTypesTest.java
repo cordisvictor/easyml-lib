@@ -25,6 +25,7 @@ import net.sourceforge.easyml.marshalling.java.time.InstantStrategy;
 import net.sourceforge.easyml.marshalling.java.time.LocalDateTimeStrategy;
 import net.sourceforge.easyml.marshalling.java.time.ZoneIdStrategy;
 import net.sourceforge.easyml.marshalling.java.util.CalendarStrategy;
+import net.sourceforge.easyml.marshalling.java.util.HexFormatStrategy;
 import net.sourceforge.easyml.marshalling.java.util.OptionalStrategy;
 import net.sourceforge.easyml.marshalling.java.util.TimeZoneStrategy;
 import net.sourceforge.easyml.marshalling.java.util.concurrent.atomic.AtomicReferenceStrategy;
@@ -36,10 +37,7 @@ import java.io.ByteArrayOutputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Optional;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
@@ -93,6 +91,29 @@ public class VariousTypesTest {
         assertEquals(expectedEmpty, xis.read());
         assertEquals(expectedNonEmpty1, xis.read());
         assertEquals(expectedNonEmpty2, xis.read());
+        xis.close();
+    }
+
+    @Test
+    public void testHexFormatStrategy() {
+        final HexFormat hf = HexFormat.of();
+        final HexFormat hfDPS = HexFormat.ofDelimiter(",").withPrefix("p").withSuffix("s");
+        final HexFormat hfDPSU = hfDPS.withUpperCase();
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.getCompositeStrategies().add(HexFormatStrategy.INSTANCE);
+        xos.write(hf);
+        xos.write(hfDPS);
+        xos.write(hfDPSU);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getCompositeStrategies().put(HexFormatStrategy.INSTANCE.name(), HexFormatStrategy.INSTANCE);
+        assertEquals(hf, xis.read());
+        assertEquals(hfDPS, xis.read());
+        assertEquals(hfDPSU, xis.read());
         xis.close();
     }
 

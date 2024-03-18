@@ -37,7 +37,7 @@ public interface Strategy<T> extends Named {
      *
      * @return true if strict, false if inheritance applicable
      */
-    default boolean strict(){
+    default boolean strict() {
         return true;
     }
 
@@ -49,7 +49,7 @@ public interface Strategy<T> extends Named {
      * @param c to test
      * @return true if can be marshalled and un-marshalled using this strategy
      */
-    default boolean appliesTo(Class<T> c){
+    default boolean appliesTo(Class<T> c) {
         return c == target();
     }
 

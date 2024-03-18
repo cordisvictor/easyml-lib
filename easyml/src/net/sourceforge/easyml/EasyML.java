@@ -84,7 +84,7 @@ import java.util.function.Supplier;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.1
+ * @version 1.7.2
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -183,7 +183,7 @@ public final class EasyML {
      */
     public EasyML() {
         this.writerPrototype = new XMLWriter();
-        this.readerPrototype = new XMLReader(new ConcurrentHashMap<>());
+        this.readerPrototype = new XMLReader(ConcurrentHashMap::new);
         defaultConfiguration(this.writerPrototype);
         defaultConfiguration(this.readerPrototype);
         this.perThreadWriter = ThreadLocal.withInitial(() -> new XMLWriter(writerPrototype));
@@ -258,6 +258,7 @@ public final class EasyML {
         composite.add(HashMapStrategy.INSTANCE);
         composite.add(HashSetStrategy.INSTANCE);
         composite.add(HashtableStrategy.INSTANCE);
+        composite.add(HexFormatStrategy.INSTANCE);
         composite.add(IdentityHashMapStrategy.INSTANCE);
         ImmutableCollectionsStrategies.forEach(composite::add);
         composite.add(LinkedHashMapStrategy.INSTANCE);
@@ -354,6 +355,7 @@ public final class EasyML {
         composite.put(HashMapStrategy.NAME, HashMapStrategy.INSTANCE);
         composite.put(HashSetStrategy.NAME, HashSetStrategy.INSTANCE);
         composite.put(HashtableStrategy.NAME, HashtableStrategy.INSTANCE);
+        composite.put(HexFormatStrategy.NAME, HexFormatStrategy.INSTANCE);
         composite.put(IdentityHashMapStrategy.NAME, IdentityHashMapStrategy.INSTANCE);
         ImmutableCollectionsStrategies.forEach(s -> composite.put(s.name(), s));
         composite.put(LinkedHashMapStrategy.NAME, LinkedHashMapStrategy.INSTANCE);
@@ -382,6 +384,9 @@ public final class EasyML {
         composite.put(PatternStrategy.NAME, PatternStrategy.INSTANCE);
     }
 
+    /**
+     * To be used by {@linkplain EasyMLBuilder} only.
+     */
     EasyML(Style style, Supplier<XmlPullParser> xmlPullParserProvider,
            String dateFormat, String customRootTag, Map<Class, String> classToAlias, Map<Field, String> fieldToAlias,
            Set<Field> excludedFields, XMLReader.SecurityPolicy deserializationSecurityPolicy,
@@ -574,7 +579,7 @@ public final class EasyML {
      */
     public XMLReader newReader(Reader in) {
         final XMLReader ret = new XMLReader(readerPrototype);
-        ret.reset(in, maybeProvidedXmlPullParser());
+        ret.reset(in, maybeXmlPullParserProvider());
         return ret;
     }
 
@@ -590,7 +595,9 @@ public final class EasyML {
      * @return a new shared-configuration reader
      */
     public XMLReader newReader(InputStream in) {
-        return this.newReader(new InputStreamReader(in));
+        final XMLReader ret = new XMLReader(readerPrototype);
+        ret.reset(in, maybeXmlPullParserProvider());
+        return ret;
     }
 
     /**
@@ -625,8 +632,11 @@ public final class EasyML {
     public void serialize(Object o, Writer out) {
         final XMLWriter writer = this.perThreadWriter.get();
         writer.reset(out);
-        writer.write(o);
-        writer.flush();
+        try {
+            writer.write(o);
+        } finally {
+            writer.flush();
+        }
     }
 
     /**
@@ -668,8 +678,11 @@ public final class EasyML {
     public void serialize(Object o, Document out) {
         final XMLWriter writer = this.perThreadWriter.get();
         writer.reset(out);
-        writer.write(o);
-        writer.flush();
+        try {
+            writer.write(o);
+        } finally {
+            writer.flush();
+        }
     }
 
     /**
@@ -682,11 +695,11 @@ public final class EasyML {
      */
     public Object deserialize(Reader in) {
         final XMLReader reader = this.perThreadReader.get();
-        reader.reset(in, maybeProvidedXmlPullParser());
+        reader.reset(in, maybeXmlPullParserProvider());
         return reader.read();
     }
 
-    private XmlPullParser maybeProvidedXmlPullParser() {
+    private XmlPullParser maybeXmlPullParserProvider() {
         return this.xmlPullParserProvider != null ? this.xmlPullParserProvider.get() : null;
     }
 
@@ -733,7 +746,7 @@ public final class EasyML {
     /**
      * Releases the XML writer, if any, belonging to the current thread. If this
      * method isn't invoked, the XML writer will be released anyway at the
-     * current threads death.
+     * current thread's death.
      * <br>
      * <b>Note:</b> this is an advanced feature and should be used only if the
      * caller knows this thread won't be using this EasyML instance for
@@ -746,7 +759,7 @@ public final class EasyML {
     /**
      * Releases the XML reader, if any, belonging to the current thread. If this
      * method isn't invoked, the XML reader will be released anyway at the
-     * current threads death.
+     * current thread's death.
      * <br>
      * <b>Note:</b> this is an advanced feature and should be used only if the
      * caller knows this thread won't be using this EasyML instance for

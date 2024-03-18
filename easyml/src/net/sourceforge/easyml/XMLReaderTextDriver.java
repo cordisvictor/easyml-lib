@@ -194,8 +194,7 @@ final class XMLReaderTextDriver extends XMLReader.Driver {
      * recreate and should be reused.
      *
      * @param in     the required input reader
-     * @param parser optional custom parser to replace the default pull-parse
-     *               implementation
+     * @param parser optional custom parser to replace the default pull-parse implementation
      */
     public void reset(Reader in, XmlPullParser parser) {
         if (parser != null) {

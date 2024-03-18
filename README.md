@@ -60,6 +60,11 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+Release 1.7.2
+- refactor: improved XML writer, reader and EasyML APIs
+- feature: added HexFormat strategy.
+
+
 Release 1.7.1
 - feature: added List.of, Map.of, Set.of strategies.
 - feature: added java.util.Collections unmodifiableList, unmodifiableMap, unmodifiableSet strategies.

@@ -65,7 +65,7 @@ import java.util.stream.StreamSupport;
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.6.0
+ * @version 1.7.2
  * @see XMLWriter
  * @since 1.0
  */
@@ -353,8 +353,8 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
         /**
          * Reads from the current position, recursively.
          *
-         * @param componentType array componentType, if the expected result is
-         *                      an array with no class attribute, null otherwise
+         * @param componentType array componentType, if the expected result is an array with no class attribute,
+         *                      null otherwise
          * @return the read object
          */
         @Override
@@ -391,6 +391,14 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
         }
     }
 
+    @FunctionalInterface
+    interface AliasingReflectionCacheSupplier {
+
+        AliasingReflectionCacheSupplier DEFAULT = HashMap::new;
+
+        Map<String, Object> get();
+    }
+
     private static final char FIELD_FQN_SEPARATOR = '#';
     private Driver driver;
     private boolean beforeRoot;
@@ -405,21 +413,47 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
     /* default*/ SecurityPolicy securityPolicy;
 
     /**
-     * Creates a new configuration prototype instance, to be used by
-     * {@linkplain EasyML} only.
+     * Creates a new configuration prototype instance.
+     * To be used by {@linkplain EasyML} only.
      */
-    XMLReader(Map<String, Object> aliasFieldCache) {
+    XMLReader(AliasingReflectionCacheSupplier getAliasingReflectionCache) {
         this.driver = null;
-        this.init(aliasFieldCache);
+        this.init(getAliasingReflectionCache);
+    }
+
+    private void init(AliasingReflectionCacheSupplier getAliasingReflectionCache) {
+        this.beforeRoot = true;
+        this.rootTag = DTD.ELEMENT_EASYML;
+        this.decoded = new HashMap<>();
+        this.sharedConfiguration = false;
+        this.context = new UnmarshalContextImpl();
+        this.cachedAliasingReflection = getAliasingReflectionCache.get();
+        this.simpleStrategies = new StrategyHashMap<>();
+        this.compositeStrategies = new StrategyHashMap<>();
+        this.dateFormat = new SimpleDateFormat(DTD.FORMAT_DATE);
+        this.securityPolicy = null; // lazy.
+        // add DTD strategies by default:
+        this.simpleStrategies.put(DTD.TYPE_BASE64, Base64Strategy.INSTANCE);
+        this.simpleStrategies.put(DTD.TYPE_BOOLEAN, BooleanStrategy.INSTANCE);
+        this.simpleStrategies.put(DTD.TYPE_DATE, DateStrategy.INSTANCE);
+        this.simpleStrategies.put(DTD.TYPE_DOUBLE, DoubleStrategy.INSTANCE);
+        this.simpleStrategies.put(DTD.TYPE_INT, IntStrategy.INSTANCE);
+        this.simpleStrategies.put(DTD.TYPE_STRING, StringStrategy.INSTANCE);
+        // add NON-DTD strategies for primitives, since we need to support the primitive API:
+        this.simpleStrategies.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
+        this.simpleStrategies.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
+        this.simpleStrategies.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
+        this.simpleStrategies.put(LongStrategy.NAME, LongStrategy.INSTANCE);
+        this.simpleStrategies.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
     }
 
     /**
-     * Creates a new shared-configuration instance, to be used by
-     * {@linkplain EasyML} only.
+     * Creates a new shared-configuration instance.
+     * To be used by {@linkplain EasyML} only.
      */
-    XMLReader(XMLReader configured) {
+    XMLReader(XMLReader prototype) {
         this.driver = null;
-        this.initIdentically(configured);
+        this.initIdentically(prototype);
     }
 
     private void initIdentically(XMLReader other) {
@@ -444,37 +478,7 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
      */
     public XMLReader(Reader reader) {
         this.driver = new XMLReaderTextDriver(this, reader);
-        this.init();
-    }
-
-    private void init() {
-        this.init(new HashMap<>());
-    }
-
-    private void init(Map<String, Object> aliasReflectCache) {
-        this.beforeRoot = true;
-        this.rootTag = DTD.ELEMENT_EASYML;
-        this.decoded = new HashMap<>();
-        this.sharedConfiguration = false;
-        this.context = new UnmarshalContextImpl();
-        this.cachedAliasingReflection = aliasReflectCache;
-        this.simpleStrategies = new StrategyHashMap<>();
-        this.compositeStrategies = new StrategyHashMap<>();
-        this.dateFormat = new SimpleDateFormat(DTD.FORMAT_DATE);
-        this.securityPolicy = null; // lazy.
-        // add DTD strategies by default:
-        this.simpleStrategies.put(DTD.TYPE_BASE64, Base64Strategy.INSTANCE);
-        this.simpleStrategies.put(DTD.TYPE_BOOLEAN, BooleanStrategy.INSTANCE);
-        this.simpleStrategies.put(DTD.TYPE_DATE, DateStrategy.INSTANCE);
-        this.simpleStrategies.put(DTD.TYPE_DOUBLE, DoubleStrategy.INSTANCE);
-        this.simpleStrategies.put(DTD.TYPE_INT, IntStrategy.INSTANCE);
-        this.simpleStrategies.put(DTD.TYPE_STRING, StringStrategy.INSTANCE);
-        // add NON-DTD strategies for primitives, since we need to support the primitive API:
-        this.simpleStrategies.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
-        this.simpleStrategies.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
-        this.simpleStrategies.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
-        this.simpleStrategies.put(LongStrategy.NAME, LongStrategy.INSTANCE);
-        this.simpleStrategies.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
+        this.init(AliasingReflectionCacheSupplier.DEFAULT);
     }
 
     /**
@@ -485,8 +489,7 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
      * @param in stream from which to read
      */
     public XMLReader(InputStream in) {
-        this.driver = new XMLReaderTextDriver(this, new InputStreamReader(in));
-        this.init();
+        this(new InputStreamReader(in));
     }
 
     /**
@@ -499,7 +502,7 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
      */
     public XMLReader(Reader reader, XmlPullParser parser) {
         this.driver = new XMLReaderTextDriver(this, reader, parser);
-        this.init();
+        this.init(AliasingReflectionCacheSupplier.DEFAULT);
     }
 
     /**
@@ -511,8 +514,7 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
      * @param parser to process the in XML with
      */
     public XMLReader(InputStream in, XmlPullParser parser) {
-        this.driver = new XMLReaderTextDriver(this, new InputStreamReader(in), parser);
-        this.init();
+        this(new InputStreamReader(in), parser);
     }
 
     /**
@@ -523,7 +525,21 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
      */
     public XMLReader(Document in) {
         this.driver = new XMLReaderDOMDriver(this, in);
-        this.init();
+        this.init(AliasingReflectionCacheSupplier.DEFAULT);
+    }
+
+    /**
+     * Creates a new instance with the given <code>driver</code>.
+     * For generic formats, other than XML.
+     *
+     * @param driver for generic formats
+     */
+    public XMLReader(XMLReader.Driver driver) {
+        if (driver == null) {
+            throw new IllegalArgumentException("driver: null");
+        }
+        this.driver = driver;
+        this.init(AliasingReflectionCacheSupplier.DEFAULT);
     }
 
     /**
@@ -1045,18 +1061,15 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
      * @param parser to use, null if default
      */
     public void reset(Reader reader, XmlPullParser parser) {
-        if (isReusableXMLReaderTextDriver()) {
+        if (this.driver != null && this.driver.getClass() == XMLReaderTextDriver.class) {
             ((XMLReaderTextDriver) this.driver).reset(reader, parser);
         } else {
-            this.driver = parser != null ? new XMLReaderTextDriver(this, reader, parser)
-                    : new XMLReaderTextDriver(this, reader);
+            this.driver = parser != null ?
+                    new XMLReaderTextDriver(this, reader, parser) :
+                    new XMLReaderTextDriver(this, reader);
         }
         this.decoded.clear();
         this.beforeRoot = true;
-    }
-
-    private boolean isReusableXMLReaderTextDriver() {
-        return this.driver != null && this.driver.getClass() == XMLReaderTextDriver.class;
     }
 
     /**
