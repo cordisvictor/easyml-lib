@@ -60,6 +60,11 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+Release 1.8.0 (requires Java 21, recommended from Java 21)
+- feature: added java.util.Collections unmodifiableSequencedCollection, unmodifiableSequencedMap,
+unmodifiableSequencedSet strategies.
+
+
 Release 1.7.3
 - feature: XMLReader exclude fields (similar to XMLWriter exclude fields)
 - feature: added OptionalDouble, OptionalInt, OptionalLong strategies.

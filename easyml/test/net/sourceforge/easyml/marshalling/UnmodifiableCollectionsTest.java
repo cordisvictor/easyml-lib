@@ -30,6 +30,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.*;
 
 import static java.util.Arrays.asList;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -211,6 +212,23 @@ public class UnmodifiableCollectionsTest {
         final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
         xis.getCompositeStrategies().put(CollectionsStrategies.NAME_UNMODIFIABLE_SET, CollectionsStrategies.INSTANCE_UNMODIFIABLE_SET);
         assertEquals(expected, xis.read());
+        xis.close();
+    }
+
+    @Test
+    public void testUnmodifSeq() {
+        final SequencedCollection expected = Collections.unmodifiableSequencedCollection(asList(1, 2, 3));
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.getCompositeStrategies().add(CollectionsStrategies.INSTANCE_UNMODIFIABLE_SEQ);
+        xos.write(expected);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getCompositeStrategies().put(CollectionsStrategies.NAME_UNMODIFIABLE_SEQ, CollectionsStrategies.INSTANCE_UNMODIFIABLE_SEQ);
+        assertArrayEquals(expected.toArray(), ((SequencedCollection) xis.read()).toArray());
         xis.close();
     }
 
