@@ -23,14 +23,18 @@ package net.sourceforge.easyml.testmodel;
  */
 public class PersonDTO extends AbstractDTO {
 
+    public static final int DEFAULT_ID = 52;
+    public static final String DEFAULT_FIRST_NAME = "DefaultFN";
+    public static final String DEFAULT_LAST_NAME = "DefaultLN";
+
     private static final long serialVersionUID = -2539612961442420907L;
     private String firstName;
     private String lastName;
 
     public PersonDTO() {
-        super(52);
-        this.firstName = "";
-        this.lastName = "";
+        super(DEFAULT_ID);
+        this.firstName = DEFAULT_FIRST_NAME;
+        this.lastName = DEFAULT_LAST_NAME;
     }
 
     public PersonDTO(int id) {

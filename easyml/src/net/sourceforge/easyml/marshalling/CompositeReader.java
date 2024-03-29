@@ -28,7 +28,7 @@ import java.util.function.*;
  * to read a composite datatype from XML format.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.7.3
  * @since 1.0
  */
 public interface CompositeReader extends Iterable, Supplier, BooleanSupplier, IntSupplier, LongSupplier, DoubleSupplier {
@@ -40,6 +40,12 @@ public interface CompositeReader extends Iterable, Supplier, BooleanSupplier, In
      * @return true if at next tag, false if at document end
      */
     boolean next();
+
+    /**
+     * Consumes the current element, stopping element's end.
+     * Must be at element start.
+     */
+    void consume();
 
     /**
      * Returns true if this instance is at an element start tag.

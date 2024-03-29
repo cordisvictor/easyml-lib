@@ -46,7 +46,7 @@ import java.util.Objects;
  * <br/>This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.6.0
+ * @version 1.7.3
  * @since 1.0
  */
 public final class ObjectStrategy extends AbstractStrategy implements CompositeStrategy {
@@ -223,8 +223,13 @@ public final class ObjectStrategy extends AbstractStrategy implements CompositeS
                     reader.next(); // consume start, leaving end tag to be consumed by the next while.
                     cls = cls.getSuperclass();
                 } else {
-                    // field: search the class for it:
                     final String localPartName = reader.elementName();
+                    // check if field is excluded:
+                    if (ctx.excluded(cls, localPartName)) {
+                        reader.consume();
+                        continue; // skip excluded field.
+                    }
+                    // field: search the class for it:
                     Field f;
                     try {
                         f = ctx.fieldFor(cls, localPartName);

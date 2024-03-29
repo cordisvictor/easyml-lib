@@ -31,7 +31,7 @@ import org.w3c.dom.NodeList;
  * transforming the DOM to text so that it can be inputed as text to EasyML.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.9
+ * @version 1.7.3
  * @since 1.1.0
  */
 final class XMLReaderDOMDriver extends XMLReader.Driver {
@@ -183,6 +183,17 @@ final class XMLReaderDOMDriver extends XMLReader.Driver {
             }
         }
         throw new IllegalStateException("not at element start: " + this.positionDescriptor());
+    }
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public void consume() {
+        if (!this.atElementStart()) {
+            throw new IllegalStateException("not at element start: " + this.positionDescriptor());
+        }
+        this.crtAtEnd = true;
     }
 
     /**

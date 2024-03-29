@@ -18,7 +18,6 @@
  */
 package net.sourceforge.easyml;
 
-import net.sourceforge.easyml.marshalling.java.io.SerializableStrategy;
 import net.sourceforge.easyml.marshalling.java.lang.CharsStrategy;
 import net.sourceforge.easyml.marshalling.java.util.*;
 import org.junit.After;
@@ -199,6 +198,42 @@ public class ArraysCollectionsTest {
         final XMLReader xis = new XMLReader(dom);
         EasyML.defaultConfiguration(xis);
         assertArrayEquals(lists, (Object[]) xis.read());
+        xis.close();
+    }
+
+    @Test
+    public void testArrayDeque() throws Exception {
+        final ArrayDeque expected = new ArrayDeque();
+        expected.add(1);
+        expected.add(2);
+        expected.add(3);
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        EasyML.defaultConfiguration(xos);
+        xos.write(expected);
+        xos.close();
+        System.out.println(this.out);
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        EasyML.defaultConfiguration(xis);
+        assertArrayEquals(expected.toArray(), ((ArrayDeque) xis.read()).toArray());
+        xis.close();
+    }
+
+    @Test
+    public void testPriorityQueue() throws Exception {
+        final PriorityQueue expected = new PriorityQueue();
+        expected.add(1);
+        expected.add(2);
+        expected.add(3);
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        EasyML.defaultConfiguration(xos);
+        xos.write(expected);
+        xos.close();
+        System.out.println(this.out);
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        EasyML.defaultConfiguration(xis);
+        assertArrayEquals(expected.toArray(), ((PriorityQueue) xis.read()).toArray());
         xis.close();
     }
 

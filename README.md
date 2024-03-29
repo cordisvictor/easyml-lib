@@ -60,6 +60,12 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+Release 1.7.3
+- feature: XMLReader exclude fields (similar to XMLWriter exclude fields)
+- feature: added OptionalDouble, OptionalInt, OptionalLong strategies.
+- feature: added ArrayDeque, PriorityQueue strategies.
+
+
 Release 1.7.2
 - refactor: improved XML writer, reader and EasyML APIs
 - feature: added HexFormat strategy.

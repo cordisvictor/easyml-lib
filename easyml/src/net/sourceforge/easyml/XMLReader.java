@@ -65,7 +65,7 @@ import java.util.stream.StreamSupport;
  * shared configuration can be created, via constructors.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.2
+ * @version 1.7.3
  * @see XMLWriter
  * @since 1.0
  */
@@ -366,7 +366,14 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
         }
 
         /**
-         * Consumes the XML until the entire subgraph is read.
+         * Consumes the current XML element, stopping {@linkplain #atElementEnd()}.
+         * Must be {@linkplain #atElementStart()}.
+         */
+        @Override
+        public abstract void consume();
+
+        /**
+         * Consumes the XML until the entire content is read.
          */
         protected abstract void consumeFully();
 
@@ -407,10 +414,11 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
     private boolean sharedConfiguration;
     private UnmarshalContextImpl context;
     /* default*/ Map<String, Object> cachedAliasingReflection;
+    private Set<String> maybeExclusions;
     private Map<String, SimpleStrategy> simpleStrategies;
     private Map<String, CompositeStrategy> compositeStrategies;
     /* default*/ SimpleDateFormat dateFormat;
-    /* default*/ SecurityPolicy securityPolicy;
+    /* default*/ SecurityPolicy maybeSecurityPolicy;
 
     /**
      * Creates a new configuration prototype instance.
@@ -428,10 +436,11 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
         this.sharedConfiguration = false;
         this.context = new UnmarshalContextImpl();
         this.cachedAliasingReflection = getAliasingReflectionCache.get();
+        this.maybeExclusions = null; // lazy.
         this.simpleStrategies = new StrategyHashMap<>();
         this.compositeStrategies = new StrategyHashMap<>();
         this.dateFormat = new SimpleDateFormat(DTD.FORMAT_DATE);
-        this.securityPolicy = null; // lazy.
+        this.maybeSecurityPolicy = null; // lazy.
         // add DTD strategies by default:
         this.simpleStrategies.put(DTD.TYPE_BASE64, Base64Strategy.INSTANCE);
         this.simpleStrategies.put(DTD.TYPE_BOOLEAN, BooleanStrategy.INSTANCE);
@@ -463,10 +472,11 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
         this.sharedConfiguration = true;
         this.context = new UnmarshalContextImpl();
         this.cachedAliasingReflection = other.cachedAliasingReflection;
+        this.maybeExclusions = other.maybeExclusions;
         this.simpleStrategies = other.simpleStrategies;
         this.compositeStrategies = other.compositeStrategies;
         this.dateFormat = new SimpleDateFormat(other.dateFormat.toPattern());
-        this.securityPolicy = other.securityPolicy;
+        this.maybeSecurityPolicy = other.maybeSecurityPolicy;
     }
 
     /**
@@ -591,7 +601,7 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
     }
 
     /**
-     * Gets the {@linkplain #securityPolicy} property, which is used to create,
+     * Gets the SecurityPolicy property, which is used to create,
      * for security reasons, black- or whitelists of classes to be checked when
      * reading objects. If a security policy is defined and an illegal class is
      * found at read time then the read will halt and throw a
@@ -613,10 +623,10 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
      */
     public SecurityPolicy getSecurityPolicy() {
         this.checkNotSharedConfiguration();
-        if (this.securityPolicy == null) {  // lazy:
-            this.securityPolicy = new SecurityPolicy();
+        if (this.maybeSecurityPolicy == null) {
+            this.maybeSecurityPolicy = new SecurityPolicy();
         }
-        return this.securityPolicy;
+        return this.maybeSecurityPolicy;
     }
 
     /**
@@ -687,6 +697,21 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
 
     private static String qualifiedFieldKey(Class declaring, String field) {
         return declaring.getName() + FIELD_FQN_SEPARATOR + field;
+    }
+
+    /**
+     * Excludes the given field, by name or alias.
+     *
+     * @param declaring class
+     * @param field     name or alias to exclude
+     * @throws IllegalStateException if shared configuration
+     */
+    public void exclude(Class declaring, String field) {
+        this.checkNotSharedConfiguration();
+        if (maybeExclusions == null) {
+            maybeExclusions = new HashSet<>();
+        }
+        this.maybeExclusions.add(qualifiedFieldKey(declaring, field));
     }
 
     /**
@@ -860,7 +885,7 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
         try {
             final Object ret = this.read0(componentType);
             return ret;
-        } catch (IllegalClassException | InvalidFormatException ex) {
+        } catch (RuntimeException ex) {
             this.driver.consumeFully();
             throw ex;
         } finally {
@@ -954,7 +979,14 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
                 final String localPartName = this.driver.elementName();
                 // search the class for the specified property:
                 Field f = null;
+                boolean skipF = false;
                 while (cls != Object.class) {
+
+                    if (this.context.excluded(cls, localPartName)) {
+                        skipF = true;
+                        break; // skip excluded field search.
+                    }
+
                     try {
                         f = this.context.fieldFor(cls, localPartName);
                         if (!Modifier.isStatic(f.getModifiers())) {
@@ -962,12 +994,17 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
                         }
                     } catch (NoSuchFieldException searchInSuperclass) {
                     }
+
                     cls = cls.getSuperclass();
                 }
-                // check if field is indeed an instance property:
+                if (skipF) {
+                    this.driver.consume();
+                    continue; // skip excluded field.
+                }
                 if (f == null) {
                     throw new InvalidFormatException(this.driver.positionDescriptor(), "undefined property: " + cls.getName() + '.' + localPartName);
                 }
+                // check if field is indeed an instance property:
                 final ReflectionUtil.FieldInfo fi = ReflectionUtil.fieldInfoForWrite(f);
                 if (!fi.isProperty) {
                     throw new InvalidFormatException(this.driver.positionDescriptor(), "not a property: " + cls.getName() + '.' + localPartName);
@@ -1023,8 +1060,8 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
     }
 
     private void ensureSecurityPolicy(Object o) {
-        if (this.securityPolicy != null) {
-            this.securityPolicy.check(o.getClass());
+        if (this.maybeSecurityPolicy != null) {
+            this.maybeSecurityPolicy.check(o.getClass());
         }
     }
 
@@ -1157,9 +1194,10 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
         this.decoded.clear();
         this.context = null;
         this.cachedAliasingReflection = null;
+        this.maybeExclusions = null;
         this.compositeStrategies = null;
         this.simpleStrategies = null;
-        this.securityPolicy = null;
+        this.maybeSecurityPolicy = null;
     }
 
     /**
@@ -1285,6 +1323,11 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
             final Field ret = declaring.getDeclaredField(aliasOrName);
             cachedAliasingReflection.putIfAbsent(fieldFQN, ret);
             return ret;
+        }
+
+        @Override
+        public boolean excluded(Class declaring, String aliasOrName) {
+            return maybeExclusions != null && maybeExclusions.contains(qualifiedFieldKey(declaring, aliasOrName));
         }
 
         @Override

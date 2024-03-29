@@ -28,12 +28,12 @@ import java.util.*;
 import java.util.function.Consumer;
 
 /**
- * CollectionsStrategies class contains strategies for {@linkplain List#of()}, {@linkplain Map#of()},
- * {@linkplain Set#of()} factory methods.
+ * CollectionsStrategies class contains strategies for {@linkplain Collections#unmodifiableList(List)},
+ * {@linkplain Collections#unmodifiableMap(Map)}, {@linkplain Collections#unmodifiableSet(Set)} factory methods.
  * Implementations are thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.1
+ * @version 1.7.3
  * @since 1.7.1
  */
 public final class CollectionsStrategies {
@@ -194,6 +194,7 @@ public final class CollectionsStrategies {
      */
     public static void forEach(Consumer<CompositeStrategy> c) {
         c.accept(INSTANCE_UNMODIFIABLE_LIST);
+        c.accept(INSTANCE_UNMODIFIABLE_LIST_RA);
         c.accept(INSTANCE_UNMODIFIABLE_MAP);
         c.accept(INSTANCE_UNMODIFIABLE_SET);
     }

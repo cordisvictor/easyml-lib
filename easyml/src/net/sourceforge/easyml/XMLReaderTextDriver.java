@@ -33,7 +33,7 @@ import java.io.Reader;
  * parameters.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.5
+ * @version 1.7.3
  * @since 1.1.0
  */
 final class XMLReaderTextDriver extends XMLReader.Driver {
@@ -161,6 +161,29 @@ final class XMLReaderTextDriver extends XMLReader.Driver {
     public String readValue() {
         try {
             return parser.nextText();
+        } catch (XmlPullParserException | IOException xppX) {
+            throw new InvalidFormatException(this.positionDescriptor(), xppX);
+        }
+    }
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public void consume() {
+        if (!this.atElementStart()) {
+            throw new IllegalStateException("not at element start: " + this.positionDescriptor());
+        }
+        try {
+            int depth = 0;
+            do {
+                final int next = parser.next();
+                if (next == XmlPullParser.START_TAG) {
+                    depth++;
+                } else if (next == XmlPullParser.END_TAG) {
+                    depth--;
+                }
+            } while (depth != 0);
         } catch (XmlPullParserException | IOException xppX) {
             throw new InvalidFormatException(this.positionDescriptor(), xppX);
         }

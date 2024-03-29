@@ -43,6 +43,7 @@ import org.xmlpull.v1.XmlPullParser;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -84,7 +85,7 @@ import java.util.function.Supplier;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.2
+ * @version 1.7.3
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -246,6 +247,7 @@ public final class EasyML {
         simple.add(ZonedDateTimeStrategy.INSTANCE);
         simple.add(ZoneIdStrategy.INSTANCE);
         // util:
+        composite.add(ArrayDequeStrategy.INSTANCE);
         composite.add(ArrayListStrategy.INSTANCE);
         composite.add(BitSetStrategy.INSTANCE);
         composite.add(CalendarStrategy.INSTANCE);
@@ -266,6 +268,10 @@ public final class EasyML {
         composite.add(LinkedListStrategy.INSTANCE);
         simple.add(LocaleStrategy.INSTANCE);
         composite.add(OptionalStrategy.INSTANCE);
+        composite.add(OptionalDoubleStrategy.INSTANCE);
+        composite.add(OptionalIntStrategy.INSTANCE);
+        composite.add(OptionalLongStrategy.INSTANCE);
+        composite.add(PriorityQueueStrategy.INSTANCE);
         composite.add(PropertiesStrategy.INSTANCE);
         composite.add(SingletonListStrategy.INSTANCE);
         composite.add(SingletonMapStrategy.INSTANCE);
@@ -343,6 +349,7 @@ public final class EasyML {
         simple.put(ZonedDateTimeStrategy.NAME, ZonedDateTimeStrategy.INSTANCE);
         simple.put(ZoneIdStrategy.NAME, ZoneIdStrategy.INSTANCE);
         // util:
+        composite.put(ArrayDequeStrategy.NAME, ArrayDequeStrategy.INSTANCE);
         composite.put(ArrayListStrategy.NAME, ArrayListStrategy.INSTANCE);
         composite.put(BitSetStrategy.NAME, BitSetStrategy.INSTANCE);
         composite.put(CalendarStrategy.NAME, CalendarStrategy.INSTANCE);
@@ -363,6 +370,10 @@ public final class EasyML {
         composite.put(LinkedListStrategy.NAME, LinkedListStrategy.INSTANCE);
         simple.put(LocaleStrategy.NAME, LocaleStrategy.INSTANCE);
         composite.put(OptionalStrategy.NAME, OptionalStrategy.INSTANCE);
+        composite.put(OptionalDoubleStrategy.NAME, OptionalDoubleStrategy.INSTANCE);
+        composite.put(OptionalIntStrategy.NAME, OptionalIntStrategy.INSTANCE);
+        composite.put(OptionalLongStrategy.NAME, OptionalLongStrategy.INSTANCE);
+        composite.put(PriorityQueueStrategy.NAME, PriorityQueueStrategy.INSTANCE);
         composite.put(PropertiesStrategy.NAME, PropertiesStrategy.INSTANCE);
         composite.put(SingletonListStrategy.NAME, SingletonListStrategy.INSTANCE);
         composite.put(SingletonMapStrategy.NAME, SingletonMapStrategy.INSTANCE);
@@ -387,11 +398,19 @@ public final class EasyML {
     /**
      * To be used by {@linkplain EasyMLBuilder} only.
      */
-    EasyML(Style style, Supplier<XmlPullParser> xmlPullParserProvider,
-           String dateFormat, String customRootTag, Map<Class, String> classToAlias, Map<Field, String> fieldToAlias,
-           Set<Field> excludedFields, XMLReader.SecurityPolicy deserializationSecurityPolicy,
-           Set<SimpleStrategy> registeredSimple, Set<CompositeStrategy> registeredComposite,
-           Set<SimpleStrategy> unregisteredSimple, Set<CompositeStrategy> unregisteredComposite) {
+    EasyML(Style style,
+           Supplier<XmlPullParser> xmlPullParserProvider,
+           String dateFormat,
+           String customRootTag,
+           Map<Class, String> classToAlias,
+           Map<Field, String> fieldToAlias,
+           Set<Field> excludedFields,
+           Set<ExcludedName> excludedFieldNames,
+           XMLReader.SecurityPolicy deserializationSecurityPolicy,
+           Set<SimpleStrategy> registeredSimple,
+           Set<CompositeStrategy> registeredComposite,
+           Set<SimpleStrategy> unregisteredSimple,
+           Set<CompositeStrategy> unregisteredComposite) {
         this();
         // style:
         if (style != null) {
@@ -429,9 +448,15 @@ public final class EasyML {
                 this.writerPrototype.exclude(excludedField);
             }
         }
+        // excludedFieldNames:
+        if (excludedFieldNames != null) {
+            for (ExcludedName excludedName : excludedFieldNames) {
+                this.readerPrototype.exclude(excludedName.declaring, excludedName.fieldOrAlias);
+            }
+        }
         // deserializationSecurityPolicy:
         if (deserializationSecurityPolicy != null) {
-            this.readerPrototype.securityPolicy = deserializationSecurityPolicy;
+            this.readerPrototype.maybeSecurityPolicy = deserializationSecurityPolicy;
         }
         // registeredSimple:
         if (registeredSimple != null) {
@@ -786,5 +811,34 @@ public final class EasyML {
         this.readerPrototype.clearCache();
         // clear writer cache:
         this.writerPrototype.clearCache();
+    }
+
+    /* default */ static final class ExcludedName {
+        private final Class declaring;
+        private final String fieldOrAlias;
+
+        /* default */ ExcludedName(Class declaring, String fieldOrAlias) {
+            if (declaring == null) {
+                throw new IllegalArgumentException("declaring: null");
+            }
+            if (fieldOrAlias == null) {
+                throw new IllegalArgumentException("fieldOrAlias: null");
+            }
+            this.declaring = declaring;
+            this.fieldOrAlias = fieldOrAlias;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ExcludedName other = (ExcludedName) o;
+            return Objects.equals(declaring, other.declaring) && Objects.equals(fieldOrAlias, other.fieldOrAlias);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(declaring, fieldOrAlias);
+        }
     }
 }

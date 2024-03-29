@@ -54,7 +54,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.6.0
+ * @version 1.7.3
  * @since 1.0
  */
 public final class SerializableStrategy extends AbstractStrategy implements CompositeStrategy<Serializable>, Caching {
@@ -418,6 +418,11 @@ public final class SerializableStrategy extends AbstractStrategy implements Comp
         while (reader.next()) {
             if (reader.atElementStart()) {
                 final String localPartName = reader.elementName();
+                // check if class-level field is excluded:
+                if (ctx.excluded(level, localPartName)) {
+                    reader.consume();
+                    continue; // skip excluded field.
+                }
                 // search the class-level for the specified field:
                 try {
                     Field f = ctx.fieldFor(level, localPartName);
@@ -450,7 +455,7 @@ public final class SerializableStrategy extends AbstractStrategy implements Comp
                         }
                     }
                 } catch (IllegalAccessException neverThrown) {
-                    // field is set to accessible. Hence ignore.
+                    // field is set to accessible. Hence, ignore.
                 } catch (NoSuchFieldException nsfX) {
                     throw new InvalidFormatException(ctx.readerPositionDescriptor(),
                             "undefined field: " + level.getName() + '.' + localPartName);

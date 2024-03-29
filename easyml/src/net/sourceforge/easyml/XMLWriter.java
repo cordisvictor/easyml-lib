@@ -480,8 +480,8 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
     /* default*/ String rootTag;
     /* default*/ SimpleDateFormat dateFormat;
     private MarshalContextImpl context;
-    private Map<Object, String> aliasing;
-    private Set<Field> exclusions;
+    private Map<Object, String> maybeAliasing;
+    private Set<Field> maybeExclusions;
     private StrategyRegistry<SimpleStrategy> simpleStrategies;
     private StrategyRegistry<CompositeStrategy> compositeStrategies;
 
@@ -498,8 +498,8 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
         this.encoded = new IdentityHashMap<>();
         this.sharedConfiguration = false;
         this.context = new MarshalContextImpl();
-        this.aliasing = new HashMap<>();
-        this.exclusions = new HashSet<>();
+        this.maybeAliasing = null; // lazy.
+        this.maybeExclusions = null; // lazy.
         this.skipDefaults = true;
         this.prettyPrint = false;
         this.rootTag = DTD.ELEMENT_EASYML;
@@ -534,8 +534,8 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
         this.encoded = new IdentityHashMap<>();
         this.sharedConfiguration = true;
         this.context = new MarshalContextImpl();
-        this.aliasing = other.aliasing;
-        this.exclusions = other.exclusions;
+        this.maybeAliasing = other.maybeAliasing;
+        this.maybeExclusions = other.maybeExclusions;
         this.skipDefaults = other.skipDefaults;
         this.prettyPrint = other.prettyPrint;
         this.rootTag = other.rootTag;
@@ -729,7 +729,10 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
             throw new IllegalArgumentException("alias: null, empty, or contains illegal XML chars: " + alias);
         }
         this.checkNotSharedConfiguration();
-        return this.aliasing.put(toAlias, alias);
+        if (maybeAliasing == null) {
+            maybeAliasing = new HashMap<>();
+        }
+        return this.maybeAliasing.put(toAlias, alias);
     }
 
     /**
@@ -755,7 +758,10 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
      */
     public void exclude(Field f) {
         this.checkNotSharedConfiguration();
-        this.exclusions.add(f);
+        if (this.maybeExclusions == null) {
+            this.maybeExclusions = new HashSet<>();
+        }
+        this.maybeExclusions.add(f);
     }
 
     /**
@@ -1056,8 +1062,8 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
         }
         this.encoded = null;
         this.context = null;
-        this.aliasing = null;
-        this.exclusions = null;
+        this.maybeAliasing = null;
+        this.maybeExclusions = null;
         this.compositeStrategies = null;
         this.simpleStrategies = null;
     }
@@ -1098,19 +1104,25 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
 
         @Override
         public String aliasOrNameFor(Class c) {
-            final String value = aliasing.get(c);
+            if (maybeAliasing == null) {
+                return c.getName();
+            }
+            final String value = maybeAliasing.get(c);
             return value != null ? value : c.getName();
         }
 
         @Override
         public String aliasOrNameFor(Field f) {
-            final String value = aliasing.get(f);
+            if (maybeAliasing == null) {
+                return f.getName();
+            }
+            final String value = maybeAliasing.get(f);
             return value != null ? value : f.getName();
         }
 
         @Override
         public boolean excluded(Field f) {
-            return exclusions.contains(f);
+            return maybeExclusions != null && maybeExclusions.contains(f);
         }
 
         @Override

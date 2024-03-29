@@ -27,7 +27,7 @@ import java.util.Date;
  * {@linkplain Strategy} instances at un-marshalling stage.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.0
+ * @version 1.7.3
  * @since 1.0
  */
 public interface UnmarshalContext {
@@ -55,6 +55,16 @@ public interface UnmarshalContext {
      * @throws NoSuchFieldException
      */
     Field fieldFor(Class declaring, String aliasOrName) throws NoSuchFieldException;
+
+    /**
+     * Returns <code>true</code> if the given field is excluded, i.e. should be
+     * skipped from unmarshalling, <code>false</code> otherwise.
+     *
+     * @param declaring   class declaring the field
+     * @param aliasOrName a configured field alias or a field name
+     * @return true if excluded, false otherwise
+     */
+    boolean excluded(Class declaring, String aliasOrName);
 
     /**
      * Parses the given date using the date format context configuration.

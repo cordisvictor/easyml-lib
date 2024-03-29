@@ -50,7 +50,7 @@ import java.util.function.Supplier;
  * <b>Note:</b> this builder implementation is <b>not</b> thread-safe
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.1
+ * @version 1.7.3
  * @see EasyML
  * @see XMLReader
  * @see XMLWriter
@@ -65,6 +65,7 @@ public final class EasyMLBuilder implements Supplier<EasyML> {
     private Map<Class, String> classToAlias;
     private Map<Field, String> fieldToAlias;
     private Set<Field> excludedFields;
+    private Set<EasyML.ExcludedName> excludedFieldNames;
     private XMLReader.SecurityPolicy deserializationSecurityPolicy;
     private Set<SimpleStrategy> registeredSimple;
     private Set<CompositeStrategy> registeredComposite;
@@ -160,6 +161,7 @@ public final class EasyMLBuilder implements Supplier<EasyML> {
 
     /**
      * Sets exclusion on the given field.
+     * For serialization.
      *
      * @param f to exclude
      */
@@ -173,6 +175,7 @@ public final class EasyMLBuilder implements Supplier<EasyML> {
 
     /**
      * Sets exclusion on the given field, of the <code>declaring</code> class.
+     * For serialization.
      *
      * @param declaring class declaring the field
      * @param field     the name of the field to exclude
@@ -180,6 +183,21 @@ public final class EasyMLBuilder implements Supplier<EasyML> {
      */
     public EasyMLBuilder withExcluded(Class declaring, String field) throws NoSuchFieldException {
         return withExcluded(declaring.getDeclaredField(field));
+    }
+
+    /**
+     * Sets exclusion on the given field name or alias, of the <code>declaring</code> class.
+     * For deserialization.
+     *
+     * @param declaring    class declaring the field
+     * @param fieldOrAlias the name of the field to exclude
+     */
+    public EasyMLBuilder withExcludedName(Class declaring, String fieldOrAlias) {
+        if (this.excludedFieldNames == null) {
+            this.excludedFieldNames = new HashSet<>();
+        }
+        this.excludedFieldNames.add(new EasyML.ExcludedName(declaring, fieldOrAlias));
+        return this;
     }
 
     /**
@@ -284,6 +302,7 @@ public final class EasyMLBuilder implements Supplier<EasyML> {
                 classToAlias,
                 fieldToAlias,
                 excludedFields,
+                excludedFieldNames,
                 deserializationSecurityPolicy,
                 registeredSimple,
                 registeredComposite,
@@ -299,4 +318,5 @@ public final class EasyMLBuilder implements Supplier<EasyML> {
     public EasyML get() {
         return this.build();
     }
+
 }

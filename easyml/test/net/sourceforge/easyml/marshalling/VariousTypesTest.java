@@ -24,10 +24,7 @@ import net.sourceforge.easyml.marshalling.java.lang.RecordStrategy;
 import net.sourceforge.easyml.marshalling.java.time.InstantStrategy;
 import net.sourceforge.easyml.marshalling.java.time.LocalDateTimeStrategy;
 import net.sourceforge.easyml.marshalling.java.time.ZoneIdStrategy;
-import net.sourceforge.easyml.marshalling.java.util.CalendarStrategy;
-import net.sourceforge.easyml.marshalling.java.util.HexFormatStrategy;
-import net.sourceforge.easyml.marshalling.java.util.OptionalStrategy;
-import net.sourceforge.easyml.marshalling.java.util.TimeZoneStrategy;
+import net.sourceforge.easyml.marshalling.java.util.*;
 import net.sourceforge.easyml.marshalling.java.util.concurrent.atomic.AtomicReferenceStrategy;
 import org.junit.After;
 import org.junit.Test;
@@ -91,6 +88,66 @@ public class VariousTypesTest {
         assertEquals(expectedEmpty, xis.read());
         assertEquals(expectedNonEmpty1, xis.read());
         assertEquals(expectedNonEmpty2, xis.read());
+        xis.close();
+    }
+
+    @Test
+    public void testOptionalIntStrategy() {
+        final OptionalInt expectedEmpty = OptionalInt.empty();
+        final OptionalInt expectedNonEmpty = OptionalInt.of(2);
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.getCompositeStrategies().add(OptionalIntStrategy.INSTANCE);
+        xos.write(expectedEmpty);
+        xos.write(expectedNonEmpty);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getCompositeStrategies().put(OptionalIntStrategy.INSTANCE.name(), OptionalIntStrategy.INSTANCE);
+        assertEquals(expectedEmpty, xis.read());
+        assertEquals(expectedNonEmpty, xis.read());
+        xis.close();
+    }
+
+    @Test
+    public void testOptionalLongStrategy() {
+        final OptionalLong expectedEmpty = OptionalLong.empty();
+        final OptionalLong expectedNonEmpty = OptionalLong.of(2);
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.getCompositeStrategies().add(OptionalLongStrategy.INSTANCE);
+        xos.write(expectedEmpty);
+        xos.write(expectedNonEmpty);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getCompositeStrategies().put(OptionalLongStrategy.INSTANCE.name(), OptionalLongStrategy.INSTANCE);
+        assertEquals(expectedEmpty, xis.read());
+        assertEquals(expectedNonEmpty, xis.read());
+        xis.close();
+    }
+
+    @Test
+    public void testOptionalDoubleStrategy() {
+        final OptionalDouble expectedEmpty = OptionalDouble.empty();
+        final OptionalDouble expectedNonEmpty = OptionalDouble.of(2.5);
+
+        final XMLWriter xos = new XMLWriter(this.out);
+        xos.getCompositeStrategies().add(OptionalDoubleStrategy.INSTANCE);
+        xos.write(expectedEmpty);
+        xos.write(expectedNonEmpty);
+        xos.close();
+
+        System.out.println(this.out);
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(this.out.toByteArray()));
+        xis.getCompositeStrategies().put(OptionalDoubleStrategy.INSTANCE.name(), OptionalDoubleStrategy.INSTANCE);
+        assertEquals(expectedEmpty, xis.read());
+        assertEquals(expectedNonEmpty, xis.read());
         xis.close();
     }
 
