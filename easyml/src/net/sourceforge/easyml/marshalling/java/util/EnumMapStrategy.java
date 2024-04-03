@@ -19,21 +19,24 @@
 package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
-import net.sourceforge.easyml.marshalling.*;
+import net.sourceforge.easyml.marshalling.CompositeReader;
+import net.sourceforge.easyml.marshalling.CompositeWriter;
+import net.sourceforge.easyml.marshalling.MarshalContext;
+import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * EnumMapStrategy class that extends the {@linkplain AbstractStrategy} for
+ * EnumMapStrategy class that extends the {@linkplain MapStrategy} for
  * the {@linkplain EnumMap}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.3
+ * @version 1.8.1
  * @since 1.4.6
  */
-public final class EnumMapStrategy extends AbstractStrategy implements CompositeStrategy<EnumMap> {
+public final class EnumMapStrategy extends MapStrategy<EnumMap> {
 
     /**
      * Constant defining the value used for the strategy name.
@@ -65,16 +68,17 @@ public final class EnumMapStrategy extends AbstractStrategy implements Composite
     }
 
     @Override
-    public void marshal(EnumMap target, CompositeWriter writer, MarshalContext ctx) {
-        writer.startElement(EnumMapStrategy.NAME);
+    protected void marshalAttrs(EnumMap target, CompositeWriter writer, MarshalContext ctx) {
         writer.setAttribute(ATTRIBUTE_KEYTYPE, ctx.aliasOrNameFor(maybeKeyType(target)));
+    }
 
+    @Override
+    protected void marshalEntrySet(EnumMap target, CompositeWriter writer) {
         Set<Map.Entry> entrySet = target.entrySet();
         for (Map.Entry e : entrySet) {
             writer.writeString(((Enum) e.getKey()).name());
             writer.write(e.getValue());
         }
-        writer.endElement();
     }
 
     private static <K extends Enum<K>, V> Class<K> maybeKeyType(EnumMap<K, V> target) {
@@ -90,7 +94,7 @@ public final class EnumMapStrategy extends AbstractStrategy implements Composite
     }
 
     @Override
-    public Object unmarshalInit(EnumMap target, CompositeReader reader, UnmarshalContext ctx) {
+    public EnumMap unmarshalInit(EnumMap target, CompositeReader reader, UnmarshalContext ctx) {
         final Class keyTypeCls;
         try {
             keyTypeCls = ctx.classFor(reader.elementRequiredAttribute(ATTRIBUTE_KEYTYPE));

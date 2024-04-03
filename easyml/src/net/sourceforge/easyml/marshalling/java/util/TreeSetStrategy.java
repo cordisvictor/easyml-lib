@@ -32,7 +32,7 @@ import java.util.TreeSet;
  * {@linkplain TreeSet}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.6
+ * @version 1.8.1
  * @since 1.4.6
  */
 public final class TreeSetStrategy extends CollectionStrategy<TreeSet> {
@@ -71,13 +71,19 @@ public final class TreeSetStrategy extends CollectionStrategy<TreeSet> {
     }
 
     /**
+     * Override to prevent the marshalling of the {@linkplain #ATTRIBUTE_SIZE}.
+     */
+    @Override
+    protected void marshalAttrs(TreeSet target, CompositeWriter writer, MarshalContext ctx) {
+    }
+
+    /**
      * Override which takes into account the tree set comparator.
      * <p>
      * {@inheritDoc }
      */
     @Override
-    public void marshal(TreeSet target, CompositeWriter writer, MarshalContext ctx) {
-        writer.startElement(TreeSetStrategy.NAME);
+    protected void marshalElements(TreeSet target, CompositeWriter writer) {
         final Comparator comparator = target.comparator();
         if (comparator != null) {
             writer.setAttribute(ATTRIBUTE_COMPARATOR, Boolean.toString(true));
@@ -85,8 +91,7 @@ public final class TreeSetStrategy extends CollectionStrategy<TreeSet> {
             writer.write(comparator);
             writer.endElement();
         }
-        this.marshalElements(target, writer);
-        writer.endElement();
+        super.marshalElements(target, writer);
     }
 
     /**

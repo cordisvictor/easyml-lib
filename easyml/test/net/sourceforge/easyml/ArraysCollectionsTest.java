@@ -202,7 +202,7 @@ public class ArraysCollectionsTest {
     }
 
     @Test
-    public void testArrayDeque() throws Exception {
+    public void testArrayDeque() {
         final ArrayDeque expected = new ArrayDeque();
         expected.add(1);
         expected.add(2);
@@ -220,7 +220,7 @@ public class ArraysCollectionsTest {
     }
 
     @Test
-    public void testPriorityQueue() throws Exception {
+    public void testPriorityQueue() {
         final PriorityQueue expected = new PriorityQueue();
         expected.add(1);
         expected.add(2);
@@ -238,7 +238,7 @@ public class ArraysCollectionsTest {
     }
 
     @Test
-    public void testListListArray() throws Exception {
+    public void testListListArray() {
         final List expected = new ArrayList();
         expected.add(1);
         List l2 = new LinkedList();
@@ -259,7 +259,7 @@ public class ArraysCollectionsTest {
     }
 
     @Test(expected = IllegalClassException.class)
-    public void testListListArrayInject1() throws Exception {
+    public void testListListArrayInject1() {
         final List expected = new ArrayList();
         expected.add(1);
         List l2 = new LinkedList();
@@ -327,7 +327,7 @@ public class ArraysCollectionsTest {
 
         @Override
         public boolean equals(Object o) {
-            return this.getClass() == o.getClass();
+            return o != null && o.getClass() == this.getClass();
         }
     }
 

@@ -25,12 +25,9 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Victor Cordis ( cordis.victor at gmail.com)
@@ -142,6 +139,111 @@ public class EasyMLTest {
             reader.read();
         } finally {
             reader.close();
+        }
+    }
+
+    @Test
+    public void testPrettyCollectionsArrayList() {
+        Object expected = new ArrayList(List.of(1, 2));
+
+        easyml = new EasyMLBuilder()
+                .withPrettyCollections(true)
+                .build();
+
+        final String xml = easyml.serialize(expected);
+        System.out.println(xml);
+
+        assertEquals(expected, easyml.deserialize(xml));
+    }
+
+    @Test
+    public void testPrettyCollectionsArrayDeque() {
+        ArrayDeque expected = new ArrayDeque(List.of(1, 2));
+
+        easyml = new EasyMLBuilder()
+                .withPrettyCollections(true)
+                .build();
+
+        final String xml = easyml.serialize(expected);
+        System.out.println(xml);
+
+        assertArrayEquals(expected.toArray(), ((ArrayDeque) easyml.deserialize(xml)).toArray());
+    }
+
+    @Test
+    public void testPrettyCollectionsEnumSet() {
+        Object expected = EnumSet.allOf(EasyML.Style.class);
+
+        easyml = new EasyMLBuilder()
+                .withAlias(EasyML.Style.class, "estyle")
+                .withPrettyCollections(true)
+                .build();
+
+        final String xml = easyml.serialize(expected);
+        System.out.println(xml);
+
+        assertEquals(expected, easyml.deserialize(xml));
+    }
+
+    @Test
+    public void testPrettyCollectionsEnumMap() {
+        Object expected = new EnumMap<>(Map.of(EasyML.Style.PRETTY, "yes"));
+
+        easyml = new EasyMLBuilder()
+                .withAlias(EasyML.Style.class, "estyle")
+                .withPrettyCollections(true)
+                .build();
+
+        final String xml = easyml.serialize(expected);
+        System.out.println(xml);
+
+        assertEquals(expected, easyml.deserialize(xml));
+    }
+
+    @Test
+    public void testPrettyCollectionsTreeMap() {
+        TreeMap expected = new TreeMap(new IntegerComparator());
+        expected.putAll(Map.of(1, "one", 2, "two"));
+
+        easyml = new EasyMLBuilder()
+                .withPrettyCollections(true)
+                .build();
+
+        final String xml = easyml.serialize(expected);
+        System.out.println(xml);
+
+        assertEquals(expected, easyml.deserialize(xml));
+    }
+
+    @Test
+    public void testPrettyCollectionsPriorityQueue() {
+        PriorityQueue expected = new PriorityQueue(new IntegerComparator());
+        expected.addAll(List.of(1, 3, 2));
+
+        easyml = new EasyMLBuilder()
+                .withPrettyCollections(true)
+                .build();
+
+        final String xml = easyml.serialize(expected);
+        System.out.println(xml);
+
+        assertArrayEquals(expected.toArray(), ((PriorityQueue) easyml.deserialize(xml)).toArray());
+    }
+
+    private static final class IntegerComparator implements Comparator<Integer> {
+        @Override
+        public int compare(Integer i1, Integer i2) {
+            return i1 - i2;
+        }
+
+        @Override
+        public int hashCode() {
+            return 1;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o != null && o.getClass() == this.getClass();
         }
     }
 }

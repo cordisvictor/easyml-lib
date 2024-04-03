@@ -19,19 +19,22 @@
 package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
-import net.sourceforge.easyml.marshalling.*;
+import net.sourceforge.easyml.marshalling.CompositeReader;
+import net.sourceforge.easyml.marshalling.CompositeWriter;
+import net.sourceforge.easyml.marshalling.MarshalContext;
+import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
 import java.util.EnumSet;
 
 /**
- * EnumSetStrategy class that extends the {@linkplain AbstractStrategy} for
+ * EnumSetStrategy class that extends the {@linkplain CollectionStrategy} for
  * the {@linkplain EnumSet}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.3
+ * @version 1.8.1
  * @since 1.4.6
  */
-public final class EnumSetStrategy extends AbstractStrategy implements CompositeStrategy<EnumSet> {
+public final class EnumSetStrategy extends CollectionStrategy<EnumSet> {
 
     /**
      * Constant defining the value used for the strategy name.
@@ -79,13 +82,15 @@ public final class EnumSetStrategy extends AbstractStrategy implements Composite
     }
 
     @Override
-    public void marshal(EnumSet target, CompositeWriter writer, MarshalContext ctx) {
-        writer.startElement(EnumSetStrategy.NAME);
+    protected void marshalAttrs(EnumSet target, CompositeWriter writer, MarshalContext ctx) {
         writer.setAttribute(ATTRIBUTE_ELEMENTTYPE, ctx.aliasOrNameFor(elementType(target)));
+    }
+
+    @Override
+    protected void marshalElements(EnumSet target, CompositeWriter writer) {
         for (Object e : target) {
             writer.writeString(((Enum) e).name());
         }
-        writer.endElement();
     }
 
     private static <E extends Enum<E>> Class<E> elementType(EnumSet<E> source) {
@@ -99,7 +104,7 @@ public final class EnumSetStrategy extends AbstractStrategy implements Composite
     }
 
     @Override
-    public Object unmarshalInit(EnumSet target, CompositeReader reader, UnmarshalContext ctx) {
+    public EnumSet unmarshalInit(EnumSet target, CompositeReader reader, UnmarshalContext ctx) {
         // consume root element:
         reader.next();
         // read elements:

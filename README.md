@@ -60,7 +60,12 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
-Release 1.8.0 (requires Java 21, recommended from Java 21)
+Release 1.8.1
+- feature: PrettyCollections option for formatting Java Collections
+- bugfix: collection impl for java.util.Collections unmodifiableSequencedCollection()
+
+
+Release 1.8.0 (requires Java 21)
 - feature: added java.util.Collections unmodifiableSequencedCollection, unmodifiableSequencedMap,
 unmodifiableSequencedSet strategies.
 
@@ -81,7 +86,7 @@ Release 1.7.1
 - feature: added java.util.Collections unmodifiableList, unmodifiableMap, unmodifiableSet strategies.
 
 
-Release 1.7.0 (requires Java 17, recommended from Java 17)
+Release 1.7.0 (requires Java 17)
 - feature: support for Java records.
 
 

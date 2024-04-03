@@ -448,7 +448,7 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
         this.simpleStrategies.put(DTD.TYPE_DOUBLE, DoubleStrategy.INSTANCE);
         this.simpleStrategies.put(DTD.TYPE_INT, IntStrategy.INSTANCE);
         this.simpleStrategies.put(DTD.TYPE_STRING, StringStrategy.INSTANCE);
-        // add NON-DTD strategies for primitives, since we need to support the primitive API:
+        // add NON-DTD strategies to support the primitives API:
         this.simpleStrategies.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
         this.simpleStrategies.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
         this.simpleStrategies.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);

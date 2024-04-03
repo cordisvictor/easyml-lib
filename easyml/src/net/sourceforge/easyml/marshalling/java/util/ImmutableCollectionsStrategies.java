@@ -19,10 +19,7 @@
 package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.InvalidFormatException;
-import net.sourceforge.easyml.marshalling.CompositeReader;
-import net.sourceforge.easyml.marshalling.CompositeStrategy;
-import net.sourceforge.easyml.marshalling.CompositeWriter;
-import net.sourceforge.easyml.marshalling.UnmarshalContext;
+import net.sourceforge.easyml.marshalling.*;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -33,7 +30,7 @@ import java.util.function.Consumer;
  * Implementations are thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.1
+ * @version 1.8.1
  * @since 1.7.1
  */
 public final class ImmutableCollectionsStrategies {
@@ -60,7 +57,7 @@ public final class ImmutableCollectionsStrategies {
         }
 
         @Override
-        protected void marshalAttr(List target, CompositeWriter writer) {
+        protected void marshalAttrs(List target, CompositeWriter writer, MarshalContext ctx) {
         }
 
         @Override
@@ -134,7 +131,7 @@ public final class ImmutableCollectionsStrategies {
         }
 
         @Override
-        protected void marshalAttr(Map target, CompositeWriter writer) {
+        protected void marshalAttrs(Map target, CompositeWriter writer, MarshalContext ctx) {
         }
 
         @Override
@@ -215,7 +212,7 @@ public final class ImmutableCollectionsStrategies {
         }
 
         @Override
-        protected void marshalAttr(Set target, CompositeWriter writer) {
+        protected void marshalAttrs(Set target, CompositeWriter writer, MarshalContext ctx) {
         }
 
         @Override

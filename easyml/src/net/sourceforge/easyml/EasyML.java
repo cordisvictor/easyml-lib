@@ -44,6 +44,7 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -85,7 +86,7 @@ import java.util.function.Supplier;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.3
+ * @version 1.8.1
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -176,248 +177,49 @@ public final class EasyML {
     /**
      * The preferred parser configuration. Is optional.
      */
-    protected Supplier<XmlPullParser> xmlPullParserProvider = null;
+    protected final Optional<Supplier<XmlPullParser>> xmlPullParserProvider;
 
     /**
      * Creates a new instance with the default settings and default reader and
      * writer strategies.
      */
     public EasyML() {
+        this(null, false);
+    }
+
+    private EasyML(Supplier<XmlPullParser> xmlPullParserProvider, boolean prettyCollections) {
         this.writerPrototype = new XMLWriter();
         this.readerPrototype = new XMLReader(ConcurrentHashMap::new);
-        defaultConfiguration(this.writerPrototype);
+        defaultConfiguration(this.writerPrototype, prettyCollections);
         defaultConfiguration(this.readerPrototype);
         this.perThreadWriter = ThreadLocal.withInitial(() -> new XMLWriter(writerPrototype));
         this.perThreadReader = ThreadLocal.withInitial(() -> new XMLReader(readerPrototype));
-    }
-
-    /**
-     * Configures all default strategies to the given writer.
-     *
-     * @param writer to configure
-     */
-    public static void defaultConfiguration(XMLWriter writer) {
-        final XMLWriter.StrategyRegistry<SimpleStrategy> simple = writer.getSimpleStrategies();
-        final XMLWriter.StrategyRegistry<CompositeStrategy> composite = writer.getCompositeStrategies();
-        // dtd: because of the primitives API, DTD are included by default in the writer:
-//        simple.add(Base64Strategy.INSTANCE);
-//        simple.add(BooleanStrategy.INSTANCE);
-//        simple.add(DateStrategy.INSTANCE);
-//        simple.add(DoubleStrategy.INSTANCE);
-//        simple.add(IntStrategy.INSTANCE);
-//        simple.add(StringStrategy.INSTANCE);
-        // awt:
-        composite.add(ColorStrategy.INSTANCE);
-        // io:
-        composite.add(ExternalizableStrategy.INSTANCE);
-        simple.add(FileStrategy.INSTANCE);
-        composite.add(new SerializableStrategy());
-        // lang: because of the primitives API, non-DTD value types are included by default in the writer:
-//        simple.add(ByteStrategy.INSTANCE);
-//        simple.add(CharacterStrategy.INSTANCE);
-//        simple.add(FloatStrategy.INSTANCE);
-//        simple.add(LongStrategy.INSTANCE);
-//        simple.add(ShortStrategy.INSTANCE);
-        composite.add(ArrayStrategy.INSTANCE);
-        simple.add(CharsStrategy.INSTANCE);
-        simple.add(ClassStrategy.INSTANCE);
-        simple.add(EnumStrategy.INSTANCE);
-        composite.add(ObjectStrategy.INSTANCE);
-        composite.add(RecordStrategy.INSTANCE);
-        simple.add(StackTraceElementStrategy.INSTANCE);
-        simple.add(StringBufferStrategy.INSTANCE);
-        simple.add(StringBuilderStrategy.INSTANCE);
-        // math:
-        simple.add(BigDecimalStrategy.INSTANCE);
-        simple.add(BigIntegerStrategy.INSTANCE);
-        // net:
-        simple.add(URIStrategy.INSTANCE);
-        simple.add(URLStrategy.INSTANCE);
-        // time:
-        simple.add(ChronologyStrategy.INSTANCE);
-        simple.add(DurationStrategy.INSTANCE);
-        simple.add(InstantStrategy.INSTANCE);
-        simple.add(LocalDateStrategy.INSTANCE);
-        simple.add(LocalDateTimeStrategy.INSTANCE);
-        simple.add(LocalTimeStrategy.INSTANCE);
-        simple.add(MonthDayStrategy.INSTANCE);
-        simple.add(PeriodStrategy.INSTANCE);
-        simple.add(YearMonthStrategy.INSTANCE);
-        simple.add(YearStrategy.INSTANCE);
-        simple.add(ZonedDateTimeStrategy.INSTANCE);
-        simple.add(ZoneIdStrategy.INSTANCE);
-        // util:
-        composite.add(ArrayDequeStrategy.INSTANCE);
-        composite.add(ArrayListStrategy.INSTANCE);
-        composite.add(BitSetStrategy.INSTANCE);
-        composite.add(CalendarStrategy.INSTANCE);
-        CollectionsStrategies.forEach(composite::add);
-        composite.add(EnumMapStrategy.INSTANCE);
-        composite.add(EnumSetStrategy.INSTANCE);
-        composite.add(EmptyListStrategy.INSTANCE);
-        composite.add(EmptyMapStrategy.INSTANCE);
-        composite.add(EmptySetStrategy.INSTANCE);
-        composite.add(HashMapStrategy.INSTANCE);
-        composite.add(HashSetStrategy.INSTANCE);
-        composite.add(HashtableStrategy.INSTANCE);
-        composite.add(HexFormatStrategy.INSTANCE);
-        composite.add(IdentityHashMapStrategy.INSTANCE);
-        ImmutableCollectionsStrategies.forEach(composite::add);
-        composite.add(LinkedHashMapStrategy.INSTANCE);
-        composite.add(LinkedHashSetStrategy.INSTANCE);
-        composite.add(LinkedListStrategy.INSTANCE);
-        simple.add(LocaleStrategy.INSTANCE);
-        composite.add(OptionalStrategy.INSTANCE);
-        composite.add(OptionalDoubleStrategy.INSTANCE);
-        composite.add(OptionalIntStrategy.INSTANCE);
-        composite.add(OptionalLongStrategy.INSTANCE);
-        composite.add(PriorityQueueStrategy.INSTANCE);
-        composite.add(PropertiesStrategy.INSTANCE);
-        composite.add(SingletonListStrategy.INSTANCE);
-        composite.add(SingletonMapStrategy.INSTANCE);
-        composite.add(SingletonSetStrategy.INSTANCE);
-        composite.add(StackStrategy.INSTANCE);
-        composite.add(TreeMapStrategy.INSTANCE);
-        composite.add(TreeSetStrategy.INSTANCE);
-        simple.add(TimeZoneStrategy.INSTANCE);
-        simple.add(UUIDStrategy.INSTANCE);
-        composite.add(VectorStrategy.INSTANCE);
-        // util.concurrent:
-        composite.add(ConcurrentHashMapStrategy.INSTANCE);
-        // util.concurrent.atomic:
-        simple.add(AtomicBooleanStrategy.INSTANCE);
-        simple.add(AtomicIntegerStrategy.INSTANCE);
-        simple.add(AtomicLongStrategy.INSTANCE);
-        composite.add(AtomicReferenceStrategy.INSTANCE);
-        // util.regex:
-        composite.add(PatternStrategy.INSTANCE);
-    }
-
-    /**
-     * Configures all default strategies to the given reader.
-     *
-     * @param reader to configure
-     */
-    public static void defaultConfiguration(XMLReader reader) {
-        final Map<String, SimpleStrategy> simple = reader.getSimpleStrategies();
-        final Map<String, CompositeStrategy> composite = reader.getCompositeStrategies();
-        // dtd: because of the primitives API, DTD are included by default in the reader:
-//        simple.put(Base64Strategy.NAME, Base64Strategy.INSTANCE);
-//        simple.put(BooleanStrategy.NAME, BooleanStrategy.INSTANCE);
-//        simple.put(DateStrategy.NAME, DateStrategy.INSTANCE);
-//        simple.put(DoubleStrategy.NAME, DoubleStrategy.INSTANCE);
-//        simple.put(IntStrategy.NAME, IntStrategy.INSTANCE);
-//        simple.put(StringStrategy.NAME, StringStrategy.INSTANCE);
-        // awt:
-        composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
-        // io:
-        composite.put(ExternalizableStrategy.NAME, ExternalizableStrategy.INSTANCE);
-        simple.put(FileStrategy.NAME, FileStrategy.INSTANCE);
-        composite.put(SerializableStrategy.NAME, new SerializableStrategy());
-        // lang: because of the primitives API, non-DTD value types are included by default in the reader:
-//        simple.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
-//        simple.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
-//        simple.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
-//        simple.put(LongStrategy.NAME, LongStrategy.INSTANCE);
-//        simple.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
-        composite.put(ArrayStrategy.NAME, ArrayStrategy.INSTANCE);
-        simple.put(CharsStrategy.NAME, CharsStrategy.INSTANCE);
-        simple.put(ClassStrategy.NAME, ClassStrategy.INSTANCE);
-        simple.put(EnumStrategy.NAME, EnumStrategy.INSTANCE);
-        composite.put(ObjectStrategy.NAME, ObjectStrategy.INSTANCE);
-        composite.put(RecordStrategy.NAME, RecordStrategy.INSTANCE);
-        simple.put(StackTraceElementStrategy.NAME, StackTraceElementStrategy.INSTANCE);
-        simple.put(StringBufferStrategy.NAME, StringBufferStrategy.INSTANCE);
-        simple.put(StringBuilderStrategy.NAME, StringBuilderStrategy.INSTANCE);
-        // math:
-        simple.put(BigDecimalStrategy.NAME, BigDecimalStrategy.INSTANCE);
-        simple.put(BigIntegerStrategy.NAME, BigIntegerStrategy.INSTANCE);
-        // net:
-        simple.put(URIStrategy.NAME, URIStrategy.INSTANCE);
-        simple.put(URLStrategy.NAME, URLStrategy.INSTANCE);
-        // time:
-        simple.put(ChronologyStrategy.NAME, ChronologyStrategy.INSTANCE);
-        simple.put(DurationStrategy.NAME, DurationStrategy.INSTANCE);
-        simple.put(InstantStrategy.NAME, InstantStrategy.INSTANCE);
-        simple.put(LocalDateStrategy.NAME, LocalDateStrategy.INSTANCE);
-        simple.put(LocalDateTimeStrategy.NAME, LocalDateTimeStrategy.INSTANCE);
-        simple.put(LocalTimeStrategy.NAME, LocalTimeStrategy.INSTANCE);
-        simple.put(MonthDayStrategy.NAME, MonthDayStrategy.INSTANCE);
-        simple.put(PeriodStrategy.NAME, PeriodStrategy.INSTANCE);
-        simple.put(YearMonthStrategy.NAME, YearMonthStrategy.INSTANCE);
-        simple.put(YearStrategy.NAME, YearStrategy.INSTANCE);
-        simple.put(ZonedDateTimeStrategy.NAME, ZonedDateTimeStrategy.INSTANCE);
-        simple.put(ZoneIdStrategy.NAME, ZoneIdStrategy.INSTANCE);
-        // util:
-        composite.put(ArrayDequeStrategy.NAME, ArrayDequeStrategy.INSTANCE);
-        composite.put(ArrayListStrategy.NAME, ArrayListStrategy.INSTANCE);
-        composite.put(BitSetStrategy.NAME, BitSetStrategy.INSTANCE);
-        composite.put(CalendarStrategy.NAME, CalendarStrategy.INSTANCE);
-        CollectionsStrategies.forEach(s -> composite.put(s.name(), s));
-        composite.put(EnumMapStrategy.NAME, EnumMapStrategy.INSTANCE);
-        composite.put(EnumSetStrategy.NAME, EnumSetStrategy.INSTANCE);
-        composite.put(EmptyListStrategy.NAME, EmptyListStrategy.INSTANCE);
-        composite.put(EmptyMapStrategy.NAME, EmptyMapStrategy.INSTANCE);
-        composite.put(EmptySetStrategy.NAME, EmptySetStrategy.INSTANCE);
-        composite.put(HashMapStrategy.NAME, HashMapStrategy.INSTANCE);
-        composite.put(HashSetStrategy.NAME, HashSetStrategy.INSTANCE);
-        composite.put(HashtableStrategy.NAME, HashtableStrategy.INSTANCE);
-        composite.put(HexFormatStrategy.NAME, HexFormatStrategy.INSTANCE);
-        composite.put(IdentityHashMapStrategy.NAME, IdentityHashMapStrategy.INSTANCE);
-        ImmutableCollectionsStrategies.forEach(s -> composite.put(s.name(), s));
-        composite.put(LinkedHashMapStrategy.NAME, LinkedHashMapStrategy.INSTANCE);
-        composite.put(LinkedHashSetStrategy.NAME, LinkedHashSetStrategy.INSTANCE);
-        composite.put(LinkedListStrategy.NAME, LinkedListStrategy.INSTANCE);
-        simple.put(LocaleStrategy.NAME, LocaleStrategy.INSTANCE);
-        composite.put(OptionalStrategy.NAME, OptionalStrategy.INSTANCE);
-        composite.put(OptionalDoubleStrategy.NAME, OptionalDoubleStrategy.INSTANCE);
-        composite.put(OptionalIntStrategy.NAME, OptionalIntStrategy.INSTANCE);
-        composite.put(OptionalLongStrategy.NAME, OptionalLongStrategy.INSTANCE);
-        composite.put(PriorityQueueStrategy.NAME, PriorityQueueStrategy.INSTANCE);
-        composite.put(PropertiesStrategy.NAME, PropertiesStrategy.INSTANCE);
-        composite.put(SingletonListStrategy.NAME, SingletonListStrategy.INSTANCE);
-        composite.put(SingletonMapStrategy.NAME, SingletonMapStrategy.INSTANCE);
-        composite.put(SingletonSetStrategy.NAME, SingletonSetStrategy.INSTANCE);
-        composite.put(StackStrategy.NAME, StackStrategy.INSTANCE);
-        composite.put(TreeMapStrategy.NAME, TreeMapStrategy.INSTANCE);
-        composite.put(TreeSetStrategy.NAME, TreeSetStrategy.INSTANCE);
-        simple.put(TimeZoneStrategy.NAME, TimeZoneStrategy.INSTANCE);
-        simple.put(UUIDStrategy.NAME, UUIDStrategy.INSTANCE);
-        composite.put(VectorStrategy.NAME, VectorStrategy.INSTANCE);
-        // util.concurrent:
-        composite.put(ConcurrentHashMapStrategy.NAME, ConcurrentHashMapStrategy.INSTANCE);
-        // util.concurrent.atomic:
-        simple.put(AtomicBooleanStrategy.NAME, AtomicBooleanStrategy.INSTANCE);
-        simple.put(AtomicIntegerStrategy.NAME, AtomicIntegerStrategy.INSTANCE);
-        simple.put(AtomicLongStrategy.NAME, AtomicLongStrategy.INSTANCE);
-        composite.put(AtomicReferenceStrategy.NAME, AtomicReferenceStrategy.INSTANCE);
-        // util.regex:
-        composite.put(PatternStrategy.NAME, PatternStrategy.INSTANCE);
+        this.xmlPullParserProvider = Optional.ofNullable(xmlPullParserProvider);
     }
 
     /**
      * To be used by {@linkplain EasyMLBuilder} only.
      */
-    EasyML(Style style,
-           Supplier<XmlPullParser> xmlPullParserProvider,
-           String dateFormat,
-           String customRootTag,
-           Map<Class, String> classToAlias,
-           Map<Field, String> fieldToAlias,
-           Set<Field> excludedFields,
-           Set<ExcludedName> excludedFieldNames,
-           XMLReader.SecurityPolicy deserializationSecurityPolicy,
-           Set<SimpleStrategy> registeredSimple,
-           Set<CompositeStrategy> registeredComposite,
-           Set<SimpleStrategy> unregisteredSimple,
-           Set<CompositeStrategy> unregisteredComposite) {
-        this();
+    EasyML(
+            Supplier<XmlPullParser> xmlPullParserProvider,
+            boolean prettyCollections,
+            Style style,
+            String dateFormat,
+            String customRootTag,
+            Map<Class, String> classToAlias,
+            Map<Field, String> fieldToAlias,
+            Set<Field> excludedFields,
+            Set<ExcludedName> excludedFieldNames,
+            XMLReader.SecurityPolicy deserializationSecurityPolicy,
+            Set<SimpleStrategy> registeredSimple,
+            Set<CompositeStrategy> registeredComposite,
+            Set<SimpleStrategy> unregisteredSimple,
+            Set<CompositeStrategy> unregisteredComposite) {
+        this(xmlPullParserProvider, prettyCollections); // xmlPullParserProvider, prettyCollections.
         // style:
         if (style != null) {
             style.applyTo(this.writerPrototype);
         }
-        // xmlPullParserProvider:
-        this.xmlPullParserProvider = xmlPullParserProvider;
         // dateFormat:
         if (dateFormat != null) {
             this.writerPrototype.setDateFormat(dateFormat);
@@ -486,6 +288,223 @@ public final class EasyML {
                 this.readerPrototype.getCompositeStrategies().remove(s.name());
             }
         }
+    }
+
+    private static void defaultConfiguration(XMLWriter writer, boolean prettyCollections) {
+        final XMLWriter.StrategyRegistry<SimpleStrategy> simple = writer.getSimpleStrategies();
+        final XMLWriter.StrategyRegistry<CompositeStrategy> composite = writer.getCompositeStrategies();
+        // dtd: because of the primitives API, DTD are included by default in the writer:
+//        simple.add(Base64Strategy.INSTANCE);
+//        simple.add(BooleanStrategy.INSTANCE);
+//        simple.add(DateStrategy.INSTANCE);
+//        simple.add(DoubleStrategy.INSTANCE);
+//        simple.add(IntStrategy.INSTANCE);
+//        simple.add(StringStrategy.INSTANCE);
+        // awt:
+        composite.add(ColorStrategy.INSTANCE);
+        // io:
+        composite.add(ExternalizableStrategy.INSTANCE);
+        simple.add(FileStrategy.INSTANCE);
+        composite.add(new SerializableStrategy());
+        // lang: because of the primitives API, non-DTD value types are included by default in the writer:
+//        simple.add(ByteStrategy.INSTANCE);
+//        simple.add(CharacterStrategy.INSTANCE);
+//        simple.add(FloatStrategy.INSTANCE);
+//        simple.add(LongStrategy.INSTANCE);
+//        simple.add(ShortStrategy.INSTANCE);
+        composite.add(ArrayStrategy.INSTANCE);
+        simple.add(CharsStrategy.INSTANCE);
+        simple.add(ClassStrategy.INSTANCE);
+        simple.add(EnumStrategy.INSTANCE);
+        composite.add(ObjectStrategy.INSTANCE);
+        composite.add(RecordStrategy.INSTANCE);
+        simple.add(StackTraceElementStrategy.INSTANCE);
+        simple.add(StringBufferStrategy.INSTANCE);
+        simple.add(StringBuilderStrategy.INSTANCE);
+        // math:
+        simple.add(BigDecimalStrategy.INSTANCE);
+        simple.add(BigIntegerStrategy.INSTANCE);
+        // net:
+        simple.add(URIStrategy.INSTANCE);
+        simple.add(URLStrategy.INSTANCE);
+        // time:
+        simple.add(ChronologyStrategy.INSTANCE);
+        simple.add(DurationStrategy.INSTANCE);
+        simple.add(InstantStrategy.INSTANCE);
+        simple.add(LocalDateStrategy.INSTANCE);
+        simple.add(LocalDateTimeStrategy.INSTANCE);
+        simple.add(LocalTimeStrategy.INSTANCE);
+        simple.add(MonthDayStrategy.INSTANCE);
+        simple.add(PeriodStrategy.INSTANCE);
+        simple.add(YearMonthStrategy.INSTANCE);
+        simple.add(YearStrategy.INSTANCE);
+        simple.add(ZonedDateTimeStrategy.INSTANCE);
+        simple.add(ZoneIdStrategy.INSTANCE);
+        // util:
+        composite.add(BitSetStrategy.INSTANCE);
+        composite.add(CalendarStrategy.INSTANCE);
+        CollectionsStrategies.forEach(composite::add);
+        composite.add(EmptyListStrategy.INSTANCE);
+        composite.add(EmptyMapStrategy.INSTANCE);
+        composite.add(EmptySetStrategy.INSTANCE);
+        composite.add(HashtableStrategy.INSTANCE);
+        composite.add(HexFormatStrategy.INSTANCE);
+        ImmutableCollectionsStrategies.forEach(composite::add);
+        simple.add(LocaleStrategy.INSTANCE);
+        composite.add(OptionalStrategy.INSTANCE);
+        composite.add(OptionalDoubleStrategy.INSTANCE);
+        composite.add(OptionalIntStrategy.INSTANCE);
+        composite.add(OptionalLongStrategy.INSTANCE);
+        composite.add(PropertiesStrategy.INSTANCE);
+        composite.add(SingletonListStrategy.INSTANCE);
+        composite.add(SingletonMapStrategy.INSTANCE);
+        composite.add(SingletonSetStrategy.INSTANCE);
+        composite.add(StackStrategy.INSTANCE);
+        simple.add(TimeZoneStrategy.INSTANCE);
+        simple.add(UUIDStrategy.INSTANCE);
+        composite.add(VectorStrategy.INSTANCE);
+        // util: Java Collections:
+        if (prettyCollections) {
+            PrettyCollectionsStrategies.forEachType(composite::add);
+        } else {
+            composite.add(ArrayDequeStrategy.INSTANCE);
+            composite.add(ArrayListStrategy.INSTANCE);
+            composite.add(EnumMapStrategy.INSTANCE);
+            composite.add(EnumSetStrategy.INSTANCE);
+            composite.add(HashMapStrategy.INSTANCE);
+            composite.add(HashSetStrategy.INSTANCE);
+            composite.add(IdentityHashMapStrategy.INSTANCE);
+            composite.add(LinkedHashMapStrategy.INSTANCE);
+            composite.add(LinkedHashSetStrategy.INSTANCE);
+            composite.add(LinkedListStrategy.INSTANCE);
+            composite.add(PriorityQueueStrategy.INSTANCE);
+            composite.add(TreeMapStrategy.INSTANCE);
+            composite.add(TreeSetStrategy.INSTANCE);
+            composite.add(ConcurrentHashMapStrategy.INSTANCE);
+        }
+        // util.concurrent.atomic:
+        simple.add(AtomicBooleanStrategy.INSTANCE);
+        simple.add(AtomicIntegerStrategy.INSTANCE);
+        simple.add(AtomicLongStrategy.INSTANCE);
+        composite.add(AtomicReferenceStrategy.INSTANCE);
+        // util.regex:
+        composite.add(PatternStrategy.INSTANCE);
+    }
+
+    /**
+     * Configures all default strategies to the given writer.
+     *
+     * @param writer to configure
+     */
+    public static void defaultConfiguration(XMLWriter writer) {
+        defaultConfiguration(writer, false);
+    }
+
+    /**
+     * Configures all default strategies to the given reader.
+     *
+     * @param reader to configure
+     */
+    public static void defaultConfiguration(XMLReader reader) {
+        final Map<String, SimpleStrategy> simple = reader.getSimpleStrategies();
+        final Map<String, CompositeStrategy> composite = reader.getCompositeStrategies();
+        // dtd: because of the primitives API, DTD are included by default in the reader:
+//        simple.put(Base64Strategy.NAME, Base64Strategy.INSTANCE);
+//        simple.put(BooleanStrategy.NAME, BooleanStrategy.INSTANCE);
+//        simple.put(DateStrategy.NAME, DateStrategy.INSTANCE);
+//        simple.put(DoubleStrategy.NAME, DoubleStrategy.INSTANCE);
+//        simple.put(IntStrategy.NAME, IntStrategy.INSTANCE);
+//        simple.put(StringStrategy.NAME, StringStrategy.INSTANCE);
+        // awt:
+        composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
+        // io:
+        composite.put(ExternalizableStrategy.NAME, ExternalizableStrategy.INSTANCE);
+        simple.put(FileStrategy.NAME, FileStrategy.INSTANCE);
+        composite.put(SerializableStrategy.NAME, new SerializableStrategy());
+        // lang: because of the primitives API, non-DTD value types are included by default in the reader:
+//        simple.put(ByteStrategy.NAME, ByteStrategy.INSTANCE);
+//        simple.put(CharacterStrategy.NAME, CharacterStrategy.INSTANCE);
+//        simple.put(FloatStrategy.NAME, FloatStrategy.INSTANCE);
+//        simple.put(LongStrategy.NAME, LongStrategy.INSTANCE);
+//        simple.put(ShortStrategy.NAME, ShortStrategy.INSTANCE);
+        composite.put(ArrayStrategy.NAME, ArrayStrategy.INSTANCE);
+        simple.put(CharsStrategy.NAME, CharsStrategy.INSTANCE);
+        simple.put(ClassStrategy.NAME, ClassStrategy.INSTANCE);
+        simple.put(EnumStrategy.NAME, EnumStrategy.INSTANCE);
+        composite.put(ObjectStrategy.NAME, ObjectStrategy.INSTANCE);
+        composite.put(RecordStrategy.NAME, RecordStrategy.INSTANCE);
+        simple.put(StackTraceElementStrategy.NAME, StackTraceElementStrategy.INSTANCE);
+        simple.put(StringBufferStrategy.NAME, StringBufferStrategy.INSTANCE);
+        simple.put(StringBuilderStrategy.NAME, StringBuilderStrategy.INSTANCE);
+        // math:
+        simple.put(BigDecimalStrategy.NAME, BigDecimalStrategy.INSTANCE);
+        simple.put(BigIntegerStrategy.NAME, BigIntegerStrategy.INSTANCE);
+        // net:
+        simple.put(URIStrategy.NAME, URIStrategy.INSTANCE);
+        simple.put(URLStrategy.NAME, URLStrategy.INSTANCE);
+        // time:
+        simple.put(ChronologyStrategy.NAME, ChronologyStrategy.INSTANCE);
+        simple.put(DurationStrategy.NAME, DurationStrategy.INSTANCE);
+        simple.put(InstantStrategy.NAME, InstantStrategy.INSTANCE);
+        simple.put(LocalDateStrategy.NAME, LocalDateStrategy.INSTANCE);
+        simple.put(LocalDateTimeStrategy.NAME, LocalDateTimeStrategy.INSTANCE);
+        simple.put(LocalTimeStrategy.NAME, LocalTimeStrategy.INSTANCE);
+        simple.put(MonthDayStrategy.NAME, MonthDayStrategy.INSTANCE);
+        simple.put(PeriodStrategy.NAME, PeriodStrategy.INSTANCE);
+        simple.put(YearMonthStrategy.NAME, YearMonthStrategy.INSTANCE);
+        simple.put(YearStrategy.NAME, YearStrategy.INSTANCE);
+        simple.put(ZonedDateTimeStrategy.NAME, ZonedDateTimeStrategy.INSTANCE);
+        simple.put(ZoneIdStrategy.NAME, ZoneIdStrategy.INSTANCE);
+        // util:
+        composite.put(BitSetStrategy.NAME, BitSetStrategy.INSTANCE);
+        composite.put(CalendarStrategy.NAME, CalendarStrategy.INSTANCE);
+        CollectionsStrategies.forEach(s -> composite.put(s.name(), s));
+        composite.put(EmptyListStrategy.NAME, EmptyListStrategy.INSTANCE);
+        composite.put(EmptyMapStrategy.NAME, EmptyMapStrategy.INSTANCE);
+        composite.put(EmptySetStrategy.NAME, EmptySetStrategy.INSTANCE);
+        composite.put(HashtableStrategy.NAME, HashtableStrategy.INSTANCE);
+        composite.put(HexFormatStrategy.NAME, HexFormatStrategy.INSTANCE);
+        ImmutableCollectionsStrategies.forEach(s -> composite.put(s.name(), s));
+        simple.put(LocaleStrategy.NAME, LocaleStrategy.INSTANCE);
+        composite.put(OptionalStrategy.NAME, OptionalStrategy.INSTANCE);
+        composite.put(OptionalDoubleStrategy.NAME, OptionalDoubleStrategy.INSTANCE);
+        composite.put(OptionalIntStrategy.NAME, OptionalIntStrategy.INSTANCE);
+        composite.put(OptionalLongStrategy.NAME, OptionalLongStrategy.INSTANCE);
+        composite.put(PropertiesStrategy.NAME, PropertiesStrategy.INSTANCE);
+        composite.put(SingletonListStrategy.NAME, SingletonListStrategy.INSTANCE);
+        composite.put(SingletonMapStrategy.NAME, SingletonMapStrategy.INSTANCE);
+        composite.put(SingletonSetStrategy.NAME, SingletonSetStrategy.INSTANCE);
+        composite.put(StackStrategy.NAME, StackStrategy.INSTANCE);
+        simple.put(TimeZoneStrategy.NAME, TimeZoneStrategy.INSTANCE);
+        simple.put(UUIDStrategy.NAME, UUIDStrategy.INSTANCE);
+        composite.put(VectorStrategy.NAME, VectorStrategy.INSTANCE);
+        // util: Java Collections:
+//        if (prettyCollections) {
+        //  register both regular and pretty collection strategies to support both formats:
+        PrettyCollectionsStrategies.forEachName(pcs -> composite.put(pcs.name(), pcs));
+//        } else {
+        composite.put(ArrayDequeStrategy.NAME, ArrayDequeStrategy.INSTANCE);
+        composite.put(ArrayListStrategy.NAME, ArrayListStrategy.INSTANCE);
+        composite.put(EnumMapStrategy.NAME, EnumMapStrategy.INSTANCE);
+        composite.put(EnumSetStrategy.NAME, EnumSetStrategy.INSTANCE);
+        composite.put(HashMapStrategy.NAME, HashMapStrategy.INSTANCE);
+        composite.put(HashSetStrategy.NAME, HashSetStrategy.INSTANCE);
+        composite.put(IdentityHashMapStrategy.NAME, IdentityHashMapStrategy.INSTANCE);
+        composite.put(LinkedHashMapStrategy.NAME, LinkedHashMapStrategy.INSTANCE);
+        composite.put(LinkedHashSetStrategy.NAME, LinkedHashSetStrategy.INSTANCE);
+        composite.put(LinkedListStrategy.NAME, LinkedListStrategy.INSTANCE);
+        composite.put(PriorityQueueStrategy.NAME, PriorityQueueStrategy.INSTANCE);
+        composite.put(TreeMapStrategy.NAME, TreeMapStrategy.INSTANCE);
+        composite.put(TreeSetStrategy.NAME, TreeSetStrategy.INSTANCE);
+        composite.put(ConcurrentHashMapStrategy.NAME, ConcurrentHashMapStrategy.INSTANCE);
+//        }
+        // util.concurrent.atomic:
+        simple.put(AtomicBooleanStrategy.NAME, AtomicBooleanStrategy.INSTANCE);
+        simple.put(AtomicIntegerStrategy.NAME, AtomicIntegerStrategy.INSTANCE);
+        simple.put(AtomicLongStrategy.NAME, AtomicLongStrategy.INSTANCE);
+        composite.put(AtomicReferenceStrategy.NAME, AtomicReferenceStrategy.INSTANCE);
+        // util.regex:
+        composite.put(PatternStrategy.NAME, PatternStrategy.INSTANCE);
     }
 
     /**
@@ -604,8 +623,12 @@ public final class EasyML {
      */
     public XMLReader newReader(Reader in) {
         final XMLReader ret = new XMLReader(readerPrototype);
-        ret.reset(in, maybeXmlPullParserProvider());
+        ret.reset(in, preferredParserOrNull());
         return ret;
+    }
+
+    private XmlPullParser preferredParserOrNull() {
+        return this.xmlPullParserProvider.map(Supplier::get).orElse(null);
     }
 
     /**
@@ -621,7 +644,7 @@ public final class EasyML {
      */
     public XMLReader newReader(InputStream in) {
         final XMLReader ret = new XMLReader(readerPrototype);
-        ret.reset(in, maybeXmlPullParserProvider());
+        ret.reset(in, preferredParserOrNull());
         return ret;
     }
 
@@ -720,12 +743,8 @@ public final class EasyML {
      */
     public Object deserialize(Reader in) {
         final XMLReader reader = this.perThreadReader.get();
-        reader.reset(in, maybeXmlPullParserProvider());
+        reader.reset(in, preferredParserOrNull());
         return reader.read();
-    }
-
-    private XmlPullParser maybeXmlPullParserProvider() {
-        return this.xmlPullParserProvider != null ? this.xmlPullParserProvider.get() : null;
     }
 
     /**

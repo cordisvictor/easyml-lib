@@ -513,7 +513,7 @@ public class XMLWriter implements Flushable, Closeable, Consumer, IntConsumer, L
         this.simpleStrategies.add(DoubleStrategy.INSTANCE);
         this.simpleStrategies.add(IntStrategy.INSTANCE);
         this.simpleStrategies.add(StringStrategy.INSTANCE);
-        // add NON-DTD strategies for primitives, since we need to support the primitive API:
+        // add NON-DTD strategies to support the primitives API:
         this.simpleStrategies.add(ByteStrategy.INSTANCE);
         this.simpleStrategies.add(CharacterStrategy.INSTANCE);
         this.simpleStrategies.add(FloatStrategy.INSTANCE);

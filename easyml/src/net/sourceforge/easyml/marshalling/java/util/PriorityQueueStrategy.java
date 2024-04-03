@@ -32,7 +32,7 @@ import java.util.PriorityQueue;
  * {@linkplain PriorityQueue}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.3
+ * @version 1.8.1
  * @since 1.7.3
  */
 public final class PriorityQueueStrategy extends CollectionStrategy<PriorityQueue> {
@@ -71,13 +71,19 @@ public final class PriorityQueueStrategy extends CollectionStrategy<PriorityQueu
     }
 
     /**
-     * Override which takes into account the tree set comparator.
+     * Override to prevent the marshalling of the {@linkplain #ATTRIBUTE_SIZE}.
+     */
+    @Override
+    protected void marshalAttrs(PriorityQueue target, CompositeWriter writer, MarshalContext ctx) {
+    }
+
+    /**
+     * Override which takes into account the priority queue comparator.
      * <p>
      * {@inheritDoc }
      */
     @Override
-    public void marshal(PriorityQueue target, CompositeWriter writer, MarshalContext ctx) {
-        writer.startElement(PriorityQueueStrategy.NAME);
+    protected void marshalElements(PriorityQueue target, CompositeWriter writer) {
         final Comparator comparator = target.comparator();
         if (comparator != null) {
             writer.setAttribute(ATTRIBUTE_COMPARATOR, Boolean.toString(true));
@@ -85,8 +91,7 @@ public final class PriorityQueueStrategy extends CollectionStrategy<PriorityQueu
             writer.write(comparator);
             writer.endElement();
         }
-        this.marshalElements(target, writer);
-        writer.endElement();
+        super.marshalElements(target, writer);
     }
 
     /**

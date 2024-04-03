@@ -32,7 +32,7 @@ import java.util.TreeMap;
  * {@linkplain TreeMap}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.3
+ * @version 1.8.1
  * @since 1.0.3
  */
 public final class TreeMapStrategy extends MapStrategy<TreeMap> {
@@ -71,13 +71,19 @@ public final class TreeMapStrategy extends MapStrategy<TreeMap> {
     }
 
     /**
+     * Override to prevent the marshalling of the {@linkplain #ATTRIBUTE_SIZE}.
+     */
+    @Override
+    protected void marshalAttrs(TreeMap target, CompositeWriter writer, MarshalContext ctx) {
+    }
+
+    /**
      * Override which takes into account the tree map comparator.
      * <p>
      * {@inheritDoc }
      */
     @Override
-    public void marshal(TreeMap target, CompositeWriter writer, MarshalContext ctx) {
-        writer.startElement(TreeMapStrategy.NAME);
+    protected void marshalEntrySet(TreeMap target, CompositeWriter writer) {
         final Comparator comparator = target.comparator();
         if (comparator != null) {
             writer.setAttribute(ATTRIBUTE_COMPARATOR, Boolean.toString(true));
@@ -85,8 +91,7 @@ public final class TreeMapStrategy extends MapStrategy<TreeMap> {
             writer.write(comparator);
             writer.endElement();
         }
-        this.marshalEntrySet(target, writer);
-        writer.endElement();
+        super.marshalEntrySet(target, writer);
     }
 
     /**

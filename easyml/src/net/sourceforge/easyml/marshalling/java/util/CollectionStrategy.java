@@ -30,7 +30,7 @@ import java.util.Collection;
  *
  * @param <T> target collection class
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.6
+ * @version 1.8.1
  * @since 1.0
  */
 public abstract class CollectionStrategy<T extends Collection> extends AbstractStrategy implements CompositeStrategy<T> {
@@ -41,27 +41,33 @@ public abstract class CollectionStrategy<T extends Collection> extends AbstractS
     protected static final String ATTRIBUTE_SIZE = "size";
 
     /**
+     * {@inheritDoc }
+     */
+    @Override
+    public void marshal(T target, CompositeWriter writer, MarshalContext ctx) {
+        writer.startElement(this.name());
+        this.marshalAttrs(target, writer, ctx);
+        this.marshalElements(target, writer);
+        writer.endElement();
+    }
+
+    /**
      * Writes the {@linkplain #ATTRIBUTE_SIZE} for the given target. This method
      * can be overridden to write used-defined attributes for the root element.
      *
      * @param target target to be marshalled
      * @param writer to write attributes with
      */
-    protected void marshalAttr(T target, CompositeWriter writer) {
+    protected void marshalAttrs(T target, CompositeWriter writer, MarshalContext ctx) {
         writer.setAttribute(ATTRIBUTE_SIZE, Integer.toString(target.size()));
     }
 
     /**
-     * {@inheritDoc }
+     * Writes the elements for the given target.
+     *
+     * @param target target to be marshalled
+     * @param writer to write elements with
      */
-    @Override
-    public void marshal(T target, CompositeWriter writer, MarshalContext ctx) {
-        writer.startElement(this.name());
-        this.marshalAttr(target, writer);
-        this.marshalElements(target, writer);
-        writer.endElement();
-    }
-
     protected void marshalElements(T target, CompositeWriter writer) {
         for (Object o : target) {
             writer.write(o);

@@ -20,6 +20,7 @@ package net.sourceforge.easyml.marshalling.java.util;
 
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.CompositeWriter;
+import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
 import java.util.LinkedList;
@@ -29,7 +30,7 @@ import java.util.LinkedList;
  * the {@linkplain LinkedList}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.0.3
+ * @version 1.8.1
  * @since 1.0
  */
 public final class LinkedListStrategy extends CollectionStrategy<LinkedList> {
@@ -66,7 +67,7 @@ public final class LinkedListStrategy extends CollectionStrategy<LinkedList> {
      * Override to prevent the marshalling of the {@linkplain #ATTRIBUTE_SIZE}.
      */
     @Override
-    protected void marshalAttr(LinkedList target, CompositeWriter writer) {
+    protected void marshalAttrs(LinkedList target, CompositeWriter writer, MarshalContext ctx) {
     }
 
     /**

@@ -50,7 +50,7 @@ import java.util.function.Supplier;
  * <b>Note:</b> this builder implementation is <b>not</b> thread-safe
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.3
+ * @version 1.8.1
  * @see EasyML
  * @see XMLReader
  * @see XMLWriter
@@ -58,8 +58,9 @@ import java.util.function.Supplier;
  */
 public final class EasyMLBuilder implements Supplier<EasyML> {
 
-    private EasyML.Style style;
     private Supplier<XmlPullParser> xmlPullParserProvider;
+    private boolean prettyCollections;
+    private EasyML.Style style;
     private String dateFormat;
     private String customRootTag;
     private Map<Class, String> classToAlias;
@@ -73,16 +74,6 @@ public final class EasyMLBuilder implements Supplier<EasyML> {
     private Set<CompositeStrategy> unregisteredComposite;
 
     /**
-     * Sets the XML outputting style.
-     *
-     * @param style to use
-     */
-    public EasyMLBuilder withStyle(EasyML.Style style) {
-        this.style = style;
-        return this;
-    }
-
-    /**
      * Sets a user-defined XML pull-parser provider, to be used at text xml
      * de-serialization.
      * <br/>
@@ -93,6 +84,28 @@ public final class EasyMLBuilder implements Supplier<EasyML> {
      */
     public EasyMLBuilder withXmlPullParserProvider(Supplier<XmlPullParser> xmlPullParserProvider) {
         this.xmlPullParserProvider = xmlPullParserProvider;
+        return this;
+    }
+
+    /**
+     * Sets the XML outputting style for Java Collections to pretty.
+     * Java Collections framework Collections and Maps will be formatted more generically.
+     *
+     * @param prettyCollections to use
+     */
+    public EasyMLBuilder withPrettyCollections(boolean prettyCollections) {
+        this.prettyCollections = prettyCollections;
+        return this;
+    }
+
+    /**
+     * Sets the format to use at XML date formatting and parsing. This is done
+     * by re-configuring both the XML reader and writer with the given format.
+     *
+     * @param style to use
+     */
+    public EasyMLBuilder withStyle(EasyML.Style style) {
+        this.style = style;
         return this;
     }
 
@@ -295,8 +308,9 @@ public final class EasyMLBuilder implements Supplier<EasyML> {
         }
         // build:
         return new EasyML(
-                style,
                 xmlPullParserProvider,
+                prettyCollections,
+                style,
                 dateFormat,
                 customRootTag,
                 classToAlias,
