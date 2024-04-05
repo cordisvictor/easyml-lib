@@ -60,6 +60,11 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+Release 1.8.2
+- feature: added EasyML.defaultConfiguration(writer, prettyCollections)
+- bugfix: PrettyCollections impl for comparators
+
+
 Release 1.8.1
 - feature: PrettyCollections option for formatting Java Collections
 - bugfix: collection impl for java.util.Collections unmodifiableSequencedCollection()

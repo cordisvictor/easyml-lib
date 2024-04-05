@@ -18,20 +18,20 @@
  */
 package net.sourceforge.easyml.marshalling.java.util;
 
-import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.CompositeReader;
 import net.sourceforge.easyml.marshalling.CompositeWriter;
 import net.sourceforge.easyml.marshalling.MarshalContext;
 import net.sourceforge.easyml.marshalling.UnmarshalContext;
 
 import java.util.EnumSet;
+import java.util.function.Function;
 
 /**
  * EnumSetStrategy class that extends the {@linkplain CollectionStrategy} for
  * the {@linkplain EnumSet}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.8.1
+ * @version 1.8.2
  * @since 1.4.6
  */
 public final class EnumSetStrategy extends CollectionStrategy<EnumSet> {
@@ -83,7 +83,7 @@ public final class EnumSetStrategy extends CollectionStrategy<EnumSet> {
 
     @Override
     protected void marshalAttrs(EnumSet target, CompositeWriter writer, MarshalContext ctx) {
-        writer.setAttribute(ATTRIBUTE_ELEMENTTYPE, ctx.aliasOrNameFor(elementType(target)));
+        writer.setAttribute(ATTRIBUTE_ELEMENTTYPE, ctx.aliasOrNameFor(elementTypeOf(target)));
     }
 
     @Override
@@ -93,9 +93,10 @@ public final class EnumSetStrategy extends CollectionStrategy<EnumSet> {
         }
     }
 
-    private static <E extends Enum<E>> Class<E> elementType(EnumSet<E> source) {
-        final EnumSet<E> nonEmptySource = source.isEmpty() ? EnumSet.complementOf(source) : source;
-        return nonEmptySource.iterator().next().getDeclaringClass();
+    private static <E extends Enum<E>> Class<E> elementTypeOf(EnumSet<E> source) {
+        return (source.isEmpty() ? EnumSet.complementOf(source) : source).iterator()
+                .next()
+                .getDeclaringClass();
     }
 
     @Override
@@ -104,19 +105,8 @@ public final class EnumSetStrategy extends CollectionStrategy<EnumSet> {
     }
 
     @Override
-    public EnumSet unmarshalInit(EnumSet target, CompositeReader reader, UnmarshalContext ctx) {
-        // consume root element:
-        reader.next();
-        // read elements:
-        final Class elementTypeCls = elementType(target);
-        while (true) {
-            if (reader.atElementEnd() && reader.elementName().equals(EnumSetStrategy.NAME)) {
-                return target;
-            }
-            final String elementName = reader.readString();
-            if (!target.add(Enum.valueOf(elementTypeCls, elementName))) {
-                throw new InvalidFormatException(ctx.readerPositionDescriptor(), "adding: " + elementName);
-            }
-        }
+    protected Function<CompositeReader, Object> unmarshalElement(EnumSet target, CompositeReader reader, UnmarshalContext ctx) {
+        final Class elementTypeCls = elementTypeOf(target);
+        return r -> Enum.valueOf(elementTypeCls, r.readString());
     }
 }

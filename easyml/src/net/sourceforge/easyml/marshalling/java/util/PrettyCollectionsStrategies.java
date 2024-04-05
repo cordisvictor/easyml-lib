@@ -23,14 +23,13 @@ import net.sourceforge.easyml.marshalling.*;
 import net.sourceforge.easyml.marshalling.java.util.concurrent.ConcurrentHashMapStrategy;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
 
 /**
  * PrettyCollectionsStrategies class contains strategies for {@linkplain Collection}s and {@linkplain Map}s,
@@ -40,7 +39,7 @@ import static java.util.stream.Collectors.toSet;
  * Implementations are thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.8.1
+ * @version 1.8.2
  * @since 1.8.1
  */
 public final class PrettyCollectionsStrategies {
@@ -86,12 +85,13 @@ public final class PrettyCollectionsStrategies {
             // vector
     );
 
-    private static final Map<String, CompositeStrategy> typeToStrategy = instances.stream()
+    private static final Map<String, CompositeStrategy> typeToDecorated = instances.stream()
             .map(DecoratorCompositeStrategy::decorated)
             .collect(toMap(Named::name, Function.identity()));
 
-    private static final Set<DecoratorCompositeStrategy> instanceNames = instances.stream()
-            .collect(toSet());
+    private static final Map<Class, CompositeStrategy> targetToDecorated = instances.stream()
+            .map(DecoratorCompositeStrategy::decorated)
+            .collect(toMap(Strategy::target, Function.identity()));
 
     /**
      * Consumes each distinct pretty strategy {@linkplain #ATTRIBUTE_TYPE}.
@@ -108,7 +108,9 @@ public final class PrettyCollectionsStrategies {
      * @param c consumer
      */
     public static void forEachName(Consumer<CompositeStrategy> c) {
-        instanceNames.forEach(c);
+        instances.stream()
+                .distinct()
+                .forEach(c);
     }
 
     private static DecoratorCollectionStrategy decorateList(CollectionStrategy strategy) {
@@ -129,12 +131,17 @@ public final class PrettyCollectionsStrategies {
 
     private static final class DecoratorCollectionStrategy<C extends Collection> extends CollectionStrategy<C> implements DecoratorCompositeStrategy<C> {
 
-        private final String name;
+        private final String decoratingName;
         private final CollectionStrategy<C> decoratedStrategy;
 
-        private DecoratorCollectionStrategy(String name, CollectionStrategy<C> decoratedStrategy) {
-            this.name = name;
+        private DecoratorCollectionStrategy(String decoratingName, CollectionStrategy<C> decoratedStrategy) {
+            this.decoratingName = decoratingName;
             this.decoratedStrategy = decoratedStrategy;
+        }
+
+        @Override
+        public String name() {
+            return decoratingName;
         }
 
         @Override
@@ -143,25 +150,57 @@ public final class PrettyCollectionsStrategies {
         }
 
         @Override
-        public String name() {
-            return name;
-        }
-
-        @Override
         protected void marshalAttrs(C target, CompositeWriter writer, MarshalContext ctx) {
             writer.setAttribute(ATTRIBUTE_TYPE, decoratedStrategy.name());
             decoratedStrategy.marshalAttrs(target, writer, ctx);
+        }
+
+        @Override
+        protected void marshalElements(C target, CompositeWriter writer) {
+            decoratedStrategy.marshalElements(target, writer);
+        }
+
+        @Override
+        public C unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
+                throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+            return decoratedForType(reader).unmarshalNew(reader, ctx);
+        }
+
+        private CollectionStrategy<C> decoratedForType(CompositeReader reader) {
+            final String type = reader.elementRequiredAttribute(ATTRIBUTE_TYPE);
+            final CompositeStrategy decorated = typeToDecorated.get(type);
+            if (!(decorated instanceof CollectionStrategy)) {
+                throw new InvalidFormatException(reader.positionDescriptor(), "element type attribute not a collection: " + type);
+            }
+            return (CollectionStrategy) decorated;
+        }
+
+        @Override
+        protected Function<CompositeReader, Object> unmarshalElement(C target, CompositeReader reader, UnmarshalContext ctx) {
+            return decoratedForTarget(target).unmarshalElement(target, reader, ctx);
+        }
+
+        private CollectionStrategy<C> decoratedForTarget(C target) {
+            // EnumSetStrategy is not strict:
+            final Class strictTargetCls = target instanceof EnumSet ? EnumSet.class : target.getClass();
+            // checked cast at decoratedForType:
+            return (CollectionStrategy) targetToDecorated.get(strictTargetCls);
         }
     }
 
     private static final class DecoratorMapStrategy<M extends Map> extends MapStrategy<M> implements DecoratorCompositeStrategy<M> {
 
-        private final String name;
+        private final String decoratingName;
         private final MapStrategy<M> decoratedStrategy;
 
-        private DecoratorMapStrategy(String name, MapStrategy<M> decoratedStrategy) {
-            this.name = name;
+        private DecoratorMapStrategy(String decoratingName, MapStrategy<M> decoratedStrategy) {
+            this.decoratingName = decoratingName;
             this.decoratedStrategy = decoratedStrategy;
+        }
+
+        @Override
+        public String name() {
+            return decoratingName;
         }
 
         @Override
@@ -170,14 +209,39 @@ public final class PrettyCollectionsStrategies {
         }
 
         @Override
-        public String name() {
-            return name;
-        }
-
-        @Override
         protected void marshalAttrs(M target, CompositeWriter writer, MarshalContext ctx) {
             writer.setAttribute(ATTRIBUTE_TYPE, decoratedStrategy.name());
             decoratedStrategy.marshalAttrs(target, writer, ctx);
+        }
+
+        @Override
+        protected void marshalEntrySet(M target, CompositeWriter writer) {
+            decoratedStrategy.marshalEntrySet(target, writer);
+        }
+
+        @Override
+        public M unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
+                throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+            return decoratedForType(reader).unmarshalNew(reader, ctx);
+        }
+
+        private MapStrategy<M> decoratedForType(CompositeReader reader) {
+            final String type = reader.elementRequiredAttribute(ATTRIBUTE_TYPE);
+            final CompositeStrategy decorated = typeToDecorated.get(type);
+            if (!(decorated instanceof MapStrategy)) {
+                throw new InvalidFormatException(reader.positionDescriptor(), "element type attribute not a map: " + type);
+            }
+            return (MapStrategy) decorated;
+        }
+
+        @Override
+        protected Function<CompositeReader, Object> unmarshalKey(M target, CompositeReader reader, UnmarshalContext ctx) {
+            return decoratedForTarget(target).unmarshalKey(target, reader, ctx);
+        }
+
+        private MapStrategy<M> decoratedForTarget(M target) {
+            // checked cast at decoratedForType:
+            return (MapStrategy) targetToDecorated.get(target.getClass());
         }
     }
 
@@ -196,19 +260,8 @@ public final class PrettyCollectionsStrategies {
         }
 
         @Override
-        default Class target() {
+        default Class<T> target() {
             return decorated().target();
-        }
-
-        @Override
-        default T unmarshalNew(CompositeReader reader, UnmarshalContext ctx)
-                throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-            final String type = reader.elementRequiredAttribute(ATTRIBUTE_TYPE);
-            final CompositeStrategy<T> decorated = typeToStrategy.get(type);
-            if (decorated == null) {
-                throw new InvalidFormatException(reader.positionDescriptor(), "invalid element type attribute: " + type);
-            }
-            return decorated.unmarshalNew(reader, ctx);
         }
     }
 

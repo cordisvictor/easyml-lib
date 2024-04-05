@@ -86,7 +86,7 @@ import java.util.function.Supplier;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.8.1
+ * @version 1.8.2
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -290,7 +290,14 @@ public final class EasyML {
         }
     }
 
-    private static void defaultConfiguration(XMLWriter writer, boolean prettyCollections) {
+    /**
+     * Configures all default strategies to the given writer.
+     *
+     * @param writer            to configure
+     * @param prettyCollections true to enable pretty collections format
+     * @see PrettyCollectionsStrategies
+     */
+    public static void defaultConfiguration(XMLWriter writer, boolean prettyCollections) {
         final XMLWriter.StrategyRegistry<SimpleStrategy> simple = writer.getSimpleStrategies();
         final XMLWriter.StrategyRegistry<CompositeStrategy> composite = writer.getCompositeStrategies();
         // dtd: because of the primitives API, DTD are included by default in the writer:

@@ -925,7 +925,7 @@ public class XMLReader implements Closeable, Iterable, Supplier, BooleanSupplier
                 this.decoded.put(idAttr, newed);
                 // init composite:
                 final Object inited = cs.unmarshalInit(newed, this.driver, this.context);
-                if (newed != inited) { // for features such as Java IO Serializable readResolve:
+                if (newed != inited) { // support features such as immutable objects or Serializable readResolve:
                     this.ensureSecurityPolicy(inited);
                     this.decoded.put(idAttr, inited);
                 }

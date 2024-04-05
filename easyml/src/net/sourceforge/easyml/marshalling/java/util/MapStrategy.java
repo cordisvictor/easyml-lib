@@ -23,6 +23,7 @@ import net.sourceforge.easyml.marshalling.*;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * MapStrategy abstract class that implements the {@linkplain CompositeStrategy}
@@ -31,7 +32,7 @@ import java.util.Set;
  *
  * @param <T> target map class
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.8.1
+ * @version 1.8.2
  * @since 1.0
  */
 public abstract class MapStrategy<T extends Map> extends AbstractStrategy implements CompositeStrategy<T> {
@@ -82,19 +83,32 @@ public abstract class MapStrategy<T extends Map> extends AbstractStrategy implem
      */
     @Override
     public T unmarshalInit(T target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
+        final String endElementName = this.name();
+        final Function<CompositeReader, Object> unmarshalKey = unmarshalKey(target, reader, ctx);
         // consume root element:
         reader.next();
         // read entries:
-        final String endElementName = this.name();
         while (true) {
             if (reader.atElementEnd() && reader.elementName().equals(endElementName)) {
                 return target;
             }
-            final Object key = reader.read();
+            final Object key = unmarshalKey.apply(reader);
             if (target.containsKey(key)) {
                 throw new InvalidFormatException(ctx.readerPositionDescriptor(), "duplicate key: " + key);
             }
             target.put(key, reader.read());
         }
+    }
+
+    /**
+     * Creates a function for reading a key, optionally mapping it.
+     *
+     * @param target optionally needed for mapping
+     * @param reader optionally needed for mapping
+     * @param ctx    optionally needed for mapping
+     * @return unmarshalling function
+     */
+    protected Function<CompositeReader, Object> unmarshalKey(T target, CompositeReader reader, UnmarshalContext ctx) {
+        return CompositeReader::read;
     }
 }

@@ -206,13 +206,17 @@ public class EasyMLTest {
         expected.putAll(Map.of(1, "one", 2, "two"));
 
         easyml = new EasyMLBuilder()
+                .withAlias(IntegerComparator.class, "int-cmp")
                 .withPrettyCollections(true)
                 .build();
 
         final String xml = easyml.serialize(expected);
         System.out.println(xml);
+        assertTrue(xml.contains("int-cmp"));
 
-        assertEquals(expected, easyml.deserialize(xml));
+        final TreeMap actual = (TreeMap) easyml.deserialize(xml);
+        assertEquals(expected.comparator(), actual.comparator());
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -221,13 +225,17 @@ public class EasyMLTest {
         expected.addAll(List.of(1, 3, 2));
 
         easyml = new EasyMLBuilder()
+                .withAlias(IntegerComparator.class, "int-cmp")
                 .withPrettyCollections(true)
                 .build();
 
         final String xml = easyml.serialize(expected);
         System.out.println(xml);
+        assertTrue(xml.contains("int-cmp"));
 
-        assertArrayEquals(expected.toArray(), ((PriorityQueue) easyml.deserialize(xml)).toArray());
+        final PriorityQueue actual = (PriorityQueue) easyml.deserialize(xml);
+        assertEquals(expected.comparator(), actual.comparator());
+        assertArrayEquals(expected.toArray(), actual.toArray());
     }
 
     private static final class IntegerComparator implements Comparator<Integer> {

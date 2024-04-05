@@ -27,13 +27,14 @@ import net.sourceforge.easyml.marshalling.UnmarshalContext;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * EnumMapStrategy class that extends the {@linkplain MapStrategy} for
  * the {@linkplain EnumMap}. This implementation is thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.8.1
+ * @version 1.8.2
  * @since 1.4.6
  */
 public final class EnumMapStrategy extends MapStrategy<EnumMap> {
@@ -94,25 +95,13 @@ public final class EnumMapStrategy extends MapStrategy<EnumMap> {
     }
 
     @Override
-    public EnumMap unmarshalInit(EnumMap target, CompositeReader reader, UnmarshalContext ctx) {
+    protected Function<CompositeReader, Object> unmarshalKey(EnumMap target, CompositeReader reader, UnmarshalContext ctx) {
         final Class keyTypeCls;
         try {
             keyTypeCls = ctx.classFor(reader.elementRequiredAttribute(ATTRIBUTE_KEYTYPE));
-        } catch (ClassNotFoundException e) {
-            throw new InvalidFormatException(ctx.readerPositionDescriptor(), "invalid " + ATTRIBUTE_KEYTYPE + ": " + e.getMessage());
+        } catch (ClassNotFoundException thrownAtUnmarshalNew) {
+            throw new InvalidFormatException(ctx.readerPositionDescriptor(), "invalid " + ATTRIBUTE_KEYTYPE, thrownAtUnmarshalNew);
         }
-        // consume root element:
-        reader.next();
-        // read elements:
-        while (true) {
-            if (reader.atElementEnd() && reader.elementName().equals(EnumMapStrategy.NAME)) {
-                return target;
-            }
-            final Enum key = Enum.valueOf(keyTypeCls, reader.readString());
-            final Object value = reader.read();
-            if (target.put(key, value) != null) {
-                throw new InvalidFormatException(ctx.readerPositionDescriptor(), "duplicate key: " + key);
-            }
-        }
+        return r -> Enum.valueOf(keyTypeCls, r.readString());
     }
 }

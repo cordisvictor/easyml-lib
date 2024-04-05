@@ -22,6 +22,7 @@ import net.sourceforge.easyml.InvalidFormatException;
 import net.sourceforge.easyml.marshalling.*;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * CollectionStrategy abstract class that implements the
@@ -30,7 +31,7 @@ import java.util.Collection;
  *
  * @param <T> target collection class
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.8.1
+ * @version 1.8.2
  * @since 1.0
  */
 public abstract class CollectionStrategy<T extends Collection> extends AbstractStrategy implements CompositeStrategy<T> {
@@ -79,18 +80,31 @@ public abstract class CollectionStrategy<T extends Collection> extends AbstractS
      */
     @Override
     public T unmarshalInit(T target, CompositeReader reader, UnmarshalContext ctx) throws IllegalAccessException {
+        final String endElementName = this.name();
+        final Function<CompositeReader, Object> unmarshalElement = unmarshalElement(target, reader, ctx);
         // consume root element:
         reader.next();
         // read elements:
-        final String endElementName = this.name();
         while (true) {
             if (reader.atElementEnd() && reader.elementName().equals(endElementName)) {
                 return target;
             }
-            final Object element = reader.read();
+            final Object element = unmarshalElement.apply(reader);
             if (!target.add(element)) {
                 throw new InvalidFormatException(ctx.readerPositionDescriptor(), "adding: " + element);
             }
         }
+    }
+
+    /**
+     * Creates a function for reading an element, optionally mapping it.
+     *
+     * @param target optionally needed for mapping
+     * @param reader optionally needed for mapping
+     * @param ctx    optionally needed for mapping
+     * @return unmarshalling function
+     */
+    protected Function<CompositeReader, Object> unmarshalElement(T target, CompositeReader reader, UnmarshalContext ctx) {
+        return CompositeReader::read;
     }
 }
