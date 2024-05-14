@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.BitSet;
+import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -76,7 +77,6 @@ public class BugsTest {
         // so we make sure that SerializableStrategy will be used:
         easyml = new EasyMLBuilder()
                 //.withStyle(EasyML.Style.PRETTY)
-                //.withProfile(EasyML.Profile.GENERIC)
                 .withStrategy(new SerializableStrategy())
                 .withoutStrategy(BitSetStrategy.INSTANCE)
                 .build();
@@ -88,6 +88,20 @@ public class BugsTest {
         expected.set(11);
         expected.set(0);
         expected.set(64);
+
+        String xml = easyml.serialize(expected);
+        System.out.println(xml);
+
+        assertEquals(expected, easyml.deserialize(xml));
+    }
+
+    @Test
+    public void testBugSpecialCharField() throws Exception {
+        easyml = new EasyMLBuilder()
+                //.withStyle(EasyML.Style.PRETTY)
+                .build();
+
+        final SpecialSymbolField expected = new SpecialSymbolField("specialValue");
 
         String xml = easyml.serialize(expected);
         System.out.println(xml);
@@ -196,6 +210,43 @@ public class BugsTest {
             public String toString() {
                 return "val2";
             }
+        }
+    }
+
+    private static class SpecialSymbolField {
+
+        private final String special$field;
+
+        public SpecialSymbolField() {
+            special$field = null;
+        }
+
+        public SpecialSymbolField(String special$field) {
+            this.special$field = special$field;
+        }
+
+        public String getSpecial$field() {
+            return special$field;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SpecialSymbolField that = (SpecialSymbolField) o;
+            return Objects.equals(special$field, that.special$field);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(special$field);
+        }
+
+        @Override
+        public String toString() {
+            return "SpecialSymbolField{" +
+                    "special$field='" + special$field + '\'' +
+                    '}';
         }
     }
 }

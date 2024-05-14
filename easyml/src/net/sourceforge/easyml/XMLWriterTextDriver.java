@@ -30,7 +30,7 @@ import java.util.List;
  * XML to output streams.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.4.1
+ * @version 1.5.3
  * @since 1.1.0
  */
 final class XMLWriterTextDriver extends XMLWriter.Driver {
@@ -73,10 +73,11 @@ final class XMLWriterTextDriver extends XMLWriter.Driver {
             } else {
                 writeIndentedLt();
             }
-            this.writer.write(name);
+            final String escapedName = XMLUtil.escapeXMLTag(name);
+            this.writer.write(escapedName);
             this.writeOneTimeUniqueId(id -> tryWriteAttrEqValue(DTD.ATTRIBUTE_ID, id));
             // update state:
-            this.elementStack.add(name);
+            this.elementStack.add(escapedName);
             this.state = XMLWriter.Driver.STATE_START;
         } catch (IOException ioX) {
             throw new RuntimeException(ioX);
@@ -123,11 +124,14 @@ final class XMLWriterTextDriver extends XMLWriter.Driver {
      */
     @Override
     public void setAttribute(String attribute, String value) {
+        if (!XMLUtil.isLegalXMLTag(attribute)) {
+            throw new IllegalArgumentException("attribute: " + attribute);
+        }
         if (this.state != XMLWriter.Driver.STATE_START) {
             throw new IllegalStateException("cannot write element attributes");
         }
         try {
-            writeAttrEqValue(XMLUtil.escapeXML(attribute), XMLUtil.escapeXML(value));
+            writeAttrEqValue(attribute, XMLUtil.escapeXML(value));
         } catch (IOException ioX) {
             throw new RuntimeException(ioX);
         }
