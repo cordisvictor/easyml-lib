@@ -60,6 +60,13 @@ for a higher control compared to the EasyML Facade.
 
 ### Release Notes
 
+Release 1.7.4
+- bugfix: XMLReader text driver comsume with pretty print
+- bugfix: XMLWriter text driver attribute validation
+- bugfix: XMLWriter and XMLReader allow field names containing "$" 
+- bugfix: only register AWT strategies if AWT available 
+
+
 Release 1.7.3
 - feature: XMLReader exclude fields (similar to XMLWriter exclude fields)
 - feature: added OptionalDouble, OptionalInt, OptionalLong strategies.
@@ -84,9 +91,6 @@ Release 1.6.0 (requires Java 9, recommended up to Java 17)
 - XMLWriter and XMLReader use getters and setters.
 - feature: support for Java 9 modules.
 - NON-BACKWARD COMPATIBLE refactor of ReflectionUtil.
-
-
-Release 1.5.3
 - refactor: remove deprecated Class.newInstance() usages.
 - refactor: limited reflection usage from Properties, EnumSet, EnumMap,
 SingletonList, SingletonSet, SingletonMap strategies.

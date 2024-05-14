@@ -74,6 +74,33 @@ public class ExcludeDeserializeTest {
     }
 
     @Test
+    public void testExcludeDeserializeObjectPrettyPrint() {
+        final ModifiedPojo expected = new ModifiedPojo("someText");
+        final String modifiedPojoXml = """
+                <easyml>
+                <objectx id="1" class="net.sourceforge.easyml.ExcludeDeserializeTest$ModifiedPojo">
+                 <removedVersionField>1</removedVersionField>
+                 <text>someText</text>
+                 <removedNamesField>
+                  <arraylst id="2" size="2">
+                   <string>e1</string>
+                   <string>e2</string
+                  ></arraylst>
+                 </removedNamesField>
+                </objectx>
+                </easyml>
+                """;
+
+        final XMLReader xis = new XMLReader(new ByteArrayInputStream(modifiedPojoXml.getBytes()));
+        xis.getCompositeStrategies().put(ObjectStrategy.NAME, ObjectStrategy.INSTANCE);
+        xis.getCompositeStrategies().put(ArrayListStrategy.NAME, ArrayListStrategy.INSTANCE);
+        xis.exclude(ModifiedPojo.class, "removedVersionField");
+        xis.exclude(ModifiedPojo.class, "removedNamesField");
+        assertEquals(expected, xis.read());
+        xis.close();
+    }
+
+    @Test
     public void testExcludeDeserializeSerializable() {
         final ModifiedDTO expected = new ModifiedDTO("someText");
         final String modifiedPojoXml = "<easyml><serial id=\"1\" class=\"net.sourceforge.easyml.ExcludeDeserializeTest$ModifiedDTO\"><this.fields><text>someText</text><removedVersionField>1</removedVersionField><removedPersonField><serial id=\"2\" class=\"net.sourceforge.easyml.testmodel.PersonDTO\"><this.fields><firstName nil=\"true\"/><lastName nil=\"true\"/></this.fields><this.fields><id>1</id></this.fields></serial></removedPersonField></this.fields></serial></easyml>\n";

@@ -18,6 +18,7 @@
  */
 package net.sourceforge.easyml;
 
+import net.sourceforge.easyml.util.XMLUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -27,7 +28,7 @@ import org.w3c.dom.Node;
  * XML to DOM documents.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.9
+ * @version 1.4.1
  * @since 1.1.0
  */
 final class XMLWriterDOMDriver extends XMLWriter.Driver {
@@ -61,7 +62,8 @@ final class XMLWriterDOMDriver extends XMLWriter.Driver {
             throw new IllegalStateException("cannot write element start");
         }
         // update state:
-        final Element started = this.root.createElement(name);
+        final String escapedName = XMLUtil.escapeXMLTag(name);
+        final Element started = this.root.createElement(escapedName);
         if (this.crt == null) {
             this.root.appendChild(started);
         } else {

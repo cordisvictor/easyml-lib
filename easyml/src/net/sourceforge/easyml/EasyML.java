@@ -85,7 +85,7 @@ import java.util.function.Supplier;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.3
+ * @version 1.7.4
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -207,7 +207,9 @@ public final class EasyML {
 //        simple.add(IntStrategy.INSTANCE);
 //        simple.add(StringStrategy.INSTANCE);
         // awt:
-        composite.add(ColorStrategy.INSTANCE);
+        if (ColorStrategy.isAvailable()) {
+            composite.add(ColorStrategy.INSTANCE);
+        }
         // io:
         composite.add(ExternalizableStrategy.INSTANCE);
         simple.add(FileStrategy.INSTANCE);
@@ -309,7 +311,9 @@ public final class EasyML {
 //        simple.put(IntStrategy.NAME, IntStrategy.INSTANCE);
 //        simple.put(StringStrategy.NAME, StringStrategy.INSTANCE);
         // awt:
-        composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
+        if (ColorStrategy.isAvailable()) {
+            composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
+        }
         // io:
         composite.put(ExternalizableStrategy.NAME, ExternalizableStrategy.INSTANCE);
         simple.put(FileStrategy.NAME, FileStrategy.INSTANCE);
