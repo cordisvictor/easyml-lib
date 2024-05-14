@@ -18,6 +18,7 @@
  */
 package net.sourceforge.easyml;
 
+import net.sourceforge.easyml.util.XMLUtil;
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -33,7 +34,7 @@ import java.io.Reader;
  * parameters.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.7.3
+ * @version 1.8.3
  * @since 1.1.0
  */
 final class XMLReaderTextDriver extends XMLReader.Driver {
@@ -131,7 +132,7 @@ final class XMLReaderTextDriver extends XMLReader.Driver {
         try {
             final int eventType = this.parser.getEventType();
             if (eventType == XmlPullParser.START_TAG || eventType == XmlPullParser.END_TAG) {
-                return this.parser.getName();
+                return XMLUtil.unescapeXMLTag(this.parser.getName());
             }
             throw new IllegalStateException("expected element start or end: " + this.parser.getLineNumber() + "," + this.parser.getColumnNumber());
         } catch (XmlPullParserException xppX) {
@@ -175,12 +176,12 @@ final class XMLReaderTextDriver extends XMLReader.Driver {
             throw new IllegalStateException("not at element start: " + this.positionDescriptor());
         }
         try {
-            int depth = 0;
+            int depth = 1;
             do {
-                final int next = parser.next();
-                if (next == XmlPullParser.START_TAG) {
+                final int eventType = parser.next();
+                if (eventType == XmlPullParser.START_TAG) {
                     depth++;
-                } else if (next == XmlPullParser.END_TAG) {
+                } else if (eventType == XmlPullParser.END_TAG) {
                     depth--;
                 }
             } while (depth != 0);
