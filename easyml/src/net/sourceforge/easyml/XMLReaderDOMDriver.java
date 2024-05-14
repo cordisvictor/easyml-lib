@@ -18,6 +18,7 @@
  */
 package net.sourceforge.easyml;
 
+import net.sourceforge.easyml.util.XMLUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -31,7 +32,7 @@ import org.w3c.dom.NodeList;
  * transforming the DOM to text so that it can be inputed as text to EasyML.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.3.9
+ * @version 1.6.1
  * @since 1.1.0
  */
 final class XMLReaderDOMDriver extends XMLReader.Driver {
@@ -155,7 +156,7 @@ final class XMLReaderDOMDriver extends XMLReader.Driver {
         if (this.crt == null) {
             throw new IllegalStateException("not at element start or end: " + this.positionDescriptor());
         }
-        return this.crt.getNodeName();
+        return XMLUtil.unescapeXMLTag(this.crt.getNodeName());
     }
 
     /**

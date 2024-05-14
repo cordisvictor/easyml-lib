@@ -84,7 +84,7 @@ import java.util.function.Supplier;
  * objects.<br/>
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.3
+ * @version 1.6.1
  * @see XMLReader
  * @see XMLWriter
  * @since 1.0
@@ -206,7 +206,9 @@ public final class EasyML {
 //        simple.add(IntStrategy.INSTANCE);
 //        simple.add(StringStrategy.INSTANCE);
         // awt:
-        composite.add(ColorStrategy.INSTANCE);
+        if (ColorStrategy.isAvailable()) {
+            composite.add(ColorStrategy.INSTANCE);
+        }
         // io:
         composite.add(ExternalizableStrategy.INSTANCE);
         simple.add(FileStrategy.INSTANCE);
@@ -299,7 +301,9 @@ public final class EasyML {
 //        simple.put(IntStrategy.NAME, IntStrategy.INSTANCE);
 //        simple.put(StringStrategy.NAME, StringStrategy.INSTANCE);
         // awt:
-        composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
+        if (ColorStrategy.isAvailable()) {
+            composite.put(ColorStrategy.NAME, ColorStrategy.INSTANCE);
+        }
         // io:
         composite.put(ExternalizableStrategy.NAME, ExternalizableStrategy.INSTANCE);
         simple.put(FileStrategy.NAME, FileStrategy.INSTANCE);
@@ -619,8 +623,11 @@ public final class EasyML {
     public void serialize(Object o, Writer out) {
         final XMLWriter writer = this.perThreadWriter.get();
         writer.reset(out);
-        writer.write(o);
-        writer.flush();
+        try {
+            writer.write(o);
+        } finally {
+            writer.flush();
+        }
     }
 
     /**
@@ -662,8 +669,11 @@ public final class EasyML {
     public void serialize(Object o, Document out) {
         final XMLWriter writer = this.perThreadWriter.get();
         writer.reset(out);
-        writer.write(o);
-        writer.flush();
+        try {
+            writer.write(o);
+        } finally {
+            writer.flush();
+        }
     }
 
     /**
@@ -727,7 +737,7 @@ public final class EasyML {
     /**
      * Releases the XML writer, if any, belonging to the current thread. If this
      * method isn't invoked, the XML writer will be released anyway at the
-     * current threads death.
+     * current thread's death.
      * <br>
      * <b>Note:</b> this is an advanced feature and should be used only if the
      * caller knows this thread won't be using this EasyML instance for
@@ -740,7 +750,7 @@ public final class EasyML {
     /**
      * Releases the XML reader, if any, belonging to the current thread. If this
      * method isn't invoked, the XML reader will be released anyway at the
-     * current threads death.
+     * current thread's death.
      * <br>
      * <b>Note:</b> this is an advanced feature and should be used only if the
      * caller knows this thread won't be using this EasyML instance for

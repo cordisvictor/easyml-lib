@@ -18,28 +18,41 @@
  */
 package net.sourceforge.easyml.util;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * XMLUtil utility class used to format the XML element and element attribute
  * values by escaping and un-escaping illegal XML characters.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.5.0
+ * @version 1.6.1
  * @since 1.0
  */
 public final class XMLUtil {
 
-    static final char XML_ILLEGAL_LT = '<';
-    static final char XML_ILLEGAL_GT = '>';
-    static final char XML_ILLEGAL_AMP = '&';
-    static final char XML_ILLEGAL_QUOT = '"';
-    static final char XML_ILLEGAL_APOS = '\'';
-    static final char XML_ILLEGAL_CR = '\r';
-    static final String XML_LEGAL_LT = "&lt;";
-    static final String XML_LEGAL_GT = "&gt;";
-    static final String XML_LEGAL_AMP = "&amp;";
-    static final String XML_LEGAL_QUOT = "&quot;";
-    static final String XML_LEGAL_APOS = "&apos;";
-    static final String XML_LEGAL_CR = "&#13;";
+    /**
+     * Constant holding the illegal <code>$</code>.
+     */
+    public static final char XML_TAG_ILLEGAL_$ = '$';
+    /**
+     * Constant holding the escaped form of <code>$</code>.
+     */
+    public static final String XML_TAG_LEGAL_$ = "_-_";
+    private static final String XML_TAG_ILLEGAL_$_QUOTED = Matcher.quoteReplacement(Character.toString(XML_TAG_ILLEGAL_$));
+    private static final Pattern XML_TAG_LEGAL_$_PATTERN = Pattern.compile(Pattern.quote(XML_TAG_LEGAL_$));
+    private static final char XML_ILLEGAL_LT = '<';
+    private static final char XML_ILLEGAL_GT = '>';
+    private static final char XML_ILLEGAL_AMP = '&';
+    private static final char XML_ILLEGAL_QUOT = '"';
+    private static final char XML_ILLEGAL_APOS = '\'';
+    private static final char XML_ILLEGAL_CR = '\r';
+    private static final String XML_LEGAL_LT = "&lt;";
+    private static final String XML_LEGAL_GT = "&gt;";
+    private static final String XML_LEGAL_AMP = "&amp;";
+    private static final String XML_LEGAL_QUOT = "&quot;";
+    private static final String XML_LEGAL_APOS = "&apos;";
+    private static final String XML_LEGAL_CR = "&#13;";
 
     /**
      * Returns true if the input text is free from illegal XML characters, false otherwise.
@@ -128,6 +141,49 @@ public final class XMLUtil {
         } else {
             destination.append(c);
         }
+    }
+
+    /**
+     * Escapes <code>$</code> in the given tag.
+     *
+     * @param tag to escape
+     * @return the escaped tag
+     */
+    public static String escapeXMLTag(String tag) {
+        final int symbolIdx = tag.indexOf(XML_TAG_ILLEGAL_$);
+        if (symbolIdx == -1) {
+            return tag; // all legal.
+        }
+        final int len = tag.length();
+        final StringBuilder sb = new StringBuilder(len + 10);
+        // copy initial legal part:
+        for (int i = 0; i < symbolIdx; i++) {
+            sb.append(tag.charAt(i));
+        }
+        // escape the remaining part:
+        for (int i = symbolIdx; i < len; i++) {
+            final char c = tag.charAt(i);
+            if (c == XML_TAG_ILLEGAL_$) {
+                sb.append(XML_TAG_LEGAL_$);
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Unescapes <code>$</code> in the given tag.
+     *
+     * @param tag to unescape
+     * @return the unescaped tag
+     */
+    public static String unescapeXMLTag(String tag) {
+        final int escapedIdx = tag.indexOf(XML_TAG_LEGAL_$);
+        if (escapedIdx == -1) {
+            return tag; // all legal.
+        }
+        return XML_TAG_LEGAL_$_PATTERN.matcher(tag).replaceAll(XML_TAG_ILLEGAL_$_QUOTED);
     }
 
     private XMLUtil() {

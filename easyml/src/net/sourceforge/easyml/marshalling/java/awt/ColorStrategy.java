@@ -29,7 +29,7 @@ import java.awt.*;
  * thread-safe.
  *
  * @author Victor Cordis ( cordis.victor at gmail.com)
- * @version 1.2.4
+ * @version 1.6.1
  * @since 1.0
  */
 public final class ColorStrategy extends AbstractStrategy implements CompositeStrategy<Color> {
@@ -52,10 +52,19 @@ public final class ColorStrategy extends AbstractStrategy implements CompositeSt
         try {
             // init Color.class by using Class.forName with initialize=false:
             return Class.forName("java.awt.Color", false, ColorStrategy.class.getClassLoader());
-        } catch (ClassNotFoundException neverThrown) {
+        } catch (ClassNotFoundException unavailableAWT) {
             // java.awt.Color should be a part of the JDK.
             return null;
         }
+    }
+
+    /**
+     * Returns true if this strategy is available for usage, false if AWT not present.
+     *
+     * @return true if AWT present, false otherwise
+     */
+    public static boolean isAvailable() {
+        return TARGET != null;
     }
 
     private ColorStrategy() {
